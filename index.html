@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bayrak Mitarbeiter-Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --blue-dark: #004b7a;
+            --blue-light: #e7f2fb;
+            --orange: #f57c00;
+            --grey-bg: #f5f5f5;
+            --card-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--grey-bg);
+            color: #333;
+        }
+
+        /* =========================================
+           TOP-LEISTE
+        ==========================================*/
+        header {
+            background: var(--blue-dark);
+            color: #fff;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.85;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-user {
+            font-size: 0.85rem;
+            max-width: 220px;
+        }
+
+        .btn-top {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: #c0392b;
+            color: #fff;
+        }
+
+        /* =========================================
+           AUTH-BEREICH
+        ==========================================*/
+        main {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 10px 25px 10px;
+        }
+
+        #auth-section {
+            max-width: 420px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 20px 18px 22px 18px;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+        }
+
+        #auth-section h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 7px 8px;
+            margin-top: 3px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            margin-top: 12px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--blue-dark);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #777;
+            color: #fff;
+            margin-left: 6px;
+        }
+
+        .info {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .error {
+            color: #b00020;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .success {
+            color: #0a7a1b;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* =========================================
+           PORTAL-LAYOUT (Sidebar + Inhalt)
+        ==========================================*/
+        #portal-section {
+            background: transparent;
+        }
+
+        .portal-layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 900px) {
+            .portal-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            padding: 14px 12px;
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-user {
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-list li {
+            padding: 7px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-list li span.icon {
+            width: 18px;
+            text-align: center;
+        }
+
+        .sidebar-list li.active,
+        .sidebar-list li:hover {
+            background: var(--blue-light);
+            color: var(--blue-dark);
+        }
+
+        .sidebar-admin {
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* Hauptbereich */
+        .main-content {
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            padding: 16px 16px 18px 16px;
+        }
+
+        .portal-greeting {
+            margin-bottom: 14px;
+        }
+
+        .portal-greeting h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .portal-greeting p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .role-badge {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 0.75rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* =========================================
+           SECTIONS + DASHBOARD-TILES
+        ==========================================*/
+        .portal-section-content {
+            margin-top: 10px;
+        }
+
+        .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .tile-card {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+        }
+
+        .tile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            background: #fdfdfd;
+        }
+
+        .tile-card.active {
+            border: 2px solid var(--orange);
+        }
+
+        .tile-icon {
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+            color: var(--orange);
+        }
+
+        .tile-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .tile-sub {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        h3.section-title {
+            margin: 12px 0 6px 0;
+            font-size: 1rem;
+        }
+
+        /* =========================================
+           DOKUMENTE (Liste)
+        ==========================================*/
+        .document-list {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0 0 0;
+        }
+
+        .document-item {
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eee;
+        }
+
+        .document-item-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .document-item-meta {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .document-item a {
+            background: var(--blue-dark);
+            color: #fff;
+            padding: 6px 9px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        /* =========================================
+           ADMIN: MITARBEITER-KACHELN
+        ==========================================*/
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .employee-card {
+            border-radius: 6px;
+            padding: 10px 10px 12px 10px;
+            box-shadow: var(--card-shadow);
+            background: #fafafa;
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .employee-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+            border: 2px solid #4caf50; /* später: Statusfarbe */
+        }
+
+        .employee-info-main {
+            font-weight: 600;
+        }
+
+        .employee-info-sub {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .employee-role {
+            margin-top: 4px;
+        }
+
+        .employee-role select {
+            font-size: 0.8rem;
+            padding: 3px 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .employee-actions {
+            margin-top: 6px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-small.primary {
+            background: var(--blue-dark);
+            color: #fff;
+        }
+
+        .btn-small.grey {
+            background: #777;
+            color: #fff;
+        }
+
+        .admin-message {
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* Kleinere Screens */
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .top-right {
+                align-self: stretch;
+                justify-content: space-between;
+            }
+            .top-user {
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo">B</div>
+        <div>
+            <div class="brand-title">Bayrak Mitarbeiter-Portal</div>
+            <div class="brand-subtitle">Interne Web-App · Testversion</div>
+        </div>
+    </div>
+    <div class="top-right">
+        <div class="top-user" id="top-user-text"></div>
+        <button id="logout-btn" class="btn-top hidden">Abmelden</button>
+    </div>
+</header>
+
+<main>
+    <!-- =========================================
+         LOGIN / REGISTRIERUNG
+    ==========================================-->
+    <section id="auth-section">
+        <h2>Anmeldung</h2>
+        <div id="auth-error" class="error hidden"></div>
+        <div id="auth-success" class="success hidden"></div>
+
+        <label for="email">E-Mail</label>
+        <input type="email" id="email" placeholder="deine@email.de">
+
+        <label for="password">Passwort</label>
+        <input type="password" id="password" placeholder="Passwort">
+
+        <button id="login-btn" class="btn-primary">Einloggen</button>
+        <button id="register-btn" class="btn-secondary">Registrieren (neue Mitarbeiter)</button>
+
+        <p class="info">
+            Hinweis: Später können Sie die Registrierung einschränken und Mitarbeiter nur freischalten, wenn Sie im System angelegt sind.
+        </p>
+    </section>
+
+    <!-- =========================================
+         PORTAL NACH LOGIN
+    ==========================================-->
+    <section id="portal-section" class="hidden">
+        <div class="portal-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-title">Mitarbeiterportal</div>
+                <div class="sidebar-user" id="sidebar-user-role"></div>
+
+                <ul class="sidebar-list" id="sidebar-nav">
+                    <li data-target="section-dashboard" class="active">
+                        <span class="icon">🏠</span> <span>Startseite</span>
+                    </li>
+                    <li data-target="section-documents">
+                        <span class="icon">📄</span> <span>Unterweisungen / Dokumente</span>
+                    </li>
+                    <li data-target="section-timesheet">
+                        <span class="icon">🕒</span> <span>Stundenzettel</span>
+                    </li>
+                    <li data-target="section-arbeitsvertrag">
+                        <span class="icon">📃</span> <span>Arbeitsvertrag</span>
+                    </li>
+                    <li data-target="section-admin" id="sidebar-admin-link" class="hidden">
+                        <span class="icon">🛠</span> <span>Admin · Mitarbeiter</span>
+                    </li>
+                </ul>
+
+                <div id="sidebar-admin-label" class="sidebar-admin hidden">
+                    Sie sind <strong>Administrator</strong> und können Mitarbeiter &amp; Rollen verwalten.
+                </div>
+            </aside>
+
+            <!-- Inhalt -->
+            <div class="main-content">
+                <div class="portal-greeting">
+                    <h2>
+                        Guten Tag,
+                        <span id="user-name-text">Mitarbeiter</span>
+                        <span id="role-badge" class="role-badge hidden"></span>
+                    </h2>
+                    <p>Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
+                </div>
+
+                <!-- DASHBOARD -->
+                <div id="section-dashboard" class="portal-section-content">
+                    <div class="tile-grid">
+                        <div class="tile-card active" data-target="section-documents">
+                            <div class="tile-icon">📄</div>
+                            <div class="tile-title">Unterweisungen</div>
+                            <div class="tile-sub">Dokumente &amp; Infos</div>
+                        </div>
+                        <div class="tile-card" data-target="section-timesheet">
+                            <div class="tile-icon">🕒</div>
+                            <div class="tile-title">Stundenzettel</div>
+                            <div class="tile-sub">Arbeitszeiten erfassen</div>
+                        </div>
+                        <div class="tile-card" data-target="section-arbeitsvertrag">
+                            <div class="tile-icon">📃</div>
+                            <div class="tile-title">Arbeitsvertrag</div>
+                            <div class="tile-sub">Verträge &amp; Bescheinigungen</div>
+                        </div>
+                        <div class="tile-card" data-target="section-admin" id="tile-admin" class="hidden">
+                            <div class="tile-icon">👥</div>
+                            <div class="tile-title">Mitarbeiter (Admin)</div>
+                            <div class="tile-sub">Übersicht &amp; Rollen</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNTERWEISUNGEN / DOKUMENTE -->
+                <div id="section-documents" class="portal-section-content hidden">
+                    <h3 class="section-title">Unterweisungen / Dokumente</h3>
+                    <p class="info">
+                        Hier sehen Sie alle Dokumente, die Ihnen persönlich zugeordnet wurden (Unterweisungen, Verträge, Informationen).
+                    </p>
+                    <div id="documents-message" class="info"></div>
+                    <ul id="documents-list" class="document-list"></ul>
+                </div>
+
+                <!-- STUNDENZETTEL (Platzhalter, echte Logik bauen wir später) -->
+                <div id="section-timesheet" class="portal-section-content hidden">
+                    <h3 class="section-title">Stundenzettel</h3>
+                    <p class="info">
+                        Hier wird später die Stundenzettel-Funktion integriert (ähnlich deiner bisherigen Stundenzettel-Web-App,
+                        aber mit Speicherung in Supabase).<br>
+                        <strong>Aktuell ist dies nur ein Platzhalter.</strong>
+                    </p>
+                </div>
+
+                <!-- ARBEITSVERTRAG (Platzhalter) -->
+                <div id="section-arbeitsvertrag" class="portal-section-content hidden">
+                    <h3 class="section-title">Arbeitsvertrag / Dokumente</h3>
+                    <p class="info">
+                        In diesem Bereich können später Arbeitsverträge, Zusatzvereinbarungen und wichtige Bescheinigungen
+                        pro Mitarbeiter hinterlegt und heruntergeladen werden.
+                    </p>
+                </div>
+
+                <!-- ADMIN: MITARBEITER-KACHELN -->
+                <div id="section-admin" class="portal-section-content hidden">
+                    <h3 class="section-title">Admin · Mitarbeiterübersicht</h3>
+                    <p class="info">
+                        Hier sehen Sie alle im System angelegten Mitarbeiter. Über die Kacheln können Sie später
+                        direkt auf die jeweilige Mitarbeiter-Oberfläche zugreifen (Unterweisungen, Stundenzettel, Verträge).
+                    </p>
+                    <div class="admin-message" id="admin-message"></div>
+                    <div id="employee-grid" class="employee-grid"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script type="module">
+    // HIER DEINE SUPABASE-DATEN EINTRAGEN:
+    const SUPABASE_URL = 'https://njjnyodpwpkpjdjxbmvo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qam55b2Rwd3BrcGpkanhibXZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTg5MDQsImV4cCI6MjA3OTczNDkwNH0.aHBJ_g1zHZlWjceUFas_v2lYfrcjv8PuhPEAFpGj3_E';
+
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // DOM-REFERENZEN
+    const authSection      = document.getElementById('auth-section');
+    const portalSection    = document.getElementById('portal-section');
+
+    const authError        = document.getElementById('auth-error');
+    const authSuccess      = document.getElementById('auth-success');
+    const emailInput       = document.getElementById('email');
+    const passwordInput    = document.getElementById('password');
+    const loginBtn         = document.getElementById('login-btn');
+    const registerBtn      = document.getElementById('register-btn');
+
+    const logoutBtn        = document.getElementById('logout-btn');
+    const topUserText      = document.getElementById('top-user-text');
+
+    const userNameText     = document.getElementById('user-name-text');
+    const roleBadge        = document.getElementById('role-badge');
+
+    const sidebarUserRole  = document.getElementById('sidebar-user-role');
+    const sidebarNav       = document.getElementById('sidebar-nav');
+    const sidebarAdminLabel= document.getElementById('sidebar-admin-label');
+    const sidebarAdminLink = document.getElementById('sidebar-admin-link');
+
+    const tileAdmin        = document.getElementById('tile-admin');
+
+    const documentsMessage = document.getElementById('documents-message');
+    const documentsList    = document.getElementById('documents-list');
+
+    const employeeGrid     = document.getElementById('employee-grid');
+    const adminMessage     = document.getElementById('admin-message');
+
+    let currentUser   = null;
+    let currentProfile= null;
+
+    function showAuthError(msg) {
+        authError.textContent = msg;
+        authError.classList.remove('hidden');
+        authSuccess.classList.add('hidden');
+    }
+
+    function showAuthSuccess(msg) {
+        authSuccess.textContent = msg;
+        authSuccess.classList.remove('hidden');
+        authError.classList.add('hidden');
+    }
+
+    function clearAuthMessages() {
+        authError.classList.add('hidden');
+        authSuccess.classList.add('hidden');
+    }
+
+    function setActiveSection(targetId) {
+        const allSections = [
+            'section-dashboard',
+            'section-documents',
+            'section-timesheet',
+            'section-arbeitsvertrag',
+            'section-admin'
+        ];
+        allSections.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (id === targetId) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        });
+
+        // Sidebar
+        const items = sidebarNav.querySelectorAll('li');
+        items.forEach(li => {
+            const t = li.getAttribute('data-target');
+            if (t === targetId) li.classList.add('active');
+            else li.classList.remove('active');
+        });
+
+        // Tiles
+        document.querySelectorAll('.tile-card').forEach(tile => {
+            const t = tile.getAttribute('data-target');
+            if (t === targetId) tile.classList.add('active');
+            else tile.classList.remove('active');
+        });
+    }
+
+    function initNavigation() {
+        // Sidebar
+        sidebarNav.querySelectorAll('li').forEach(li => {
+            li.addEventListener('click', () => {
+                const target = li.getAttribute('data-target');
+                if (target) setActiveSection(target);
+            });
+        });
+
+        // Dashboard-Kacheln
+        document.querySelectorAll('.tile-card').forEach(tile => {
+            tile.addEventListener('click', () => {
+                const target = tile.getAttribute('data-target');
+                if (target) setActiveSection(target);
+            });
+        });
+
+        // Startansicht: Dashboard + Dokumente-Sektion sichtbar
+        setActiveSection('section-dashboard');
+    }
+
+    async function loadProfile(user) {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name, role, email')
+            .eq('id', user.id)
+            .single();
+
+        if (error) {
+            console.warn('Profil konnte nicht geladen werden:', error.message);
+            return { full_name: '', role: 'user', email: user.email };
+        }
+        return data;
+    }
+
+    async function loadDocumentsForUser(user) {
+        documentsMessage.textContent = '';
+        documentsList.innerHTML = '';
+
+        const { data, error } = await supabase
+            .from('documents')
+            .select('id, title, file_url, doc_type, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            documentsMessage.textContent = 'Fehler beim Laden der Dokumente: ' + error.message;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            documentsMessage.textContent = 'Es sind aktuell keine Dokumente für Sie hinterlegt.';
+            return;
+        }
+
+        data.forEach(doc => {
+            const li = document.createElement('li');
+            li.className = 'document-item';
+
+            const infoDiv = document.createElement('div');
+            const titleEl = document.createElement('div');
+            titleEl.className = 'document-item-title';
+            titleEl.textContent = doc.title || 'Dokument';
+
+            const metaEl = document.createElement('div');
+            metaEl.className = 'document-item-meta';
+            const parts = [];
+            if (doc.doc_type) parts.push(doc.doc_type);
+            if (doc.created_at) {
+                try {
+                    const d = new Date(doc.created_at);
+                    parts.push(d.toLocaleDateString('de-DE'));
+                } catch {}
+            }
+            metaEl.textContent = parts.join(' • ');
+
+            infoDiv.appendChild(titleEl);
+            if (parts.length > 0) infoDiv.appendChild(metaEl);
+
+            const link = document.createElement('a');
+            link.href = doc.file_url || '#';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = 'Öffnen';
+
+            li.appendChild(infoDiv);
+            li.appendChild(link);
+
+            documentsList.appendChild(li);
+        });
+    }
+
+    async function loadEmployeeGrid() {
+        if (!currentProfile || currentProfile.role !== 'admin') {
+            adminMessage.textContent = 'Keine Admin-Berechtigung.';
+            employeeGrid.innerHTML = '';
+            return;
+        }
+
+        adminMessage.textContent = 'Lade Mitarbeiter...';
+        employeeGrid.innerHTML = '';
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .order('full_name', { ascending: true });
+
+        if (error) {
+            adminMessage.textContent = 'Fehler beim Laden der Mitarbeiter: ' + error.message;
+            return;
+        }
+
+        adminMessage.textContent = `Es wurden ${data.length} Mitarbeiter geladen.`;
+
+        data.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'employee-card';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'employee-avatar';
+            const initials = (p.full_name || p.email || '?')
+                .split(' ')
+                .map(x => x.trim()[0])
+                .filter(Boolean)
+                .slice(0,2)
+                .join('')
+                .toUpperCase();
+            avatar.textContent = initials || '?';
+
+            const infoCol = document.createElement('div');
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'employee-info-main';
+            nameEl.textContent = p.full_name || '(kein Name)';
+
+            const emailEl = document.createElement('div');
+            emailEl.className = 'employee-info-sub';
+            emailEl.textContent = p.email || '';
+
+            const roleRow = document.createElement('div');
+            roleRow.className = 'employee-role';
+            const roleLabel = document.createElement('span');
+            roleLabel.textContent = 'Rolle: ';
+            const roleSelect = document.createElement('select');
+            const optUser = document.createElement('option');
+            optUser.value = 'user';
+            optUser.textContent = 'Mitarbeiter';
+            const optAdmin = document.createElement('option');
+            optAdmin.value = 'admin';
+            optAdmin.textContent = 'Administrator';
+            roleSelect.appendChild(optUser);
+            roleSelect.appendChild(optAdmin);
+            roleSelect.value = p.role || 'user';
+
+            roleRow.appendChild(roleLabel);
+            roleRow.appendChild(roleSelect);
+
+            const actions = document.createElement('div');
+            actions.className = 'employee-actions';
+
+            const btnOpen = document.createElement('button');
+            btnOpen.className = 'btn-small primary';
+            btnOpen.textContent = 'Mitarbeiter öffnen';
+            btnOpen.addEventListener('click', () => {
+                // Später: echte "Mitarbeiter-Ansicht" öffnen
+                alert(`Später öffnet sich hier die Oberfläche von:\n${p.full_name || p.email}`);
+            });
+
+            const btnSave = document.createElement('button');
+            btnSave.className = 'btn-small grey';
+            btnSave.textContent = 'Rolle speichern';
+            btnSave.addEventListener('click', async () => {
+                await updateUserRole(p.id, roleSelect.value, p.email);
+            });
+
+            actions.appendChild(btnOpen);
+            actions.appendChild(btnSave);
+
+            infoCol.appendChild(nameEl);
+            infoCol.appendChild(emailEl);
+            infoCol.appendChild(roleRow);
+            infoCol.appendChild(actions);
+
+            card.appendChild(avatar);
+            card.appendChild(infoCol);
+
+            employeeGrid.appendChild(card);
+        });
+    }
+
+    async function updateUserRole(userId, newRole, email) {
+        if (!currentProfile || currentProfile.role !== 'admin') return;
+
+        const sicher = confirm(`Soll die Rolle von "${email}" wirklich auf "${newRole === 'admin' ? 'Administrator' : 'Mitarbeiter'}" geändert werden?`);
+        if (!sicher) return;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role: newRole })
+            .eq('id', userId);
+
+        if (error) {
+            adminMessage.textContent = 'Fehler beim Speichern der Rolle: ' + error.message;
+            return;
+        }
+
+        adminMessage.textContent = 'Rolle erfolgreich geändert.';
+        await loadEmployeeGrid();
+    }
+
+    async function showPortal(user) {
+        currentUser = user;
+        currentProfile = await loadProfile(user);
+
+        const nameText = currentProfile.full_name || user.email;
+        userNameText.textContent = nameText;
+        topUserText.textContent = `${nameText} (${currentProfile.role === 'admin' ? 'Administrator' : 'Mitarbeiter'})`;
+
+        sidebarUserRole.textContent = `Rolle: ${currentProfile.role === 'admin' ? 'Administrator' : 'Mitarbeiter'}`;
+
+        if (currentProfile.role === 'admin') {
+            roleBadge.classList.remove('hidden');
+            roleBadge.textContent = 'Administrator';
+            sidebarAdminLabel.classList.remove('hidden');
+            sidebarAdminLink.classList.remove('hidden');
+            tileAdmin?.classList.remove('hidden');
+        } else {
+            roleBadge.classList.add('hidden');
+            sidebarAdminLabel.classList.add('hidden');
+            sidebarAdminLink.classList.add('hidden');
+            tileAdmin?.classList.add('hidden');
+        }
+
+        // Bereiche
+        authSection.classList.add('hidden');
+        portalSection.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+
+        // Dokumente laden
+        await loadDocumentsForUser(user);
+
+        // Admin-Grid laden (falls Admin)
+        if (currentProfile.role === 'admin') {
+            await loadEmployeeGrid();
+        }
+
+        // Start: Dashboard
+        setActiveSection('section-dashboard');
+    }
+
+    function showLogin() {
+        currentUser = null;
+        currentProfile = null;
+        authSection.classList.remove('hidden');
+        portalSection.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+        topUserText.textContent = '';
+        clearAuthMessages();
+    }
+
+    // =========================================
+    // AUTH EVENTS
+    // =========================================
+    loginBtn.addEventListener('click', async () => {
+        clearAuthMessages();
+        const email = emailInput.value.trim();
+        const pw    = passwordInput.value.trim();
+
+        if (!email || !pw) {
+            showAuthError('Bitte E-Mail und Passwort eingeben.');
+            return;
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+
+        if (error) {
+            showAuthError('Login fehlgeschlagen: ' + error.message);
+            return;
+        }
+
+        showAuthSuccess('Login erfolgreich.');
+        if (data.user) await showPortal(data.user);
+    });
+
+    registerBtn.addEventListener('click', async () => {
+        clearAuthMessages();
+        const email = emailInput.value.trim();
+        const pw    = passwordInput.value.trim();
+
+        if (!email || !pw) {
+            showAuthError('Bitte E-Mail und Passwort eingeben.');
+            return;
+        }
+        if (pw.length < 6) {
+            showAuthError('Das Passwort sollte mindestens 6 Zeichen haben.');
+            return;
+        }
+
+        const { error } = await supabase.auth.signUp({ email, password: pw });
+        if (error) {
+            showAuthError('Registrierung fehlgeschlagen: ' + error.message);
+            return;
+        }
+
+        showAuthSuccess('Registrierung erfolgreich. Bitte E-Mail bestätigen und anschließend einloggen.');
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        showLogin();
+    });
+
+    // =========================================
+    // SESSION CHECK & INIT
+    // =========================================
+    async function checkSession() {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+            console.error('Fehler bei getSession:', error.message);
+            showLogin();
+            return;
+        }
+        if (data.session && data.session.user) {
+            await showPortal(data.session.user);
+        } else {
+            showLogin();
+        }
+    }
+
+    // Navigation initialisieren und Session prüfen
+    initNavigation();
+    checkSession();
+</script>
+</body>
+</html>
