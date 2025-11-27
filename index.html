@@ -520,22 +520,25 @@
         .employee-role-selector {
             margin-top: 4px;
             display: flex;
-            gap: 8px;
+            gap: 4px;
             align-items: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .employee-role-selector label {
              margin: 0;
+             margin-right: 4px;
         }
 
         .employee-role-selector select {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             padding: 3px 4px;
             border-radius: 4px;
             border: 1px solid #ccc;
             width: auto;
-            max-width: 130px;
+            flex: 1;
+            min-width: 80px;
         }
 
         .employee-actions {
@@ -1309,8 +1312,6 @@
         logoutBtn.classList.remove('hidden');
         topUserText.textContent = `${user.email} (wartet auf Freigabe)`;
         pendingMessage.textContent = `Angemeldet als: ${user.email}. Bitte warten Sie auf die Freischaltung.`;
-        // No timer needed for pending really, but safer to have it or just sign them out? 
-        // We'll keep them logged in but restricted.
         resetInactivityTimer();
     }
 
@@ -1325,7 +1326,6 @@
 
         if (error || !profile) {
             console.error('Profil nicht gefunden', error);
-            // Fallback: pending or error
             showPending(user);
             return;
         }
@@ -1410,7 +1410,7 @@
 
     function renderDocumentList(listEl, docs) {
         listEl.innerHTML = '';
-        if (!docs || docs.length === 0) return; // Msg is handled via separate div
+        if (!docs || docs.length === 0) return;
 
         docs.forEach(doc => {
             const li = document.createElement('li');
@@ -1568,10 +1568,11 @@
         
         const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
         
-        // Selects
+        // Role Select
         const roleSel = document.createElement('select');
         roleSel.innerHTML = `<option value="user">Mitarbeiter</option><option value="admin">Administrator</option>`;
         
+        // Type Select
         const typeSel = document.createElement('select');
         typeSel.innerHTML = `<option value="fulltime">Vollzeit</option><option value="minijob">Minijob</option>`;
 
@@ -1586,7 +1587,7 @@
                 </div>
             </div>
         `;
-        // Append elements manually to attach events
+        
         card.querySelector('.employee-role-selector').appendChild(roleSel);
         
         const typeDiv = document.createElement('div');
@@ -1615,7 +1616,7 @@
         actions.appendChild(btnApprove);
         actions.appendChild(btnOpen);
         
-        // Insert typeDiv before actions, inside the main div (child 1)
+        // Insert typeDiv before actions
         card.children[1].appendChild(typeDiv);
         card.children[1].appendChild(actions);
 
@@ -1644,14 +1645,26 @@
             roleSel.innerHTML = `<option value="user" ${p.role==='user'?'selected':''}>Mitarbeiter</option>
                                  <option value="admin" ${p.role==='admin'?'selected':''}>Administrator</option>`;
             
+            // Edit Type (Neu hinzugefügt)
+            const typeSel = document.createElement('select');
+            typeSel.innerHTML = `<option value="fulltime" ${p.employment_type==='fulltime'?'selected':''}>Vollzeit</option>
+                                 <option value="minijob" ${p.employment_type==='minijob'?'selected':''}>Minijob</option>`;
+            
+            if(p.role === 'admin') typeSel.disabled = true;
+
+            roleSel.addEventListener('change', () => {
+                typeSel.disabled = (roleSel.value === 'admin');
+            });
+            
             // Actions
             const actions = document.createElement('div');
             actions.className = 'employee-actions';
             
             const btnSave = document.createElement('button');
             btnSave.className = 'btn-small grey';
-            btnSave.textContent = 'Rolle speichern';
-            btnSave.onclick = () => updateUserRole(p.id, roleSel.value);
+            btnSave.textContent = 'Speichern'; // Umbenannt, da jetzt Rolle & Art gespeichert werden
+            // Update Funktion angepasst
+            btnSave.onclick = () => updateUserStatus(p.id, roleSel.value, typeSel.value);
 
             const btnOpen = document.createElement('button');
             btnOpen.className = 'btn-small primary';
@@ -1671,7 +1684,15 @@
             `;
             
             card.querySelector('.employee-role-selector').appendChild(roleSel);
-            card.children[1].appendChild(actions); // Append actions
+            
+            // Type Selector Container
+            const typeDiv = document.createElement('div');
+            typeDiv.className = 'employee-role-selector';
+            typeDiv.innerHTML = '<label>Art:</label>';
+            typeDiv.appendChild(typeSel);
+            
+            card.children[1].appendChild(typeDiv);
+            card.children[1].appendChild(actions); 
             
             grid.appendChild(card);
         });
@@ -1696,11 +1717,16 @@
         else loadEmployeeGrid();
     }
 
-    async function updateUserRole(id, role) {
-        const { error } = await supabaseClient.from('profiles').update({ role: role }).eq('id', id);
+    async function updateUserStatus(id, role, empType) {
+        const updates = {
+            role: role,
+            employment_type: (role === 'admin') ? null : empType
+        };
+
+        const { error } = await supabaseClient.from('profiles').update(updates).eq('id', id);
         if(error) alert('Fehler: ' + error.message);
         else {
-            alert('Rolle aktualisiert');
+            alert('Daten aktualisiert');
             loadEmployeeGrid();
         }
     }
@@ -1729,7 +1755,7 @@
         adminUnterwMessage.textContent = 'Upload läuft...';
         
         try {
-            const category = adminUploadCategory.value; // 'unterweisung' or 'krankmeldung' (though UI mostly implies Unterweisung)
+            const category = adminUploadCategory.value; 
             const scope = adminUnterwScope.value;
             
             // Filter Targets
@@ -1876,12 +1902,12 @@
             settingsProfileMsg.textContent = 'Fehler: ' + error.message;
             settingsProfileMsg.style.color = 'red';
         } else {
-            // Update Auth Meta (Optional but good practice)
+            // Update Auth Meta
             await supabaseClient.auth.updateUser({ data: { full_name: updates.full_name } });
             
             settingsProfileMsg.textContent = 'Gespeichert.';
             settingsProfileMsg.style.color = 'green';
-            userNameText.textContent = updates.full_name; // Immediate UI update
+            userNameText.textContent = updates.full_name; 
         }
     });
 
@@ -2021,7 +2047,7 @@
              authSection.classList.remove('hidden');
              loginBox.classList.add('hidden');
              resetBox.classList.remove('hidden');
-             return; // Stop here, user needs to reset pw
+             return; 
         }
 
         const { data } = await supabaseClient.auth.getSession();
