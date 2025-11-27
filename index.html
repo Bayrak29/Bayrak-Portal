@@ -355,7 +355,18 @@
             font-size: 1rem;
         }
 
-        /* DOKUMENTE (Liste) */
+        /* DOKUMENT-KATEGORIEN */
+        .document-category {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        .document-category h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+        }
+
         .document-list {
             list-style: none;
             padding: 0;
@@ -392,6 +403,16 @@
             text-decoration: none;
             font-size: 0.8rem;
             white-space: nowrap;
+        }
+
+        .doc-badge-new {
+            display: inline-block;
+            background: #ff9800;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 0 6px;
+            margin-left: 4px;
         }
 
         /* ADMIN: MITARBEITER-KACHELN */
@@ -721,7 +742,7 @@
                         <div class="tile-card active" data-target="section-documents">
                             <div class="tile-icon">📄</div>
                             <div class="tile-title">Unterweisungen</div>
-                            <div class="tile-sub">Dokumente &amp; Infos</div>
+                            <div class="tile-sub">Nachweise &amp; Dokumente</div>
                         </div>
                         <div class="tile-card" data-target="section-timesheet">
                             <div class="tile-icon">🕒</div>
@@ -753,10 +774,45 @@
                 <div id="section-documents" class="portal-section-content hidden">
                     <h3 class="section-title">Unterweisungen / Dokumente</h3>
                     <p class="info">
-                        Hier sehen Sie alle Dokumente, die Ihnen persönlich zugeordnet wurden (Unterweisungen, Verträge, Informationen).
+                        In diesem Bereich sehen Sie:
+                        <br>• Unterweisungsnachweise (vom Admin bereitgestellt)
+                        <br>• Ihre hochgeladenen Stundenzettel-Nachweise
+                        <br>• Ihre hochgeladenen Krankmeldungen
                     </p>
-                    <div id="documents-message" class="info"></div>
-                    <ul id="documents-list" class="document-list"></ul>
+
+                    <!-- Unterweisungen -->
+                    <div class="document-category">
+                        <h4>Unterweisungen</h4>
+                        <p class="info">
+                            Unterweisungsnachweise und Dokumente, die von der Firma bereitgestellt wurden.
+                        </p>
+                        <div id="docs-unterweisungen-message" class="info"></div>
+                        <ul id="docs-unterweisungen-list" class="document-list"></ul>
+                    </div>
+
+                    <!-- Stundenzettel-Nachweise (Upload für Mitarbeiter) -->
+                    <div class="document-category">
+                        <h4>Stundenzettel-Nachweise</h4>
+                        <p class="info">
+                            Laden Sie hier Ihre Stundenzettel / Rapporte als PDF oder Foto hoch.
+                        </p>
+                        <button id="upload-timesheet-btn" class="btn-primary">Stundenzettel hochladen</button>
+                        <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" capture="environment" class="hidden">
+                        <div id="docs-timesheets-message" class="info"></div>
+                        <ul id="docs-timesheets-list" class="document-list"></ul>
+                    </div>
+
+                    <!-- Krankmeldungen (Upload für Mitarbeiter) -->
+                    <div class="document-category">
+                        <h4>Krankmeldungen</h4>
+                        <p class="info">
+                            Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen.
+                        </p>
+                        <button id="upload-sicknote-btn" class="btn-primary">Krankmeldung hochladen</button>
+                        <input type="file" id="upload-sicknote-input" accept="image/*,application/pdf" capture="environment" class="hidden">
+                        <div id="docs-sicknotes-message" class="info"></div>
+                        <ul id="docs-sicknotes-list" class="document-list"></ul>
+                    </div>
                 </div>
 
                 <!-- STUNDENZETTEL (Platzhalter) -->
@@ -848,6 +904,42 @@
                     <div id="employee-grid"></div>
 
                     <div class="admin-message" id="admin-message"></div>
+
+                    <!-- Admin-Dokumentübersicht -->
+                    <h4 style="margin-top:18px;">Stundenzettel (alle Mitarbeiter)</h4>
+                    <div id="admin-timesheets-overview" class="info"></div>
+
+                    <h4 style="margin-top:14px;">Krankmeldungen (alle Mitarbeiter)</h4>
+                    <div id="admin-sicknotes-overview" class="info"></div>
+
+                    <h4 style="margin-top:14px;">Unterweisungen verwalten</h4>
+                    <div id="admin-unterweisungen-manager" class="settings-card">
+                        <h4 style="margin-top:0;">Unterweisungen hochladen</h4>
+                        <p>
+                            Laden Sie eine Unterweisung hoch und wählen Sie, für welche Mitarbeiter sie gelten soll
+                            (einzelner Mitarbeiter, alle Vollzeit, alle Minijobber oder alle Mitarbeiter).
+                        </p>
+
+                        <label for="admin-unterweisungen-scope">Zielgruppe</label>
+                        <select id="admin-unterweisungen-scope">
+                            <option value="all">Alle Mitarbeiter</option>
+                            <option value="fulltime">Alle Vollzeit-Mitarbeiter</option>
+                            <option value="minijob">Alle Minijobber</option>
+                            <option value="single">Einzelner Mitarbeiter</option>
+                        </select>
+
+                        <label for="admin-unterweisungen-user">Mitarbeiter (nur bei „Einzelner Mitarbeiter“)</label>
+                        <select id="admin-unterweisungen-user" disabled>
+                            <option value="">Bitte wählen...</option>
+                        </select>
+
+                        <button id="admin-unterweisungen-upload-btn" class="btn-primary" style="margin-top:10px;">
+                            Unterweisung hochladen
+                        </button>
+                        <input type="file" id="admin-unterweisungen-input" accept="image/*,application/pdf" class="hidden">
+
+                        <div id="admin-unterweisungen-message" class="settings-message"></div>
+                    </div>
                 </div>
 
                 <!-- ADMIN: MITARBEITER-DETAILANSICHT -->
@@ -874,6 +966,7 @@
     // SUPABASE-DATEN
     const SUPABASE_URL = 'https://njjnyodpwpkpjdjxbmvo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qam55b2Rwd3BrcGpkanhibXZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTg5MDQsImV4cCI6MjA3OTczNDkwNH0.aHBJ_g1zHZlWjceUFas_v2lYfrcjv8PuhPEAFpGj3_E';
+    const STORAGE_BUCKET = 'documents'; // Supabase Storage Bucket-Name (bitte im Supabase-Dashboard anlegen)
 
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -927,14 +1020,32 @@
     const tileAdmin        = document.getElementById('tile-admin');
     const tileAdminBadge   = document.getElementById('tile-admin-badge');
 
-    const documentsMessage = document.getElementById('documents-message');
-    const documentsList    = document.getElementById('documents-list');
+    // Dokumente (Mitarbeiter-Ansicht, Kategorien)
+    const docsUnterwMessage     = document.getElementById('docs-unterweisungen-message');
+    const docsUnterwList        = document.getElementById('docs-unterweisungen-list');
+    const uploadTimesheetBtn    = document.getElementById('upload-timesheet-btn');
+    const uploadTimesheetInput  = document.getElementById('upload-timesheet-input');
+    const docsTimesheetsMessage = document.getElementById('docs-timesheets-message');
+    const docsTimesheetsList    = document.getElementById('docs-timesheets-list');
+    const uploadSicknoteBtn     = document.getElementById('upload-sicknote-btn');
+    const uploadSicknoteInput   = document.getElementById('upload-sicknote-input');
+    const docsSicknotesMessage  = document.getElementById('docs-sicknotes-message');
+    const docsSicknotesList     = document.getElementById('docs-sicknotes-list');
 
+    // Admin-Mitarbeiter & Dokumente
     const employeeGrid     = document.getElementById('employee-grid');
     const pendingEmployeeGrid = document.getElementById('pending-employee-grid');
     const pendingRequestsBox  = document.getElementById('pending-requests-box');
     const adminMessage     = document.getElementById('admin-message');
     const adminRequestsCounter = document.getElementById('admin-requests-counter');
+
+    const adminTimesheetsOverview = document.getElementById('admin-timesheets-overview');
+    const adminSicknotesOverview  = document.getElementById('admin-sicknotes-overview');
+    const adminUnterwScopeSelect  = document.getElementById('admin-unterweisungen-scope');
+    const adminUnterwUserSelect   = document.getElementById('admin-unterweisungen-user');
+    const adminUnterwUploadBtn    = document.getElementById('admin-unterweisungen-upload-btn');
+    const adminUnterwInput        = document.getElementById('admin-unterweisungen-input');
+    const adminUnterwMessage      = document.getElementById('admin-unterweisungen-message');
 
     const employeeDetailSection      = document.getElementById('section-employee-detail');
     const employeeDetailBackBtn      = document.getElementById('employee-detail-back');
@@ -958,6 +1069,25 @@
     let currentUser   = null;
     let currentProfile= null;
     let selectedEmployee = null;
+    let allProfilesCache = [];
+
+    // Auto-Logout nach 10 Minuten Inaktivität
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
+    let inactivityTimer = null;
+
+    function resetInactivityTimer() {
+        if (!currentUser) return;
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(async () => {
+            await supabase.auth.signOut();
+            alert('Aus Sicherheitsgründen wurden Sie nach 10 Minuten Inaktivität abgemeldet.');
+            showLogin();
+        }, INACTIVITY_LIMIT_MS);
+    }
+
+    ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(evt => {
+        window.addEventListener(evt, resetInactivityTimer);
+    });
 
     // Passwort-Policy: min. 8, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen
     function isStrongPassword(pw) {
@@ -1015,6 +1145,15 @@
             if (t === targetId) tile.classList.add('active');
             else tile.classList.remove('active');
         });
+
+        // Sektionen-spezifische Nachladelogik
+        if (targetId === 'section-documents' && currentUser) {
+            loadDocumentsForUser(currentUser);
+        }
+        if (targetId === 'section-admin' && currentProfile?.role === 'admin') {
+            loadEmployeeGrid();
+            loadAdminDocumentOverviews();
+        }
     }
 
     function initNavigation() {
@@ -1106,27 +1245,15 @@
         settingsNewPw2.value    = '';
     }
 
-    async function loadDocumentsForUser(user) {
-        documentsMessage.textContent = '';
-        documentsList.innerHTML = '';
-
-        const { data, error } = await supabase
-            .from('documents')
-            .select('id, title, file_url, doc_type, created_at')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            documentsMessage.textContent = 'Fehler beim Laden der Dokumente: ' + error.message;
+    function renderDocumentList(listEl, msgEl, docs, emptyText) {
+        listEl.innerHTML = '';
+        msgEl.textContent = '';
+        if (!docs || docs.length === 0) {
+            msgEl.textContent = emptyText;
             return;
         }
 
-        if (!data || data.length === 0) {
-            documentsMessage.textContent = 'Es sind aktuell keine Dokumente für Sie hinterlegt.';
-            return;
-        }
-
-        data.forEach(doc => {
+        docs.forEach(doc => {
             const li = document.createElement('li');
             li.className = 'document-item';
 
@@ -1138,7 +1265,11 @@
             const metaEl = document.createElement('div');
             metaEl.className = 'document-item-meta';
             const parts = [];
-            if (doc.doc_type) parts.push(doc.doc_type);
+            if (doc.doc_type) {
+                if (doc.doc_type === 'stundenzettel') parts.push('Stundenzettel');
+                else if (doc.doc_type === 'krankmeldung') parts.push('Krankmeldung');
+                else parts.push('Unterweisung');
+            }
             if (doc.created_at) {
                 try {
                     const d = new Date(doc.created_at);
@@ -1158,9 +1289,43 @@
 
             li.appendChild(infoDiv);
             li.appendChild(link);
-
-            documentsList.appendChild(li);
+            listEl.appendChild(li);
         });
+    }
+
+    async function loadDocumentsForUser(user) {
+        docsUnterwMessage.textContent = '';
+        docsTimesheetsMessage.textContent = '';
+        docsSicknotesMessage.textContent = '';
+        docsUnterwList.innerHTML = '';
+        docsTimesheetsList.innerHTML = '';
+        docsSicknotesList.innerHTML = '';
+
+        const { data, error } = await supabase
+            .from('documents')
+            .select('id, title, file_url, doc_type, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            docsUnterwMessage.textContent = 'Fehler beim Laden der Dokumente: ' + error.message;
+            return;
+        }
+
+        const unterweisungen = [];
+        const timesheets     = [];
+        const sicknotes      = [];
+
+        (data || []).forEach(doc => {
+            const type = (doc.doc_type || '').toLowerCase();
+            if (type === 'stundenzettel') timesheets.push(doc);
+            else if (type === 'krankmeldung') sicknotes.push(doc);
+            else unterweisungen.push(doc); // Standard: Unterweisungen
+        });
+
+        renderDocumentList(docsUnterwList, docsUnterwMessage, unterweisungen, 'Es sind aktuell keine Unterweisungen für Sie hinterlegt.');
+        renderDocumentList(docsTimesheetsList, docsTimesheetsMessage, timesheets, 'Es wurden noch keine Stundenzettel-Nachweise hochgeladen.');
+        renderDocumentList(docsSicknotesList, docsSicknotesMessage, sicknotes, 'Es wurden noch keine Krankmeldungen hochgeladen.');
     }
 
     function updatePendingBadges(count) {
@@ -1279,6 +1444,8 @@
             updatePendingBadges(0);
             return;
         }
+
+        allProfilesCache = data || [];
 
         const pending = data.filter(p => !p.is_approved);
         updatePendingBadges(pending.length);
@@ -1545,6 +1712,30 @@
         createCategoryBlock('Mitarbeiter (ohne Kategorie)', others);
 
         adminMessage.textContent = `Es wurden ${data.length} Mitarbeiter geladen.`;
+        populateAdminUnterweisungenUserSelect();
+    }
+
+    function populateAdminUnterweisungenUserSelect() {
+        if (!adminUnterwUserSelect) return;
+        const previousValue = adminUnterwUserSelect.value;
+
+        adminUnterwUserSelect.innerHTML = '';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Bitte wählen...';
+        adminUnterwUserSelect.appendChild(defaultOpt);
+
+        const approved = (allProfilesCache || []).filter(p => p.is_approved);
+        approved.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.full_name || p.email || '(kein Name)';
+            adminUnterwUserSelect.appendChild(opt);
+        });
+
+        if (approved.some(p => p.id === previousValue)) {
+            adminUnterwUserSelect.value = previousValue;
+        }
     }
 
     async function updateUserRole(userId, newRole, email) {
@@ -1605,6 +1796,138 @@
         await loadEmployeeGrid();
     }
 
+    // Admin-Dokumentübersicht (Stundenzettel & Krankmeldungen)
+    async function loadAdminDocumentOverviews() {
+        if (!currentProfile || currentProfile.role !== 'admin') {
+            adminTimesheetsOverview.textContent = '';
+            adminSicknotesOverview.textContent = '';
+            return;
+        }
+
+        adminTimesheetsOverview.textContent = 'Lade Stundenzettel...';
+        adminSicknotesOverview.textContent = 'Lade Krankmeldungen...';
+
+        const { data, error } = await supabase
+            .from('documents')
+            .select('id, title, file_url, doc_type, created_at, user_id')
+            .in('doc_type', ['stundenzettel', 'krankmeldung'])
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            adminTimesheetsOverview.textContent = 'Fehler beim Laden: ' + error.message;
+            adminSicknotesOverview.textContent = 'Fehler beim Laden: ' + error.message;
+            return;
+        }
+
+        const docs = data || [];
+        const userIds = [...new Set(docs.map(d => d.user_id).filter(Boolean))];
+
+        let profileMap = {};
+        if (userIds.length > 0) {
+            const { data: profs, error: pErr } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+
+            if (!pErr && profs) {
+                profileMap = profs.reduce((acc, p) => {
+                    acc[p.id] = p;
+                    return acc;
+                }, {});
+            }
+        }
+
+        const timesheets = docs.filter(d => (d.doc_type || '').toLowerCase() === 'stundenzettel');
+        const sicknotes  = docs.filter(d => (d.doc_type || '').toLowerCase() === 'krankmeldung');
+
+        const nowIso = new Date().toISOString();
+        const tsKey  = 'bayrak_admin_last_opened_timesheets';
+        const snKey  = 'bayrak_admin_last_opened_sicknotes';
+
+        const lastTsOpened = new Date(localStorage.getItem(tsKey) || 0);
+        const lastSnOpened = new Date(localStorage.getItem(snKey) || 0);
+
+        let tsNewCount = 0;
+        let snNewCount = 0;
+
+        function groupDocsByUserYearMonth(list, lastOpened) {
+            const grouped = {};
+            list.forEach(doc => {
+                const createdAt = doc.created_at ? new Date(doc.created_at) : null;
+                if (createdAt && createdAt > lastOpened) {
+                    if ((doc.doc_type || '').toLowerCase() === 'stundenzettel') tsNewCount++;
+                    if ((doc.doc_type || '').toLowerCase() === 'krankmeldung') snNewCount++;
+                }
+
+                const userId = doc.user_id;
+                if (!userId) return;
+                const profile = profileMap[userId];
+                const userName = profile?.full_name || profile?.email || '(Unbekannt)';
+
+                const year = createdAt ? createdAt.getFullYear() : 'Unbekannt';
+                const month = createdAt ? (createdAt.getMonth() + 1).toString().padStart(2, '0') : '??';
+
+                if (!grouped[userName]) grouped[userName] = {};
+                const ymKey = `${year}-${month}`;
+                if (!grouped[userName][ymKey]) grouped[userName][ymKey] = [];
+                grouped[userName][ymKey].push(doc);
+            });
+            return grouped;
+        }
+
+        const tsGrouped = groupDocsByUserYearMonth(timesheets, lastTsOpened);
+        const snGrouped = groupDocsByUserYearMonth(sicknotes, lastSnOpened);
+
+        function renderAdminOverview(container, grouped, emptyText, newCount) {
+            container.innerHTML = '';
+            if (Object.keys(grouped).length === 0) {
+                container.textContent = emptyText;
+                return;
+            }
+
+            const infoTop = document.createElement('div');
+            infoTop.style.marginBottom = '6px';
+            infoTop.textContent = newCount > 0
+                ? `Es gibt ${newCount} neue Uploads seit Ihrem letzten Besuch dieses Bereichs.`
+                : 'Keine neuen Uploads seit Ihrem letzten Besuch dieses Bereichs.';
+            container.appendChild(infoTop);
+
+            Object.keys(grouped).sort().forEach(userName => {
+                const userHeader = document.createElement('div');
+                userHeader.style.fontWeight = '600';
+                userHeader.style.marginTop = '6px';
+                userHeader.textContent = userName;
+                container.appendChild(userHeader);
+
+                const ymEntries = grouped[userName];
+                Object.keys(ymEntries).sort().forEach(ym => {
+                    const ymDiv = document.createElement('div');
+                    ymDiv.style.marginLeft = '10px';
+                    ymDiv.style.marginTop = '2px';
+                    ymDiv.textContent = `• ${ym}: ${ymEntries[ym].length} Datei(en)`;
+                    container.appendChild(ymDiv);
+                });
+            });
+        }
+
+        renderAdminOverview(
+            adminTimesheetsOverview,
+            tsGrouped,
+            'Es wurden noch keine Stundenzettel-Nachweise hochgeladen.',
+            tsNewCount
+        );
+        renderAdminOverview(
+            adminSicknotesOverview,
+            snGrouped,
+            'Es wurden noch keine Krankmeldungen hochgeladen.',
+            snNewCount
+        );
+
+        // Markierung "neu" zurücksetzen, weil Admin Bereich jetzt geöffnet wurde
+        localStorage.setItem(tsKey, nowIso);
+        localStorage.setItem(snKey, nowIso);
+    }
+
     async function showPortal(user) {
         currentUser = user;
         currentProfile = await loadProfile(user);
@@ -1621,6 +1944,7 @@
             logoutBtn.classList.remove('hidden');
 
             pendingMessage.textContent = `Angemeldet als: ${displayName} (${currentProfile.role || 'Mitarbeiter'}). Ihr Zugang ist noch nicht freigegeben.`;
+            resetInactivityTimer();
             return;
         }
 
@@ -1655,15 +1979,21 @@
 
         if (currentProfile.role === 'admin') {
             await loadEmployeeGrid();
+            await loadAdminDocumentOverviews();
         }
 
         setActiveSection('section-dashboard');
+        resetInactivityTimer();
     }
 
     function showLogin() {
         currentUser = null;
         currentProfile = null;
         selectedEmployee = null;
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+        }
         authSection.classList.remove('hidden');
         portalSection.classList.add('hidden');
         pendingSection.classList.add('hidden');
@@ -1705,7 +2035,7 @@
             return;
         }
 
-        // Auth-User-Metadaten aktualisieren (optional, aber sauber)
+        // Auth-User-Metadaten aktualisieren
         const { error: userError } = await supabase.auth.updateUser({
             data: {
                 first_name: firstName,
@@ -1732,6 +2062,7 @@
         // Admin-Ansicht neu laden, damit Namen dort auch aktualisiert sind
         if (currentProfile.role === 'admin') {
             await loadEmployeeGrid();
+            await loadAdminDocumentOverviews();
         }
     });
 
@@ -1786,8 +2117,186 @@
         settingsNewPw2.value    = '';
     });
 
+    // Hilfsfunktionen für Uploads
+    function makeSafeFileName(name) {
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    }
+
+    async function uploadFileToStorage(file, pathPrefix) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const safeName = makeSafeFileName(file.name || 'upload');
+        const filePath = `${pathPrefix}/${timestamp}_${safeName}`;
+
+        const { data, error } = await supabase
+            .storage
+            .from(STORAGE_BUCKET)
+            .upload(filePath, file);
+
+        if (error) {
+            throw new Error('Upload-Fehler: ' + error.message);
+        }
+
+        const { data: pub } = supabase
+            .storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+
+        return pub.publicUrl;
+    }
+
+    async function insertDocumentRow(userId, title, docType, fileUrl) {
+        const { error } = await supabase
+            .from('documents')
+            .insert({
+                user_id: userId,
+                title,
+                doc_type: docType,
+                file_url: fileUrl
+            });
+
+        if (error) {
+            throw new Error('Fehler beim Speichern des Dokumenteintrags: ' + error.message);
+        }
+    }
+
+    // Upload Stundenzettel (Mitarbeiter)
+    if (uploadTimesheetBtn && uploadTimesheetInput) {
+        uploadTimesheetBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                alert('Bitte zuerst einloggen.');
+                return;
+            }
+            uploadTimesheetInput.click();
+        });
+
+        uploadTimesheetInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file || !currentUser) return;
+            docsTimesheetsMessage.textContent = 'Lade Datei hoch...';
+            try {
+                const url = await uploadFileToStorage(file, `stundenzettel/${currentUser.id}`);
+                const title = `Stundenzettel ${new Date().toLocaleDateString('de-DE')} – ${file.name}`;
+                await insertDocumentRow(currentUser.id, title, 'stundenzettel', url);
+                docsTimesheetsMessage.textContent = 'Stundenzettel erfolgreich hochgeladen.';
+                await loadDocumentsForUser(currentUser);
+            } catch (err) {
+                console.error(err);
+                docsTimesheetsMessage.textContent = String(err.message || err);
+            } finally {
+                uploadTimesheetInput.value = '';
+            }
+        });
+    }
+
+    // Upload Krankmeldung (Mitarbeiter)
+    if (uploadSicknoteBtn && uploadSicknoteInput) {
+        uploadSicknoteBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                alert('Bitte zuerst einloggen.');
+                return;
+            }
+            uploadSicknoteInput.click();
+        });
+
+        uploadSicknoteInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file || !currentUser) return;
+            docsSicknotesMessage.textContent = 'Lade Datei hoch...';
+            try {
+                const url = await uploadFileToStorage(file, `krankmeldungen/${currentUser.id}`);
+                const title = `Krankmeldung ${new Date().toLocaleDateString('de-DE')} – ${file.name}`;
+                await insertDocumentRow(currentUser.id, title, 'krankmeldung', url);
+                docsSicknotesMessage.textContent = 'Krankmeldung erfolgreich hochgeladen.';
+                await loadDocumentsForUser(currentUser);
+            } catch (err) {
+                console.error(err);
+                docsSicknotesMessage.textContent = String(err.message || err);
+            } finally {
+                uploadSicknoteInput.value = '';
+            }
+        });
+    }
+
+    // Admin: Unterweisungen hochladen
+    if (adminUnterwScopeSelect && adminUnterwUserSelect) {
+        adminUnterwScopeSelect.addEventListener('change', () => {
+            const val = adminUnterwScopeSelect.value;
+            const single = (val === 'single');
+            adminUnterwUserSelect.disabled = !single;
+        });
+    }
+
+    if (adminUnterwUploadBtn && adminUnterwInput) {
+        adminUnterwUploadBtn.addEventListener('click', () => {
+            if (!currentProfile || currentProfile.role !== 'admin') {
+                alert('Nur Administratoren können Unterweisungen hochladen.');
+                return;
+            }
+            adminUnterwInput.click();
+        });
+
+        adminUnterwInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file || !currentProfile || currentProfile.role !== 'admin') return;
+
+            adminUnterwMessage.textContent = 'Lade Unterweisung hoch...';
+            try {
+                const scope = adminUnterwScopeSelect.value;
+                let targetProfiles = [];
+
+                const approved = (allProfilesCache || []).filter(p => p.is_approved);
+
+                if (scope === 'all') {
+                    targetProfiles = approved;
+                } else if (scope === 'fulltime') {
+                    targetProfiles = approved.filter(p => p.role !== 'admin' && p.employment_type === 'fulltime');
+                } else if (scope === 'minijob') {
+                    targetProfiles = approved.filter(p => p.role !== 'admin' && p.employment_type === 'minijob');
+                } else if (scope === 'single') {
+                    const selId = adminUnterwUserSelect.value;
+                    if (!selId) {
+                        adminUnterwMessage.textContent = 'Bitte einen Mitarbeiter auswählen.';
+                        adminUnterwInput.value = '';
+                        return;
+                    }
+                    const prof = approved.find(p => p.id === selId);
+                    if (!prof) {
+                        adminUnterwMessage.textContent = 'Ausgewählter Mitarbeiter wurde nicht gefunden.';
+                        adminUnterwInput.value = '';
+                        return;
+                    }
+                    targetProfiles = [prof];
+                }
+
+                if (targetProfiles.length === 0) {
+                    adminUnterwMessage.textContent = 'Keine passenden Mitarbeiter für diese Auswahl gefunden.';
+                    adminUnterwInput.value = '';
+                    return;
+                }
+
+                const url = await uploadFileToStorage(file, 'unterweisungen/admin');
+                const baseTitle = file.name || 'Unterweisung';
+
+                for (const prof of targetProfiles) {
+                    const title = `${baseTitle} – ${prof.full_name || prof.email || ''}`.trim();
+                    await insertDocumentRow(prof.id, title, 'unterweisung', url);
+                }
+
+                adminUnterwMessage.textContent = `Unterweisung wurde für ${targetProfiles.length} Mitarbeiter gespeichert.`;
+                if (currentUser) {
+                    await loadDocumentsForUser(currentUser);
+                }
+            } catch (err) {
+                console.error(err);
+                adminUnterwMessage.textContent = String(err.message || err);
+            } finally {
+                adminUnterwInput.value = '';
+            }
+        });
+    }
+
     // AUTH EVENTS
-    loginBtn.addEventListener('click', async () => {
+    async function handleLogin() {
         clearAuthMessages();
         const email = emailInput.value.trim();
         const pw    = passwordInput.value.trim();
@@ -1806,6 +2315,18 @@
 
         showAuthSuccess('Login erfolgreich.');
         if (data.user) await showPortal(data.user);
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    emailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
     });
 
     registerBtn.addEventListener('click', async () => {
@@ -1898,7 +2419,7 @@
             return;
         }
         if (pw !== pw2) {
-            showAuthError('Die Passwörter stimmen nicht überein.');
+            showAuthError('Die Passwörter stimmen nicht überein.', 'error');
             return;
         }
 
@@ -1957,6 +2478,7 @@
             logoutBtn.classList.remove('hidden');
             topUserText.textContent = `${currentUser.email} (Passwort zurücksetzen)`;
             clearAuthMessages();
+            resetInactivityTimer();
             return;
         }
 
