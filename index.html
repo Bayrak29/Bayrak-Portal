@@ -1443,10 +1443,10 @@
         currentProfile = profile;
 
         // Wenn kein Admin und nicht freigeschaltet → Pending anzeigen
-if (!profile.is_approved && profile.role !== 'admin') {
-    showPending(user);
-    return;
-        }
+        if (!profile.is_approved && profile.role !== 'admin') {
+              showPending(user);
+               return;
+         }
 
         // Show Portal
         authSection.classList.add('hidden');
@@ -2419,3 +2419,4 @@ if (!profile.is_approved && profile.role !== 'admin') {
 </body>
 
 </html>
+
