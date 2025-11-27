@@ -1427,49 +1427,85 @@
     async function showPortal(user) {
         currentUser = user;
 
-        // Load Profile
-        const { data: profile, error } = await supabaseClient
+        // Profil laden
+        let { data: profile, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', user.id)
             .single();
 
+        // Wenn kein Profil gefunden wird → automatisch eins anlegen (für ersten Login)
         if (error || !profile) {
-            console.error('Profil nicht gefunden', error);
-            showPending(user);
-            return;
+            console.warn('Profil nicht gefunden, versuche neues Profil anzulegen', error);
+
+            const meta = user.user_metadata || {};
+            const firstName = meta.first_name || '';
+            const lastName = meta.last_name || '';
+            const fullName =
+                meta.full_name ||
+                `${firstName} ${lastName}`.trim() ||
+                user.email;
+
+            const { data: insertData, error: insertError } = await supabaseClient
+                .from('profiles')
+                .insert({
+                    id: user.id,
+                    email: user.email,
+                    first_name: firstName,
+                    last_name: lastName,
+                    full_name: fullName,
+                    role: 'admin',          // ersten User als Admin anlegen
+                    is_approved: true,
+                    employment_type: 'fulltime'
+                })
+                .select('*')
+                .single();
+
+            if (insertError || !insertData) {
+                console.error('Profil konnte nicht angelegt werden', insertError);
+                showPending(user);
+                return;
+            }
+
+            profile = insertData;
         }
 
         currentProfile = profile;
 
-        // Wenn kein Admin und nicht freigeschaltet → Pending anzeigen
-        if (!profile.is_approved && profile.role !== 'admin') {
-              showPending(user);
-               return;
-         }
+        const isAdmin = profile.role === 'admin';
+        const isApproved = profile.is_approved || isAdmin;
 
-        // Show Portal
+        // Normale User: ohne Freigabe → Pending
+        if (!isApproved) {
+            showPending(user);
+            return;
+        }
+
+        // === Portal anzeigen ===
         authSection.classList.add('hidden');
         pendingSection.classList.add('hidden');
         portalSection.classList.remove('hidden');
-        
-        // Update UI
+
         const name = profile.full_name || user.email;
-        const roleText = profile.role === 'admin' ? 'Administrator' : 'Mitarbeiter';
-        
+        const roleText = isAdmin ? 'Administrator' : 'Mitarbeiter';
+
         topUserText.textContent = `${name} (${roleText})`;
         logoutBtn.classList.remove('hidden');
         userNameText.textContent = name;
         sidebarUserRole.textContent = `Rolle: ${roleText}`;
 
         // Role Badge
-        roleBadge.textContent = profile.role === 'admin' ? 'ADMIN' : (profile.employment_type === 'fulltime' ? 'Vollzeit' : 'Minijob');
-        roleBadge.style.background = profile.role === 'admin' ? '#bbdefb' : (profile.employment_type === 'fulltime' ? '#e8f5e9' : '#fff3e0');
-        roleBadge.style.color = profile.role === 'admin' ? 'var(--blue-dark)' : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
+        roleBadge.textContent = isAdmin ? 'ADMIN' : (profile.employment_type === 'fulltime' ? 'VZ' : 'MJ');
+        roleBadge.style.background = isAdmin
+            ? 'var(--orange)'
+            : (profile.employment_type === 'fulltime' ? '#e8f5e9' : '#fff3e0');
+        roleBadge.style.color = isAdmin
+            ? '#fff'
+            : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
         roleBadge.classList.remove('hidden');
 
-        // Admin Links
-        if (profile.role === 'admin') {
+        // Admin-Links / Kacheln
+        if (isAdmin) {
             sidebarAdminLink.classList.remove('hidden');
             sidebarAdminUploadsLink.classList.remove('hidden');
             sidebarAdminLabel.classList.remove('hidden');
@@ -1484,7 +1520,7 @@
             tileAdminUploads.classList.add('hidden');
         }
 
-        // Initial Section
+        // Start-Section & Timer
         setActiveSection('section-dashboard');
         resetInactivityTimer();
     }
@@ -2419,4 +2455,5 @@
 </body>
 
 </html>
+
 
