@@ -1442,9 +1442,10 @@
 
         currentProfile = profile;
 
-        if (!profile.is_approved) {
-            showPending(user);
-            return;
+        // Wenn kein Admin und nicht freigeschaltet → Pending anzeigen
+if (!profile.is_approved && profile.role !== 'admin') {
+    showPending(user);
+    return;
         }
 
         // Show Portal
@@ -2416,4 +2417,5 @@
 
 </script>
 </body>
+
 </html>
