@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Bayrak Mitarbeiter-Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -72,6 +73,9 @@
         .top-user {
             font-size: 0.85rem;
             max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .btn-top {
@@ -114,16 +118,18 @@
             margin-top: 10px;
             font-size: 0.9rem;
         }
-
+        
         input[type="email"],
         input[type="password"],
-        input[type="text"] {
+        input[type="text"],
+        select { 
             width: 100%;
             padding: 7px 8px;
             margin-top: 3px;
             border-radius: 4px;
             border: 1px solid #ccc;
             font-size: 0.9rem;
+            background: #fff;
         }
 
         .btn-primary,
@@ -207,6 +213,7 @@
             border-radius: 6px;
             box-shadow: var(--card-shadow);
             padding: 14px 12px;
+            align-self: flex-start; /* Fixiert Sidebar, wenn Hauptcontent lang ist */
         }
 
         .sidebar-title {
@@ -235,6 +242,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: background 0.1s;
         }
 
         .sidebar-list li span.icon {
@@ -266,6 +274,7 @@
             margin-left: 4px;
             min-width: 16px;
             text-align: center;
+            line-height: 1.4;
         }
 
         /* Hauptbereich */
@@ -331,6 +340,7 @@
 
         .tile-card.active {
             border: 2px solid var(--orange);
+            padding: 14px 10px;
         }
 
         .tile-icon {
@@ -352,7 +362,8 @@
 
         h3.section-title {
             margin: 12px 0 6px 0;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
         /* DOKUMENT-KATEGORIEN */
@@ -364,7 +375,8 @@
 
         .document-category h4 {
             margin: 0 0 4px 0;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
+            font-weight: 600;
         }
 
         .document-list {
@@ -414,11 +426,43 @@
             padding: 0 6px;
             margin-left: 4px;
         }
+        
+        /* ADMIN OVERVIEW */
+        .admin-overview-section {
+            background: #fcfcfc;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        
+        .admin-overview-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        
+        .admin-overview-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .admin-overview-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        
+        .admin-overview-details {
+            font-size: 0.8rem;
+            color: #555;
+            margin-left: 10px;
+        }
 
         /* ADMIN: MITARBEITER-KACHELN */
         .employee-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 10px;
             margin-top: 8px;
         }
@@ -439,6 +483,11 @@
             background: #fff7e6;
         }
 
+        .employee-card.admin {
+            border: 2px solid var(--blue-dark);
+            background: #e7f2fb;
+        }
+
         .employee-avatar {
             width: 48px;
             height: 48px;
@@ -455,26 +504,43 @@
 
         .employee-info-main {
             font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .employee-info-sub {
             font-size: 0.8rem;
             color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .employee-role {
+        .employee-role-selector {
             margin-top: 4px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 0.8rem;
         }
 
-        .employee-role select {
+        .employee-role-selector label {
+             margin: 0;
+        }
+
+        .employee-role-selector select {
             font-size: 0.8rem;
             padding: 3px 4px;
             border-radius: 4px;
             border: 1px solid #ccc;
+            width: auto;
+            max-width: 130px;
         }
 
         .employee-actions {
-            margin-top: 6px;
+            grid-column: 1 / 3;
+            margin-top: 8px;
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
@@ -486,6 +552,7 @@
             border-radius: 4px;
             border: none;
             cursor: pointer;
+            line-height: 1.5;
         }
 
         .btn-small.primary {
@@ -514,15 +581,23 @@
 
         .employee-category-heading {
             font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 6px;
+            font-size: 1.1rem;
+            margin: 18px 0 6px 0;
             color: #444;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .employee-category-heading:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
         }
 
         /* SETTINGS */
         .settings-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 12px;
             margin-top: 8px;
         }
@@ -537,6 +612,7 @@
         .settings-card h4 {
             margin: 0 0 6px 0;
             font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .settings-card p {
@@ -604,25 +680,24 @@
     </div>
     <div class="top-right">
         <div class="top-user" id="top-user-text"></div>
+        <span id="inactivity-timer" class="hidden" style="color: #f57c00; font-weight: bold; font-size: 0.8rem; margin-right: 6px;">10:00</span>
         <button id="logout-btn" class="btn-top hidden">Abmelden</button>
     </div>
 </header>
 
 <main>
-    <!-- LOGIN / REGISTRIERUNG / PASSWORT-RESET -->
     <section id="auth-section">
         <h2>Anmeldung</h2>
         <div id="auth-error" class="error hidden"></div>
         <div id="auth-success" class="success hidden"></div>
 
-        <!-- Login-Box -->
         <div id="login-box">
             <h3>Einloggen</h3>
             <label for="email">E-Mail</label>
-            <input type="email" id="email" placeholder="deine@email.de">
+            <input type="email" id="email" placeholder="deine@email.de" autocomplete="username">
 
             <label for="password">Passwort</label>
-            <input type="password" id="password" placeholder="Passwort">
+            <input type="password" id="password" placeholder="Passwort" autocomplete="current-password">
 
             <button id="login-btn" class="btn-primary">Einloggen</button>
 
@@ -634,24 +709,23 @@
             <button id="show-register-btn" class="btn-secondary">Neu anmelden</button>
         </div>
 
-        <!-- Registrierungs-Box -->
         <div id="register-box" class="hidden">
             <h3>Neu anmelden</h3>
 
             <label for="reg-first-name">Vorname</label>
-            <input type="text" id="reg-first-name" placeholder="Vorname">
+            <input type="text" id="reg-first-name" placeholder="Vorname" autocomplete="given-name">
 
             <label for="reg-last-name">Nachname</label>
-            <input type="text" id="reg-last-name" placeholder="Nachname">
+            <input type="text" id="reg-last-name" placeholder="Nachname" autocomplete="family-name">
 
             <label for="reg-email">E-Mail</label>
-            <input type="email" id="reg-email" placeholder="E-Mail">
+            <input type="email" id="reg-email" placeholder="E-Mail" autocomplete="email">
 
             <label for="reg-password">Passwort</label>
-            <input type="password" id="reg-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen">
+            <input type="password" id="reg-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
 
             <label for="reg-password2">Passwort wiederholen</label>
-            <input type="password" id="reg-password2" placeholder="Passwort bestätigen">
+            <input type="password" id="reg-password2" placeholder="Passwort bestätigen" autocomplete="new-password">
 
             <button id="register-btn" class="btn-primary">Registrierung abschließen</button>
             <button id="back-to-login-btn" class="btn-secondary">Zurück zum Login</button>
@@ -662,7 +736,6 @@
             </p>
         </div>
 
-        <!-- Passwort-Reset-Box (für Recovery-Link) -->
         <div id="reset-box" class="hidden">
             <h3>Neues Passwort setzen</h3>
             <p class="info">
@@ -670,16 +743,15 @@
             </p>
 
             <label for="reset-password">Neues Passwort</label>
-            <input type="password" id="reset-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen">
+            <input type="password" id="reset-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
 
             <label for="reset-password2">Passwort wiederholen</label>
-            <input type="password" id="reset-password2" placeholder="Neues Passwort bestätigen">
+            <input type="password" id="reset-password2" placeholder="Neues Passwort bestätigen" autocomplete="new-password">
 
             <button id="reset-password-btn" class="btn-primary">Passwort speichern</button>
         </div>
     </section>
 
-    <!-- PENDING-SECTION: Benutzer ist registriert, aber noch nicht freigegeben -->
     <section id="pending-section" class="hidden">
         <h2>Registrierung ausstehend</h2>
         <p id="pending-message" class="info"></p>
@@ -690,10 +762,8 @@
         <button id="pending-logout-btn" class="btn-primary">Abmelden</button>
     </section>
 
-    <!-- PORTAL NACH LOGIN (freigegeben) -->
     <section id="portal-section" class="hidden">
         <div class="portal-layout">
-            <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="sidebar-title">Mitarbeiterportal</div>
                 <div class="sidebar-user" id="sidebar-user-role"></div>
@@ -702,14 +772,14 @@
                     <li data-target="section-dashboard" class="active">
                         <span class="icon">🏠</span> <span>Startseite</span>
                     </li>
-                    <li data-target="section-documents">
-                        <span class="icon">📄</span> <span>Unterweisungen / Dokumente</span>
+                    <li data-target="section-training-records">
+                        <span class="icon">✅</span> <span>Dokumente & Uploads</span>
                     </li>
                     <li data-target="section-timesheet">
                         <span class="icon">🕒</span> <span>Stundenzettel</span>
                     </li>
-                    <li data-target="section-arbeitsvertrag">
-                        <span class="icon">📃</span> <span>Arbeitsvertrag</span>
+                    <li data-target="section-sicknotes">
+                        <span class="icon">🏥</span> <span>Krankmeldungen</span>
                     </li>
                     <li data-target="section-settings">
                         <span class="icon">⚙️</span> <span>Einstellungen</span>
@@ -718,6 +788,9 @@
                         <span class="icon">🛠</span> <span>Admin · Mitarbeiter</span>
                         <span id="sidebar-admin-badge" class="request-badge hidden"></span>
                     </li>
+                    <li data-target="section-admin-uploads" id="sidebar-admin-uploads-link" class="hidden">
+                        <span class="icon">📥</span> <span>Admin · Uploads</span>
+                    </li>
                 </ul>
 
                 <div id="sidebar-admin-label" class="sidebar-admin hidden">
@@ -725,7 +798,6 @@
                 </div>
             </aside>
 
-            <!-- Inhalt -->
             <div class="main-content">
                 <div class="portal-greeting">
                     <h2>
@@ -736,28 +808,27 @@
                     <p>Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
                 </div>
 
-                <!-- DASHBOARD -->
                 <div id="section-dashboard" class="portal-section-content">
                     <div class="tile-grid">
-                        <div class="tile-card active" data-target="section-documents">
-                            <div class="tile-icon">📄</div>
-                            <div class="tile-title">Unterweisungen</div>
-                            <div class="tile-sub">Nachweise &amp; Dokumente</div>
+                        <div class="tile-card active" data-target="section-training-records">
+                            <div class="tile-icon">✅</div>
+                            <div class="tile-title">Dokumente & Uploads</div>
+                            <div class="tile-sub">Nachweise, Stundenzettel, Krankmeldungen</div>
                         </div>
                         <div class="tile-card" data-target="section-timesheet">
                             <div class="tile-icon">🕒</div>
                             <div class="tile-title">Stundenzettel</div>
-                            <div class="tile-sub">Arbeitszeiten erfassen</div>
+                            <div class="tile-sub">Arbeitszeiten erfassen (Platzhalter)</div>
                         </div>
-                        <div class="tile-card" data-target="section-arbeitsvertrag">
-                            <div class="tile-icon">📃</div>
-                            <div class="tile-title">Arbeitsvertrag</div>
-                            <div class="tile-sub">Verträge &amp; Bescheinigungen</div>
+                        <div class="tile-card" data-target="section-sicknotes">
+                            <div class="tile-icon">🏥</div>
+                            <div class="tile-title">Krankmeldungen</div>
+                            <div class="tile-sub">AU-Bescheinigung hochladen</div>
                         </div>
                         <div class="tile-card" data-target="section-settings">
                             <div class="tile-icon">⚙️</div>
                             <div class="tile-title">Einstellungen</div>
-                            <div class="tile-sub">Profil &amp; Passwort</div>
+                            <div class="tile-sub">Profil & Passwort</div>
                         </div>
                         <div id="tile-admin" class="tile-card hidden" data-target="section-admin">
                             <div class="tile-icon">👥</div>
@@ -765,57 +836,58 @@
                                 Mitarbeiter (Admin)
                                 <span id="tile-admin-badge" class="request-badge hidden"></span>
                             </div>
-                            <div class="tile-sub">Übersicht &amp; Rollen</div>
+                            <div class="tile-sub">Übersicht & Rollen</div>
+                        </div>
+                        <div id="tile-admin-uploads" class="tile-card hidden" data-target="section-admin-uploads">
+                            <div class="tile-icon">📥</div>
+                            <div class="tile-title">Admin Uploads</div>
+                            <div class="tile-sub">Dateien für Mitarbeiter hochladen</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- UNTERWEISUNGEN / DOKUMENTE -->
-                <div id="section-documents" class="portal-section-content hidden">
-                    <h3 class="section-title">Unterweisungen / Dokumente</h3>
+                <div id="section-training-records" class="portal-section-content hidden">
+                    <h3 class="section-title">Dokumente, Nachweise & Uploads</h3>
                     <p class="info">
                         In diesem Bereich sehen Sie:
                         <br>• Unterweisungsnachweise (vom Admin bereitgestellt)
                         <br>• Ihre hochgeladenen Stundenzettel-Nachweise
-                        <br>• Ihre hochgeladenen Krankmeldungen
+                        <br>• Ihre hochgeladenen Krankmeldungen-Nachweise
                     </p>
 
-                    <!-- Unterweisungen -->
                     <div class="document-category">
-                        <h4>Unterweisungen</h4>
-                        <p class="info">
-                            Unterweisungsnachweise und Dokumente, die von der Firma bereitgestellt wurden.
-                        </p>
-                        <div id="docs-unterweisungen-message" class="info"></div>
+                        <h4>Unterweisungen (vom Admin bereitgestellt)</h4>
+                        <div id="docs-unterweisungen-message" class="info">Es sind keine Unterweisungen für Sie hinterlegt.</div>
                         <ul id="docs-unterweisungen-list" class="document-list"></ul>
                     </div>
 
-                    <!-- Stundenzettel-Nachweise (Upload für Mitarbeiter) -->
                     <div class="document-category">
-                        <h4>Stundenzettel-Nachweise</h4>
+                        <h4>Stundenzettel-Nachweise (Ihr Upload)</h4>
                         <p class="info">
                             Laden Sie hier Ihre Stundenzettel / Rapporte als PDF oder Foto hoch.
                         </p>
                         <button id="upload-timesheet-btn" class="btn-primary">Stundenzettel hochladen</button>
                         <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" capture="environment" class="hidden">
-                        <div id="docs-timesheets-message" class="info"></div>
+                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Stundenzettel von Ihnen hochgeladen.</div>
                         <ul id="docs-timesheets-list" class="document-list"></ul>
                     </div>
+                </div>
 
-                    <!-- Krankmeldungen (Upload für Mitarbeiter) -->
-                    <div class="document-category">
-                        <h4>Krankmeldungen</h4>
+                <div id="section-sicknotes" class="portal-section-content hidden">
+                    <h3 class="section-title">Krankmeldungen (Ihr Upload)</h3>
+                    <div class="document-category" style="padding-top: 0; border-top: none;">
                         <p class="info">
-                            Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen.
+                            Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen. Die Admins sehen diese in ihrer Übersicht.
                         </p>
                         <button id="upload-sicknote-btn" class="btn-primary">Krankmeldung hochladen</button>
                         <input type="file" id="upload-sicknote-input" accept="image/*,application/pdf" capture="environment" class="hidden">
                         <div id="docs-sicknotes-message" class="info"></div>
+                        <h4 style="margin-top:18px;">Ihre hochgeladenen Krankmeldungen</h4>
+                        <div id="sicknotes-user-message" class="info">Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.</div>
                         <ul id="docs-sicknotes-list" class="document-list"></ul>
                     </div>
                 </div>
 
-                <!-- STUNDENZETTEL (Platzhalter) -->
                 <div id="section-timesheet" class="portal-section-content hidden">
                     <h3 class="section-title">Stundenzettel</h3>
                     <p class="info">
@@ -824,16 +896,6 @@
                     </p>
                 </div>
 
-                <!-- ARBEITSVERTRAG (Platzhalter) -->
-                <div id="section-arbeitsvertrag" class="portal-section-content hidden">
-                    <h3 class="section-title">Arbeitsvertrag / Dokumente</h3>
-                    <p class="info">
-                        In diesem Bereich können später Arbeitsverträge, Zusatzvereinbarungen und wichtige Bescheinigungen
-                        pro Mitarbeiter hinterlegt und heruntergeladen werden.
-                    </p>
-                </div>
-
-                <!-- EINSTELLUNGEN: PROFIL & PASSWORT -->
                 <div id="section-settings" class="portal-section-content hidden">
                     <h3 class="section-title">Einstellungen</h3>
                     <p class="info">
@@ -841,10 +903,9 @@
                     </p>
 
                     <div class="settings-grid">
-                        <!-- Profildaten -->
                         <div class="settings-card">
                             <h4>Profildaten</h4>
-                            <p>Aktualisieren Sie hier Ihren Namen. Die E-Mail-Adresse ist aktuell nur informativ.</p>
+                            <p>Aktualisieren Sie hier Ihren Namen.</p>
 
                             <div class="settings-inline">
                                 <div>
@@ -859,24 +920,29 @@
 
                             <label for="settings-email">E-Mail</label>
                             <input type="email" id="settings-email" disabled>
+                            
+                            <label for="settings-employment-type" id="settings-employment-label">Beschäftigungsart</label>
+                            <select id="settings-employment-type">
+                                <option value="fulltime">Vollzeit</option>
+                                <option value="minijob">Minijob</option>
+                            </select>
 
                             <button id="settings-save-profile" class="btn-primary">Profil speichern</button>
                             <div id="settings-profile-msg" class="settings-message"></div>
                         </div>
 
-                        <!-- Passwort ändern -->
                         <div class="settings-card">
                             <h4>Passwort ändern</h4>
                             <p>Das neue Passwort muss mindestens 8 Zeichen, einen Großbuchstaben und eine Zahl oder ein Sonderzeichen enthalten.</p>
 
                             <label for="settings-current-password">Aktuelles Passwort</label>
-                            <input type="password" id="settings-current-password" placeholder="Aktuelles Passwort">
+                            <input type="password" id="settings-current-password" placeholder="Aktuelles Passwort" autocomplete="current-password">
 
                             <label for="settings-new-password">Neues Passwort</label>
-                            <input type="password" id="settings-new-password" placeholder="Neues Passwort">
+                            <input type="password" id="settings-new-password" placeholder="Neues Passwort" autocomplete="new-password">
 
                             <label for="settings-new-password2">Neues Passwort wiederholen</label>
-                            <input type="password" id="settings-new-password2" placeholder="Neues Passwort bestätigen">
+                            <input type="password" id="settings-new-password2" placeholder="Neues Passwort bestätigen" autocomplete="new-password">
 
                             <button id="settings-change-password" class="btn-primary">Passwort ändern</button>
                             <div id="settings-password-msg" class="settings-message"></div>
@@ -884,217 +950,218 @@
                     </div>
                 </div>
 
-                <!-- ADMIN: MITARBEITER-KACHELN -->
                 <div id="section-admin" class="portal-section-content hidden">
-                    <h3 class="section-title">
-                        Admin · Mitarbeiterübersicht
-                        <span id="admin-requests-counter" class="request-badge hidden"></span>
-                    </h3>
-                    <p class="info">
-                        Hier sehen Sie alle im System angelegten Mitarbeiter. Offene Registrierungs-Anfragen können Sie
-                        im Bereich „Offene Anfragen“ freigeben.
-                    </p>
-
+                    <h3 class="section-title"> Admin · Mitarbeiterübersicht <span id="admin-requests-counter" class="request-badge hidden"></span> </h3>
+                    <p class="info"> Hier sehen Sie alle im System angelegten Mitarbeiter. Offene Registrierungs-Anfragen können Sie im Bereich „Offene Anfragen“ freigeben. </p>
+                    
                     <div id="pending-requests-box" class="hidden">
-                        <h4>Offene Anfragen (noch nicht freigegeben)</h4>
+                        <h4 class="employee-category-heading" style="margin-top:0;">Offene Anfragen (noch nicht freigegeben)</h4>
                         <div id="pending-employee-grid" class="employee-grid"></div>
                     </div>
-
-                    <h4 style="margin-top:14px;">Alle Mitarbeiter</h4>
-                    <div id="employee-grid"></div>
-
+                    
+                    <div id="approved-employees-content">
+                        </div>
+                    
                     <div class="admin-message" id="admin-message"></div>
 
-                    <!-- Admin-Dokumentübersicht -->
-                    <h4 style="margin-top:18px;">Stundenzettel (alle Mitarbeiter)</h4>
-                    <div id="admin-timesheets-overview" class="info"></div>
+                    <h4 class="employee-category-heading">Stundenzettel-Uploads (alle Mitarbeiter)</h4>
+                    <div id="admin-timesheets-new-count" class="info"></div>
+                    <div id="admin-timesheets-overview" class="admin-overview-section"></div>
+                    
+                    <h4 class="employee-category-heading">Krankmeldungen-Uploads (alle Mitarbeiter)</h4>
+                    <div id="admin-sicknotes-new-count" class="info"></div>
+                    <div id="admin-sicknotes-overview" class="admin-overview-section"></div>
+                </div>
 
-                    <h4 style="margin-top:14px;">Krankmeldungen (alle Mitarbeiter)</h4>
-                    <div id="admin-sicknotes-overview" class="info"></div>
-
-                    <h4 style="margin-top:14px;">Unterweisungen verwalten</h4>
-                    <div id="admin-unterweisungen-manager" class="settings-card">
-                        <h4 style="margin-top:0;">Unterweisungen hochladen</h4>
+                <div id="section-admin-uploads" class="portal-section-content hidden">
+                    <h3 class="section-title">Admin · Datei-Uploads für Mitarbeiter</h3>
+                    <div id="admin-doc-manager" class="settings-card">
+                        <h4 style="margin-top:0;">Dokument für Mitarbeiter hochladen</h4>
                         <p>
-                            Laden Sie eine Unterweisung hoch und wählen Sie, für welche Mitarbeiter sie gelten soll
-                            (einzelner Mitarbeiter, alle Vollzeit, alle Minijobber oder alle Mitarbeiter).
+                            Laden Sie ein Dokument hoch und wählen Sie die Zielgruppe sowie die Dokumenten-Kategorie.
                         </p>
 
-                        <label for="admin-unterweisungen-scope">Zielgruppe</label>
+                        <label for="admin-upload-category">Kategorie</label>
+                        <select id="admin-upload-category">
+                            <option value="unterweisung">Unterweisungsnachweis</option>
+                            </select>
+
+                        <label for="admin-unterweisungen-scope" style="margin-top: 10px;">Zielgruppe</label>
                         <select id="admin-unterweisungen-scope">
-                            <option value="all">Alle Mitarbeiter</option>
-                            <option value="fulltime">Alle Vollzeit-Mitarbeiter</option>
-                            <option value="minijob">Alle Minijobber</option>
+                            <option value="all">Alle Mitarbeiter (freigegeben)</option>
+                            <option value="fulltime">Nur Vollzeit-Mitarbeiter (freigegeben)</option>
+                            <option value="minijob">Nur Minijob-Mitarbeiter (freigegeben)</option>
                             <option value="single">Einzelner Mitarbeiter</option>
                         </select>
 
-                        <label for="admin-unterweisungen-user">Mitarbeiter (nur bei „Einzelner Mitarbeiter“)</label>
-                        <select id="admin-unterweisungen-user" disabled>
-                            <option value="">Bitte wählen...</option>
-                        </select>
+                        <div id="admin-unterweisungen-user-select-wrapper" class="hidden">
+                            <label for="admin-unterweisungen-user-select" style="margin-top: 10px;">Mitarbeiter auswählen</label>
+                            <select id="admin-unterweisungen-user-select"></select>
+                        </div>
 
-                        <button id="admin-unterweisungen-upload-btn" class="btn-primary" style="margin-top:10px;">
-                            Unterweisung hochladen
-                        </button>
-                        <input type="file" id="admin-unterweisungen-input" accept="image/*,application/pdf" class="hidden">
+                        <label for="admin-unterweisungen-input" style="margin-top: 10px;">Datei auswählen (PDF/Bild)</label>
+                        <input type="file" id="admin-unterweisungen-input" accept="image/*,application/pdf">
 
+                        <button id="admin-unterweisungen-upload-btn" class="btn-primary" style="margin-top: 10px;">Dokument hochladen</button>
                         <div id="admin-unterweisungen-message" class="settings-message"></div>
                     </div>
                 </div>
 
-                <!-- ADMIN: MITARBEITER-DETAILANSICHT -->
                 <div id="section-employee-detail" class="portal-section-content hidden">
-                    <h3 class="section-title">Mitarbeiter-Ansicht</h3>
-                    <button id="employee-detail-back" class="btn-secondary">← Zurück zur Mitarbeiterübersicht</button>
-                    <div id="employee-detail-info" class="info" style="margin-top:10px;"></div>
+                    <h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
+                    <div id="employee-detail-meta" class="info" style="margin-bottom:12px;"></div>
+                    <button id="employee-detail-back-btn" class="btn-secondary" style="margin-bottom: 15px;">Zurück zur Übersicht</button>
 
-                    <h4 style="margin-top:14px;">Dokumente dieses Mitarbeiters</h4>
-                    <div id="employee-detail-docs-message" class="info"></div>
+                    <h4>Hochgeladene Dokumente</h4>
                     <ul id="employee-detail-docs" class="document-list"></ul>
-
-                    <p class="info">
-                        (Sie sehen hier die Dokumente aus Sicht des Mitarbeiters. Weitere Bereiche wie Stundenzettel
-                        und Arbeitsvertrag können wir später ergänzen.)
-                    </p>
                 </div>
+
             </div>
         </div>
     </section>
 </main>
 
 <script type="module">
-    // SUPABASE-DATEN
+    // --- KONFIGURATION: BITTE HIER IHRE URL & KEY EINFÜGEN ---
     const SUPABASE_URL = 'https://njjnyodpwpkpjdjxbmvo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qam55b2Rwd3BrcGpkanhibXZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTg5MDQsImV4cCI6MjA3OTczNDkwNH0.aHBJ_g1zHZlWjceUFas_v2lYfrcjv8PuhPEAFpGj3_E';
-    const STORAGE_BUCKET = 'documents'; // Supabase Storage Bucket-Name (bitte im Supabase-Dashboard anlegen)
+    const STORAGE_BUCKET = 'documents';
 
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Supabase-Client initialisieren
+    // Hinweis: supabase wird global durch das CDN-Script bereitgestellt,
+    // aber wir verwenden createClient, um uns mit den Credentials zu verbinden.
+    const { createClient } = window.supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // DOM-REFERENZEN
-    const authSection      = document.getElementById('auth-section');
-    const portalSection    = document.getElementById('portal-section');
-    const pendingSection   = document.getElementById('pending-section');
-
-    const authError        = document.getElementById('auth-error');
-    const authSuccess      = document.getElementById('auth-success');
-
-    const loginBox         = document.getElementById('login-box');
-    const registerBox      = document.getElementById('register-box');
-    const resetBox         = document.getElementById('reset-box');
-
-    const emailInput       = document.getElementById('email');
-    const passwordInput    = document.getElementById('password');
-    const loginBtn         = document.getElementById('login-btn');
-
+    // Globale Variablen
+    let currentUser = null;
+    let currentProfile = null;
+    let allProfilesCache = []; // Für Admin-Auswahl
+    
+    // DOM-Referenzen
+    const authSection = document.getElementById('auth-section');
+    const portalSection = document.getElementById('portal-section');
+    const pendingSection = document.getElementById('pending-section');
+    const loginBox = document.getElementById('login-box');
+    const registerBox = document.getElementById('register-box');
+    const resetBox = document.getElementById('reset-box');
+    const authError = document.getElementById('auth-error');
+    const authSuccess = document.getElementById('auth-success');
+    
+    // Inputs Auth
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('login-btn');
     const forgotPasswordBtn = document.getElementById('forgot-password-btn');
-
-    const showRegisterBtn  = document.getElementById('show-register-btn');
-    const registerBtn      = document.getElementById('register-btn');
-    const backToLoginBtn   = document.getElementById('back-to-login-btn');
-
-    const regFirstName     = document.getElementById('reg-first-name');
-    const regLastName      = document.getElementById('reg-last-name');
-    const regEmail         = document.getElementById('reg-email');
-    const regPassword      = document.getElementById('reg-password');
-    const regPassword2     = document.getElementById('reg-password2');
-
-    const resetPasswordInput  = document.getElementById('reset-password');
+    const showRegisterBtn = document.getElementById('show-register-btn');
+    const backToLoginBtn = document.getElementById('back-to-login-btn');
+    
+    // Register Inputs
+    const regFirstName = document.getElementById('reg-first-name');
+    const regLastName = document.getElementById('reg-last-name');
+    const regEmail = document.getElementById('reg-email');
+    const regPassword = document.getElementById('reg-password');
+    const regPassword2 = document.getElementById('reg-password2');
+    const registerBtn = document.getElementById('register-btn');
+    
+    // Reset Inputs
+    const resetPasswordInput = document.getElementById('reset-password');
     const resetPassword2Input = document.getElementById('reset-password2');
-    const resetPasswordBtn    = document.getElementById('reset-password-btn');
-
-    const logoutBtn        = document.getElementById('logout-btn');
+    const resetPasswordBtn = document.getElementById('reset-password-btn');
+    
+    // Top Bar
+    const topUserText = document.getElementById('top-user-text');
+    const logoutBtn = document.getElementById('logout-btn');
     const pendingLogoutBtn = document.getElementById('pending-logout-btn');
-    const topUserText      = document.getElementById('top-user-text');
-    const pendingMessage   = document.getElementById('pending-message');
-
-    const userNameText     = document.getElementById('user-name-text');
-    const roleBadge        = document.getElementById('role-badge');
-
-    const sidebarUserRole  = document.getElementById('sidebar-user-role');
-    const sidebarNav       = document.getElementById('sidebar-nav');
-    const sidebarAdminLabel= document.getElementById('sidebar-admin-label');
+    const pendingMessage = document.getElementById('pending-message');
+    
+    // Portal Basic
+    const userNameText = document.getElementById('user-name-text');
+    const roleBadge = document.getElementById('role-badge');
+    const sidebarUserRole = document.getElementById('sidebar-user-role');
+    const sidebarNav = document.getElementById('sidebar-nav');
+    
+    // Admin Elements
     const sidebarAdminLink = document.getElementById('sidebar-admin-link');
-    const sidebarAdminBadge= document.getElementById('sidebar-admin-badge');
-
-    const tileAdmin        = document.getElementById('tile-admin');
-    const tileAdminBadge   = document.getElementById('tile-admin-badge');
-
-    // Dokumente (Mitarbeiter-Ansicht, Kategorien)
-    const docsUnterwMessage     = document.getElementById('docs-unterweisungen-message');
-    const docsUnterwList        = document.getElementById('docs-unterweisungen-list');
-    const uploadTimesheetBtn    = document.getElementById('upload-timesheet-btn');
-    const uploadTimesheetInput  = document.getElementById('upload-timesheet-input');
-    const docsTimesheetsMessage = document.getElementById('docs-timesheets-message');
-    const docsTimesheetsList    = document.getElementById('docs-timesheets-list');
-    const uploadSicknoteBtn     = document.getElementById('upload-sicknote-btn');
-    const uploadSicknoteInput   = document.getElementById('upload-sicknote-input');
-    const docsSicknotesMessage  = document.getElementById('docs-sicknotes-message');
-    const docsSicknotesList     = document.getElementById('docs-sicknotes-list');
-
-    // Admin-Mitarbeiter & Dokumente
-    const employeeGrid     = document.getElementById('employee-grid');
+    const sidebarAdminBadge = document.getElementById('sidebar-admin-badge');
+    const sidebarAdminLabel = document.getElementById('sidebar-admin-label');
+    const sidebarAdminUploadsLink = document.getElementById('sidebar-admin-uploads-link');
+    const tileAdmin = document.getElementById('tile-admin');
+    const tileAdminBadge = document.getElementById('tile-admin-badge');
+    const tileAdminUploads = document.getElementById('tile-admin-uploads');
+    
+    // Admin Content
+    const pendingRequestsBox = document.getElementById('pending-requests-box');
     const pendingEmployeeGrid = document.getElementById('pending-employee-grid');
-    const pendingRequestsBox  = document.getElementById('pending-requests-box');
-    const adminMessage     = document.getElementById('admin-message');
+    const approvedEmployeesContent = document.getElementById('approved-employees-content');
+    const adminMessage = document.getElementById('admin-message');
     const adminRequestsCounter = document.getElementById('admin-requests-counter');
-
     const adminTimesheetsOverview = document.getElementById('admin-timesheets-overview');
-    const adminSicknotesOverview  = document.getElementById('admin-sicknotes-overview');
-    const adminUnterwScopeSelect  = document.getElementById('admin-unterweisungen-scope');
-    const adminUnterwUserSelect   = document.getElementById('admin-unterweisungen-user');
-    const adminUnterwUploadBtn    = document.getElementById('admin-unterweisungen-upload-btn');
-    const adminUnterwInput        = document.getElementById('admin-unterweisungen-input');
-    const adminUnterwMessage      = document.getElementById('admin-unterweisungen-message');
+    const adminSicknotesOverview = document.getElementById('admin-sicknotes-overview');
+    const adminTimesheetsNewCount = document.getElementById('admin-timesheets-new-count');
+    const adminSicknotesNewCount = document.getElementById('admin-sicknotes-new-count');
 
-    const employeeDetailSection      = document.getElementById('section-employee-detail');
-    const employeeDetailBackBtn      = document.getElementById('employee-detail-back');
-    const employeeDetailInfo         = document.getElementById('employee-detail-info');
-    const employeeDetailDocs         = document.getElementById('employee-detail-docs');
-    const employeeDetailDocsMessage  = document.getElementById('employee-detail-docs-message');
+    // Admin Uploads
+    const adminUploadCategory = document.getElementById('admin-upload-category');
+    const adminUnterwScope = document.getElementById('admin-unterweisungen-scope');
+    const adminUnterwUserSelectWrapper = document.getElementById('admin-unterweisungen-user-select-wrapper');
+    const adminUnterwUserSelect = document.getElementById('admin-unterweisungen-user-select');
+    const adminUnterwInput = document.getElementById('admin-unterweisungen-input');
+    const adminUnterwUploadBtn = document.getElementById('admin-unterweisungen-upload-btn');
+    const adminUnterwMessage = document.getElementById('admin-unterweisungen-message');
+    
+    // Employee Detail
+    const employeeDetailInfoTitle = document.getElementById('employee-detail-info-title');
+    const employeeDetailMeta = document.getElementById('employee-detail-meta');
+    const employeeDetailDocs = document.getElementById('employee-detail-docs');
+    const employeeDetailBackBtn = document.getElementById('employee-detail-back-btn');
 
-    // SETTINGS DOM
-    const settingsFirstName     = document.getElementById('settings-first-name');
-    const settingsLastName      = document.getElementById('settings-last-name');
-    const settingsEmail         = document.getElementById('settings-email');
-    const settingsSaveProfile   = document.getElementById('settings-save-profile');
-    const settingsProfileMsg    = document.getElementById('settings-profile-msg');
+    // Documents
+    const docsUnterwList = document.getElementById('docs-unterweisungen-list');
+    const docsUnterwMessage = document.getElementById('docs-unterweisungen-message');
+    const uploadTimesheetBtn = document.getElementById('upload-timesheet-btn');
+    const uploadTimesheetInput = document.getElementById('upload-timesheet-input');
+    const docsTimesheetsList = document.getElementById('docs-timesheets-list');
+    const docsTimesheetsMessage = document.getElementById('docs-timesheets-message');
+    const uploadSicknoteBtn = document.getElementById('upload-sicknote-btn');
+    const uploadSicknoteInput = document.getElementById('upload-sicknote-input');
+    const docsSicknotesList = document.getElementById('docs-sicknotes-list');
+    const docsSicknotesMessage = document.getElementById('docs-sicknotes-message');
+    const sicknotesUserMessage = document.getElementById('sicknotes-user-message');
 
-    const settingsCurrentPw     = document.getElementById('settings-current-password');
-    const settingsNewPw         = document.getElementById('settings-new-password');
-    const settingsNewPw2        = document.getElementById('settings-new-password2');
-    const settingsChangePw      = document.getElementById('settings-change-password');
-    const settingsPasswordMsg   = document.getElementById('settings-password-msg');
+    // Settings
+    const settingsFirstName = document.getElementById('settings-first-name');
+    const settingsLastName = document.getElementById('settings-last-name');
+    const settingsEmail = document.getElementById('settings-email');
+    const settingsEmploymentType = document.getElementById('settings-employment-type');
+    const settingsSaveProfile = document.getElementById('settings-save-profile');
+    const settingsProfileMsg = document.getElementById('settings-profile-msg');
+    
+    const settingsCurrentPw = document.getElementById('settings-current-password');
+    const settingsNewPw = document.getElementById('settings-new-password');
+    const settingsNewPw2 = document.getElementById('settings-new-password2');
+    const settingsChangePw = document.getElementById('settings-change-password');
+    const settingsPasswordMsg = document.getElementById('settings-password-msg');
 
-    let currentUser   = null;
-    let currentProfile= null;
-    let selectedEmployee = null;
-    let allProfilesCache = [];
+    // Timer
+    const inactivityTimerEl = document.getElementById('inactivity-timer');
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 Min
+    let inactivityTimeout;
+    let timerInterval;
+    let timeRemaining = INACTIVITY_LIMIT_MS / 1000;
 
-    // Auto-Logout nach 10 Minuten Inaktivität
-    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
-    let inactivityTimer = null;
+    // --- HELPER FUNCTIONS ---
 
-    function resetInactivityTimer() {
-        if (!currentUser) return;
-        if (inactivityTimer) clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(async () => {
-            await supabase.auth.signOut();
-            alert('Aus Sicherheitsgründen wurden Sie nach 10 Minuten Inaktivität abgemeldet.');
-            showLogin();
-        }, INACTIVITY_LIMIT_MS);
-    }
-
-    ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(evt => {
-        window.addEventListener(evt, resetInactivityTimer);
-    });
-
-    // Passwort-Policy: min. 8, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen
     function isStrongPassword(pw) {
         if (!pw || pw.length < 8) return false;
+        // Min 8 chars, 1 Uppercase, 1 Digit OR Special Char
         const hasUpper = /[A-ZÄÖÜ]/.test(pw);
         const hasDigitOrSpecial = /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw);
         return hasUpper && hasDigitOrSpecial;
+    }
+
+    function makeSafeFileName(name) {
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
     }
 
     function showAuthError(msg) {
@@ -1114,1383 +1181,859 @@
         authSuccess.classList.add('hidden');
     }
 
+    // --- TIMER LOGIC ---
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = Math.floor(timeRemaining % 60);
+        inactivityTimerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    async function handleInactivityLogout() {
+        await supabaseClient.auth.signOut();
+        alert('Aus Sicherheitsgründen wurden Sie nach 10 Minuten Inaktivität abgemeldet.');
+        showLogin();
+    }
+
+    function resetInactivityTimer() {
+        if (!currentUser) return; // Only if logged in
+
+        clearTimeout(inactivityTimeout);
+        clearInterval(timerInterval);
+
+        timeRemaining = INACTIVITY_LIMIT_MS / 1000;
+        inactivityTimerEl.classList.remove('hidden');
+        updateTimerDisplay();
+
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            if (timeRemaining < 0) timeRemaining = 0;
+            updateTimerDisplay();
+        }, 1000);
+
+        inactivityTimeout = setTimeout(() => {
+            clearInterval(timerInterval);
+            handleInactivityLogout();
+        }, INACTIVITY_LIMIT_MS);
+    }
+
+    // Attach events for timer reset
+    ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(evt => {
+        window.addEventListener(evt, resetInactivityTimer);
+    });
+
+    // --- NAVIGATION ---
+
     function setActiveSection(targetId) {
-        const allSections = [
-            'section-dashboard',
-            'section-documents',
-            'section-timesheet',
-            'section-arbeitsvertrag',
-            'section-settings',
-            'section-admin',
-            'section-employee-detail'
+        const sections = [
+            'section-dashboard', 'section-training-records', 'section-timesheet',
+            'section-sicknotes', 'section-settings', 'section-admin',
+            'section-admin-uploads', 'section-employee-detail'
         ];
-        allSections.forEach(id => {
+        
+        sections.forEach(id => {
             const el = document.getElementById(id);
-            if (!el) return;
-            if (id === targetId) el.classList.remove('hidden');
-            else el.classList.add('hidden');
+            if(el) {
+                if(id === targetId) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            }
         });
 
-        // Sidebar
+        // Sidebar Active State
         const items = sidebarNav.querySelectorAll('li');
         items.forEach(li => {
             const t = li.getAttribute('data-target');
-            if (t === targetId) li.classList.add('active');
+            if(t === targetId) li.classList.add('active');
             else li.classList.remove('active');
         });
 
-        // Tiles
+        // Tile Active State
         document.querySelectorAll('.tile-card').forEach(tile => {
             const t = tile.getAttribute('data-target');
-            if (t === targetId) tile.classList.add('active');
+            if(t === targetId) tile.classList.add('active');
             else tile.classList.remove('active');
         });
 
-        // Sektionen-spezifische Nachladelogik
-        if (targetId === 'section-documents' && currentUser) {
+        // Load content on demand
+        if(targetId === 'section-training-records' || targetId === 'section-sicknotes') {
             loadDocumentsForUser(currentUser);
         }
-        if (targetId === 'section-admin' && currentProfile?.role === 'admin') {
+        if(targetId === 'section-admin' && currentProfile?.role === 'admin') {
             loadEmployeeGrid();
             loadAdminDocumentOverviews();
         }
     }
 
     function initNavigation() {
-        // Sidebar
         sidebarNav.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', () => {
                 const target = li.getAttribute('data-target');
-                if (target) setActiveSection(target);
+                if(target) setActiveSection(target);
             });
         });
-
-        // Dashboard-Kacheln
         document.querySelectorAll('.tile-card').forEach(tile => {
             tile.addEventListener('click', () => {
                 const target = tile.getAttribute('data-target');
-                if (target) setActiveSection(target);
+                if(target) setActiveSection(target);
             });
         });
-
-        // Startansicht: Dashboard
-        setActiveSection('section-dashboard');
+        employeeDetailBackBtn.addEventListener('click', () => {
+            setActiveSection('section-admin');
+        });
     }
 
-    function toggleToRegister() {
-        clearAuthMessages();
-        loginBox.classList.add('hidden');
-        resetBox.classList.add('hidden');
-        registerBox.classList.remove('hidden');
-    }
+    // --- AUTH FLOW UI ---
 
-    function toggleToLogin() {
-        clearAuthMessages();
+    function showLogin() {
+        currentUser = null;
+        currentProfile = null;
+        clearTimeout(inactivityTimeout);
+        clearInterval(timerInterval);
+        inactivityTimerEl.classList.add('hidden');
+
+        authSection.classList.remove('hidden');
+        portalSection.classList.add('hidden');
+        pendingSection.classList.add('hidden');
+        loginBox.classList.remove('hidden');
         registerBox.classList.add('hidden');
         resetBox.classList.add('hidden');
-        loginBox.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        topUserText.textContent = '';
+        clearAuthMessages();
     }
 
-    showRegisterBtn.addEventListener('click', toggleToRegister);
-    backToLoginBtn.addEventListener('click', toggleToLogin);
-
-    employeeDetailBackBtn.addEventListener('click', () => {
-        selectedEmployee = null;
-        setActiveSection('section-admin');
-    });
-
-    function setSettingsProfileMessage(msg, type = 'info') {
-        settingsProfileMsg.textContent = msg || '';
-        settingsProfileMsg.classList.remove('error', 'success');
-        if (!msg) return;
-        if (type === 'error') settingsProfileMsg.classList.add('error');
-        if (type === 'success') settingsProfileMsg.classList.add('success');
+    function showPending(user) {
+        currentUser = user;
+        authSection.classList.add('hidden');
+        portalSection.classList.add('hidden');
+        pendingSection.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        topUserText.textContent = `${user.email} (wartet auf Freigabe)`;
+        pendingMessage.textContent = `Angemeldet als: ${user.email}. Bitte warten Sie auf die Freischaltung.`;
+        // No timer needed for pending really, but safer to have it or just sign them out? 
+        // We'll keep them logged in but restricted.
+        resetInactivityTimer();
     }
 
-    function setSettingsPasswordMessage(msg, type = 'info') {
-        settingsPasswordMsg.textContent = msg || '';
-        settingsPasswordMsg.classList.remove('error', 'success');
-        if (!msg) return;
-        if (type === 'error') settingsPasswordMsg.classList.add('error');
-        if (type === 'success') settingsPasswordMsg.classList.add('success');
-    }
-
-    async function loadProfile(user) {
-        const { data, error } = await supabase
+    async function showPortal(user) {
+        currentUser = user;
+        // Load Profile
+        const { data: profile, error } = await supabaseClient
             .from('profiles')
-            .select('full_name, role, email, is_approved, first_name, last_name, employment_type')
+            .select('*')
             .eq('id', user.id)
             .single();
 
-        if (error) {
-            console.warn('Profil konnte nicht geladen werden:', error.message);
-            return {
-                full_name: user.email,
-                role: 'user',
-                email: user.email,
-                is_approved: false
-            };
-        }
-        return data;
-    }
-
-    function populateSettingsForm(profile, user) {
-        settingsFirstName.value = profile.first_name || '';
-        settingsLastName.value  = profile.last_name || '';
-        settingsEmail.value     = profile.email || user.email || '';
-        setSettingsProfileMessage('');
-        setSettingsPasswordMessage('');
-        settingsCurrentPw.value = '';
-        settingsNewPw.value     = '';
-        settingsNewPw2.value    = '';
-    }
-
-    function renderDocumentList(listEl, msgEl, docs, emptyText) {
-        listEl.innerHTML = '';
-        msgEl.textContent = '';
-        if (!docs || docs.length === 0) {
-            msgEl.textContent = emptyText;
+        if (error || !profile) {
+            console.error('Profil nicht gefunden', error);
+            // Fallback: pending or error
+            showPending(user);
             return;
         }
+        currentProfile = profile;
+
+        if (!profile.is_approved) {
+            showPending(user);
+            return;
+        }
+
+        // Show Portal
+        authSection.classList.add('hidden');
+        pendingSection.classList.add('hidden');
+        portalSection.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+
+        const name = profile.full_name || user.email;
+        const roleText = profile.role === 'admin' ? 'Administrator' : 'Mitarbeiter';
+        
+        userNameText.textContent = name;
+        topUserText.textContent = `${name} (${roleText})`;
+        sidebarUserRole.textContent = `Rolle: ${roleText}`;
+        
+        if (profile.role === 'admin') {
+            roleBadge.textContent = 'Administrator';
+            roleBadge.classList.remove('hidden');
+            
+            sidebarAdminLink.classList.remove('hidden');
+            sidebarAdminLabel.classList.remove('hidden');
+            sidebarAdminUploadsLink.classList.remove('hidden');
+            
+            tileAdmin.classList.remove('hidden');
+            tileAdminUploads.classList.remove('hidden');
+            
+            // Initial Admin Load
+            loadEmployeeGrid(); 
+        } else {
+            roleBadge.classList.add('hidden');
+            sidebarAdminLink.classList.add('hidden');
+            sidebarAdminLabel.classList.add('hidden');
+            sidebarAdminUploadsLink.classList.add('hidden');
+            tileAdmin.classList.add('hidden');
+            tileAdminUploads.classList.add('hidden');
+        }
+
+        populateSettingsForm(profile, user);
+        resetInactivityTimer();
+        setActiveSection('section-dashboard');
+    }
+
+    // --- SUPABASE STORAGE & DOCS ---
+
+    async function uploadFileToStorage(file, pathPrefix) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const safeName = makeSafeFileName(file.name);
+        const filePath = `${pathPrefix}/${timestamp}_${safeName}`;
+
+        const { data, error } = await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicData } = supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+
+        return publicData.publicUrl;
+    }
+
+    async function insertDocumentRow(userId, title, docType, fileUrl) {
+        const { error } = await supabaseClient
+            .from('documents')
+            .insert({
+                user_id: userId,
+                title: title,
+                doc_type: docType,
+                file_url: fileUrl
+            });
+        if (error) throw error;
+    }
+
+    function renderDocumentList(listEl, docs) {
+        listEl.innerHTML = '';
+        if (!docs || docs.length === 0) return; // Msg is handled via separate div
 
         docs.forEach(doc => {
             const li = document.createElement('li');
             li.className = 'document-item';
 
-            const infoDiv = document.createElement('div');
-            const titleEl = document.createElement('div');
-            titleEl.className = 'document-item-title';
-            titleEl.textContent = doc.title || 'Dokument';
+            const div = document.createElement('div');
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'document-item-title';
+            titleDiv.textContent = doc.title;
+            
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'document-item-meta';
+            const dateStr = new Date(doc.created_at).toLocaleDateString('de-DE');
+            metaDiv.textContent = `${doc.doc_type} • ${dateStr}`;
 
-            const metaEl = document.createElement('div');
-            metaEl.className = 'document-item-meta';
-            const parts = [];
-            if (doc.doc_type) {
-                if (doc.doc_type === 'stundenzettel') parts.push('Stundenzettel');
-                else if (doc.doc_type === 'krankmeldung') parts.push('Krankmeldung');
-                else parts.push('Unterweisung');
-            }
-            if (doc.created_at) {
-                try {
-                    const d = new Date(doc.created_at);
-                    parts.push(d.toLocaleDateString('de-DE'));
-                } catch {}
-            }
-            metaEl.textContent = parts.join(' • ');
-
-            infoDiv.appendChild(titleEl);
-            if (parts.length > 0) infoDiv.appendChild(metaEl);
+            div.appendChild(titleDiv);
+            div.appendChild(metaDiv);
 
             const link = document.createElement('a');
-            link.href = doc.file_url || '#';
+            link.href = doc.file_url;
             link.target = '_blank';
-            link.rel = 'noopener noreferrer';
             link.textContent = 'Öffnen';
 
-            li.appendChild(infoDiv);
+            li.appendChild(div);
             li.appendChild(link);
             listEl.appendChild(li);
         });
     }
 
     async function loadDocumentsForUser(user) {
-        docsUnterwMessage.textContent = '';
-        docsTimesheetsMessage.textContent = '';
-        docsSicknotesMessage.textContent = '';
-        docsUnterwList.innerHTML = '';
-        docsTimesheetsList.innerHTML = '';
-        docsSicknotesList.innerHTML = '';
-
-        const { data, error } = await supabase
+        const { data: docs, error } = await supabaseClient
             .from('documents')
-            .select('id, title, file_url, doc_type, created_at')
+            .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
         if (error) {
-            docsUnterwMessage.textContent = 'Fehler beim Laden der Dokumente: ' + error.message;
+            console.error(error);
             return;
         }
 
-        const unterweisungen = [];
-        const timesheets     = [];
-        const sicknotes      = [];
+        const unterweisungen = docs.filter(d => d.doc_type === 'unterweisung' || !d.doc_type);
+        const timesheets = docs.filter(d => d.doc_type === 'stundenzettel');
+        const sicknotes = docs.filter(d => d.doc_type === 'krankmeldung');
 
-        (data || []).forEach(doc => {
-            const type = (doc.doc_type || '').toLowerCase();
-            if (type === 'stundenzettel') timesheets.push(doc);
-            else if (type === 'krankmeldung') sicknotes.push(doc);
-            else unterweisungen.push(doc); // Standard: Unterweisungen
-        });
+        if(unterweisungen.length > 0) docsUnterwMessage.classList.add('hidden');
+        else docsUnterwMessage.classList.remove('hidden');
+        renderDocumentList(docsUnterwList, unterweisungen);
 
-        renderDocumentList(docsUnterwList, docsUnterwMessage, unterweisungen, 'Es sind aktuell keine Unterweisungen für Sie hinterlegt.');
-        renderDocumentList(docsTimesheetsList, docsTimesheetsMessage, timesheets, 'Es wurden noch keine Stundenzettel-Nachweise hochgeladen.');
-        renderDocumentList(docsSicknotesList, docsSicknotesMessage, sicknotes, 'Es wurden noch keine Krankmeldungen hochgeladen.');
+        if(timesheets.length > 0) docsTimesheetsMessage.classList.add('hidden');
+        else docsTimesheetsMessage.classList.remove('hidden');
+        renderDocumentList(docsTimesheetsList, timesheets);
+
+        if(sicknotes.length > 0) sicknotesUserMessage.classList.add('hidden');
+        else sicknotesUserMessage.classList.remove('hidden');
+        renderDocumentList(docsSicknotesList, sicknotes);
+    }
+
+    // --- UPLOAD HANDLERS (USER) ---
+
+    async function handleUserUpload(fileInput, docType, folder) {
+        const file = fileInput.files[0];
+        if (!file || !currentUser) return;
+        
+        try {
+            const url = await uploadFileToStorage(file, `${folder}/${currentUser.id}`);
+            const dateStr = new Date().toLocaleDateString('de-DE');
+            const title = `${docType === 'stundenzettel' ? 'Stundenzettel' : 'Krankmeldung'} ${dateStr} – ${file.name}`;
+            
+            await insertDocumentRow(currentUser.id, title, docType, url);
+            alert('Upload erfolgreich!');
+            loadDocumentsForUser(currentUser);
+        } catch (err) {
+            alert('Fehler beim Upload: ' + err.message);
+        } finally {
+            fileInput.value = '';
+        }
+    }
+
+    uploadTimesheetInput.addEventListener('change', () => handleUserUpload(uploadTimesheetInput, 'stundenzettel', 'stundenzettel'));
+    uploadSicknoteInput.addEventListener('change', () => handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'krankmeldungen'));
+    
+    uploadTimesheetBtn.addEventListener('click', () => uploadTimesheetInput.click());
+    uploadSicknoteBtn.addEventListener('click', () => uploadSicknoteInput.click());
+
+    // --- ADMIN AREA ---
+
+    async function loadEmployeeGrid() {
+        if (currentProfile?.role !== 'admin') return;
+
+        const { data: profiles, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .order('full_name');
+
+        if (error) {
+            adminMessage.textContent = 'Fehler beim Laden der Profile: ' + error.message;
+            return;
+        }
+
+        allProfilesCache = profiles;
+
+        // Pending
+        const pending = profiles.filter(p => !p.is_approved);
+        updatePendingBadges(pending.length);
+        
+        pendingEmployeeGrid.innerHTML = '';
+        if (pending.length > 0) {
+            pendingRequestsBox.classList.remove('hidden');
+            pending.forEach(p => {
+                const card = createPendingCard(p);
+                pendingEmployeeGrid.appendChild(card);
+            });
+        } else {
+            pendingRequestsBox.classList.add('hidden');
+        }
+
+        // Approved Groups
+        const approved = profiles.filter(p => p.is_approved);
+        const admins = approved.filter(p => p.role === 'admin');
+        const fulltime = approved.filter(p => p.role !== 'admin' && p.employment_type === 'fulltime');
+        const minijob = approved.filter(p => p.role !== 'admin' && p.employment_type === 'minijob');
+        const others = approved.filter(p => p.role !== 'admin' && p.employment_type !== 'fulltime' && p.employment_type !== 'minijob');
+
+        approvedEmployeesContent.innerHTML = '';
+        renderGroup('Administratoren', admins);
+        renderGroup('Vollzeit-Mitarbeiter', fulltime);
+        renderGroup('Minijob-Mitarbeiter', minijob);
+        renderGroup('Sonstige Mitarbeiter', others);
+
+        // Update User Select for Uploads
+        populateAdminUploadSelect(approved);
     }
 
     function updatePendingBadges(count) {
-        const badges = [sidebarAdminBadge, tileAdminBadge, adminRequestsCounter];
-        badges.forEach(b => {
-            if (!b) return;
-            if (count > 0) {
-                b.textContent = String(count);
-                b.classList.remove('hidden');
-            } else {
-                b.classList.add('hidden');
-            }
-        });
-    }
-
-    async function loadEmployeeDocumentsForAdmin(profileRow) {
-        employeeDetailDocs.innerHTML = '';
-        employeeDetailDocsMessage.textContent = '';
-
-        const { data, error } = await supabase
-            .from('documents')
-            .select('id, title, file_url, doc_type, created_at')
-            .eq('user_id', profileRow.id)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            employeeDetailDocsMessage.textContent = 'Fehler beim Laden der Dokumente: ' + error.message;
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            employeeDetailDocsMessage.textContent = 'Keine Dokumente für diesen Mitarbeiter vorhanden.';
-            return;
-        }
-
-        data.forEach(doc => {
-            const li = document.createElement('li');
-            li.className = 'document-item';
-
-            const infoDiv = document.createElement('div');
-            const titleEl = document.createElement('div');
-            titleEl.className = 'document-item-title';
-            titleEl.textContent = doc.title || 'Dokument';
-
-            const metaEl = document.createElement('div');
-            metaEl.className = 'document-item-meta';
-            const parts = [];
-            if (doc.doc_type) parts.push(doc.doc_type);
-            if (doc.created_at) {
-                try {
-                    const d = new Date(doc.created_at);
-                    parts.push(d.toLocaleDateString('de-DE'));
-                } catch {}
-            }
-            metaEl.textContent = parts.join(' • ');
-
-            infoDiv.appendChild(titleEl);
-            if (parts.length > 0) infoDiv.appendChild(metaEl);
-
-            const link = document.createElement('a');
-            link.href = doc.file_url || '#';
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.textContent = 'Öffnen';
-
-            li.appendChild(infoDiv);
-            li.appendChild(link);
-
-            employeeDetailDocs.appendChild(li);
-        });
-    }
-
-    function describeEmploymentType(p) {
-        if (p.role === 'admin') return 'Administrator';
-        if (p.employment_type === 'fulltime') return 'Vollzeit-Mitarbeiter';
-        if (p.employment_type === 'minijob') return 'Minijob-Mitarbeiter';
-        return 'Mitarbeiter (ohne Kategorie)';
-    }
-
-    async function openEmployeeDetail(profileRow) {
-        if (!currentProfile || currentProfile.role !== 'admin') return;
-        selectedEmployee = profileRow;
-
-        const typeText = describeEmploymentType(profileRow);
-        const email = profileRow.email || '-';
-
-        employeeDetailInfo.textContent =
-            `${profileRow.full_name || email} · Rolle: ${profileRow.role} · Art: ${typeText} · E-Mail: ${email}`;
-
-        await loadEmployeeDocumentsForAdmin(profileRow);
-
-        setActiveSection('section-employee-detail');
-    }
-
-    async function loadEmployeeGrid() {
-        if (!currentProfile || currentProfile.role !== 'admin') {
-            adminMessage.textContent = 'Keine Admin-Berechtigung.';
-            employeeGrid.innerHTML = '';
-            pendingEmployeeGrid.innerHTML = '';
-            pendingRequestsBox.classList.add('hidden');
-            updatePendingBadges(0);
-            return;
-        }
-
-        adminMessage.textContent = 'Lade Mitarbeiter...';
-        employeeGrid.innerHTML = '';
-        pendingEmployeeGrid.innerHTML = '';
-
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, role, is_approved, employment_type')
-            .order('full_name', { ascending: true });
-
-        if (error) {
-            adminMessage.textContent = 'Fehler beim Laden der Mitarbeiter: ' + error.message;
-            updatePendingBadges(0);
-            return;
-        }
-
-        allProfilesCache = data || [];
-
-        const pending = data.filter(p => !p.is_approved);
-        updatePendingBadges(pending.length);
-
-        if (pending.length > 0) {
-            pendingRequestsBox.classList.remove('hidden');
+        const txt = count > 0 ? count : '';
+        sidebarAdminBadge.textContent = txt;
+        tileAdminBadge.textContent = txt;
+        adminRequestsCounter.textContent = txt;
+        
+        if(count > 0) {
+            sidebarAdminBadge.classList.remove('hidden');
+            tileAdminBadge.classList.remove('hidden');
+            adminRequestsCounter.classList.remove('hidden');
         } else {
-            pendingRequestsBox.classList.add('hidden');
+            sidebarAdminBadge.classList.add('hidden');
+            tileAdminBadge.classList.add('hidden');
+            adminRequestsCounter.classList.add('hidden');
         }
+    }
 
-        // Pending-Karten (mit Rollen- und Beschäftigungsart-Wahl)
-        pending.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'employee-card pending';
+    function createPendingCard(p) {
+        const card = document.createElement('div');
+        card.className = 'employee-card pending';
+        
+        const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
+        
+        // Selects
+        const roleSel = document.createElement('select');
+        roleSel.innerHTML = `<option value="user">Mitarbeiter</option><option value="admin">Administrator</option>`;
+        
+        const typeSel = document.createElement('select');
+        typeSel.innerHTML = `<option value="fulltime">Vollzeit</option><option value="minijob">Minijob</option>`;
 
-            const avatar = document.createElement('div');
-            avatar.className = 'employee-avatar';
-            const initials = (p.full_name || p.email || '?')
-                .split(' ')
-                .map(x => x.trim()[0])
-                .filter(Boolean)
-                .slice(0,2)
-                .join('')
-                .toUpperCase();
-            avatar.textContent = initials || '?';
-
-            const infoCol = document.createElement('div');
-
-            const nameEl = document.createElement('div');
-            nameEl.className = 'employee-info-main';
-            nameEl.textContent = p.full_name || '(kein Name)';
-
-            const emailEl = document.createElement('div');
-            emailEl.className = 'employee-info-sub';
-            emailEl.textContent = p.email || '';
-
-            const infoPending = document.createElement('div');
-            infoPending.className = 'employee-info-sub';
-            infoPending.textContent = 'Status: wartet auf Freigabe';
-
-            const roleRow = document.createElement('div');
-            roleRow.className = 'employee-role';
-            const roleLabel = document.createElement('span');
-            roleLabel.textContent = 'Rolle bei Freigabe: ';
-            const roleSelect = document.createElement('select');
-            const optUser = document.createElement('option');
-            optUser.value = 'user';
-            optUser.textContent = 'Mitarbeiter';
-            const optAdmin = document.createElement('option');
-            optAdmin.value = 'admin';
-            optAdmin.textContent = 'Administrator';
-            roleSelect.appendChild(optUser);
-            roleSelect.appendChild(optAdmin);
-            roleSelect.value = p.role || 'user';
-            roleRow.appendChild(roleLabel);
-            roleRow.appendChild(roleSelect);
-
-            // Beschäftigungsart nur für Nicht-Admins relevant
-            const typeRow = document.createElement('div');
-            typeRow.className = 'employee-role';
-            const typeLabel = document.createElement('span');
-            typeLabel.textContent = 'Beschäftigungsart: ';
-            const typeSelect = document.createElement('select');
-            const optFull = document.createElement('option');
-            optFull.value = 'fulltime';
-            optFull.textContent = 'Vollzeit';
-            const optMini = document.createElement('option');
-            optMini.value = 'minijob';
-            optMini.textContent = 'Minijob';
-            typeSelect.appendChild(optFull);
-            typeSelect.appendChild(optMini);
-            typeSelect.value = p.employment_type || 'fulltime';
-            typeRow.appendChild(typeLabel);
-            typeRow.appendChild(typeSelect);
-
-            const actions = document.createElement('div');
-            actions.className = 'employee-actions';
-
-            const btnApprove = document.createElement('button');
-            btnApprove.className = 'btn-small approve';
-            btnApprove.textContent = 'Freigeben';
-            btnApprove.addEventListener('click', async () => {
-                const employmentType = (roleSelect.value === 'admin') ? null : typeSelect.value;
-                await approveUser(p, roleSelect.value, employmentType);
-            });
-
-            const btnOpen = document.createElement('button');
-            btnOpen.className = 'btn-small primary';
-            btnOpen.textContent = 'Mitarbeiter öffnen';
-            btnOpen.addEventListener('click', () => {
-                openEmployeeDetail(p);
-            });
-
-            actions.appendChild(btnApprove);
-            actions.appendChild(btnOpen);
-
-            infoCol.appendChild(nameEl);
-            infoCol.appendChild(emailEl);
-            infoCol.appendChild(infoPending);
-            infoCol.appendChild(roleRow);
-            infoCol.appendChild(typeRow);
-            infoCol.appendChild(actions);
-
-            card.appendChild(avatar);
-            card.appendChild(infoCol);
-
-            pendingEmployeeGrid.appendChild(card);
+        card.innerHTML = `
+            <div class="employee-avatar">${initials}</div>
+            <div>
+                <div class="employee-info-main">${p.full_name || '-'}</div>
+                <div class="employee-info-sub">${p.email}</div>
+                <div class="employee-info-sub" style="color:#e65100">Wartet auf Freigabe</div>
+                <div class="employee-role-selector">
+                    <label>Rolle:</label>
+                </div>
+            </div>
+        `;
+        // Append elements manually to attach events
+        card.querySelector('.employee-role-selector').appendChild(roleSel);
+        
+        const typeDiv = document.createElement('div');
+        typeDiv.className = 'employee-role-selector';
+        typeDiv.innerHTML = '<label>Art:</label>';
+        typeDiv.appendChild(typeSel);
+        
+        // Hide Art if Admin
+        roleSel.addEventListener('change', () => {
+             typeSel.disabled = (roleSel.value === 'admin');
         });
 
-        // ========== Alle Mitarbeiter gruppiert anzeigen ==========
-        const admins   = data.filter(p => p.role === 'admin');
-        const fulltime = data.filter(p => p.role !== 'admin' && p.employment_type === 'fulltime');
-        const minijob  = data.filter(p => p.role !== 'admin' && p.employment_type === 'minijob');
-        const others   = data.filter(p =>
-            p.role !== 'admin' &&
-            (!p.employment_type || (p.employment_type !== 'fulltime' && p.employment_type !== 'minijob'))
-        );
+        const actions = document.createElement('div');
+        actions.className = 'employee-actions';
+        
+        const btnApprove = document.createElement('button');
+        btnApprove.className = 'btn-small approve';
+        btnApprove.textContent = 'Freigeben';
+        btnApprove.onclick = () => approveUser(p.id, roleSel.value, typeSel.value);
+        
+        const btnOpen = document.createElement('button');
+        btnOpen.className = 'btn-small primary';
+        btnOpen.textContent = 'Öffnen';
+        btnOpen.onclick = () => openEmployeeDetail(p);
 
-        employeeGrid.innerHTML = '';
+        actions.appendChild(btnApprove);
+        actions.appendChild(btnOpen);
+        
+        // Insert typeDiv before actions, inside the main div (child 1)
+        card.children[1].appendChild(typeDiv);
+        card.children[1].appendChild(actions);
 
-        function createCategoryBlock(titleText, list) {
-            if (!list || list.length === 0) return;
-            const wrapper = document.createElement('div');
-            wrapper.className = 'employee-category-wrapper';
+        return card;
+    }
 
-            const heading = document.createElement('div');
-            heading.className = 'employee-category-heading';
-            heading.textContent = titleText;
-
-            const grid = document.createElement('div');
-            grid.className = 'employee-grid';
-
-            list.forEach(p => {
-                const card = buildEmployeeCard(p);
-                grid.appendChild(card);
-            });
-
-            wrapper.appendChild(heading);
-            wrapper.appendChild(grid);
-            employeeGrid.appendChild(wrapper);
-        }
-
-        function buildEmployeeCard(p) {
+    function renderGroup(title, list) {
+        if (list.length === 0) return;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'employee-category-wrapper';
+        wrapper.innerHTML = `<h4 class="employee-category-heading">${title}</h4>`;
+        
+        const grid = document.createElement('div');
+        grid.className = 'employee-grid';
+        
+        list.forEach(p => {
             const card = document.createElement('div');
             card.className = 'employee-card';
-
-            const avatar = document.createElement('div');
-            avatar.className = 'employee-avatar';
-            const initials = (p.full_name || p.email || '?')
-                .split(' ')
-                .map(x => x.trim()[0])
-                .filter(Boolean)
-                .slice(0,2)
-                .join('')
-                .toUpperCase();
-            avatar.textContent = initials || '?';
-
-            const infoCol = document.createElement('div');
-
-            const nameEl = document.createElement('div');
-            nameEl.className = 'employee-info-main';
-            nameEl.textContent = p.full_name || '(kein Name)';
-
-            const emailEl = document.createElement('div');
-            emailEl.className = 'employee-info-sub';
-            emailEl.textContent = p.email || '';
-
-            // Rolle
-            const roleRow = document.createElement('div');
-            roleRow.className = 'employee-role';
-            const roleLabel = document.createElement('span');
-            roleLabel.textContent = 'Rolle: ';
-            const roleSelect = document.createElement('select');
-            const optUser = document.createElement('option');
-            optUser.value = 'user';
-            optUser.textContent = 'Mitarbeiter';
-            const optAdmin = document.createElement('option');
-            optAdmin.value = 'admin';
-            optAdmin.textContent = 'Administrator';
-            roleSelect.appendChild(optUser);
-            roleSelect.appendChild(optAdmin);
-            roleSelect.value = p.role || 'user';
-
-            const statusSpan = document.createElement('span');
-            statusSpan.style.fontSize = '0.75rem';
-            statusSpan.style.marginLeft = '6px';
-            statusSpan.style.color = p.is_approved ? '#2e7d32' : '#e65100';
-            statusSpan.textContent = p.is_approved ? '(freigegeben)' : '(nicht freigegeben)';
-
-            roleRow.appendChild(roleLabel);
-            roleRow.appendChild(roleSelect);
-            roleRow.appendChild(statusSpan);
-
-            // Beschäftigungsart (nur für Mitarbeiter, nicht für Admins)
-            let typeSelect = null;
-            if (p.role !== 'admin') {
-                const typeRow = document.createElement('div');
-                typeRow.className = 'employee-role';
-                const typeLabel = document.createElement('span');
-                typeLabel.textContent = 'Beschäftigungsart: ';
-                typeSelect = document.createElement('select');
-                const optFull = document.createElement('option');
-                optFull.value = 'fulltime';
-                optFull.textContent = 'Vollzeit';
-                const optMini = document.createElement('option');
-                optMini.value = 'minijob';
-                optMini.textContent = 'Minijob';
-                typeSelect.appendChild(optFull);
-                typeSelect.appendChild(optMini);
-                typeSelect.value = p.employment_type || 'fulltime';
-
-                typeRow.appendChild(typeLabel);
-                typeRow.appendChild(typeSelect);
-                infoCol.appendChild(typeRow);
-            }
-
+            if(p.role === 'admin') card.classList.add('admin');
+            
+            const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
+            
+            // Edit Role
+            const roleSel = document.createElement('select');
+            roleSel.innerHTML = `<option value="user" ${p.role==='user'?'selected':''}>Mitarbeiter</option>
+                                 <option value="admin" ${p.role==='admin'?'selected':''}>Administrator</option>`;
+            
+            // Actions
             const actions = document.createElement('div');
             actions.className = 'employee-actions';
+            
+            const btnSave = document.createElement('button');
+            btnSave.className = 'btn-small grey';
+            btnSave.textContent = 'Rolle speichern';
+            btnSave.onclick = () => updateUserRole(p.id, roleSel.value);
 
             const btnOpen = document.createElement('button');
             btnOpen.className = 'btn-small primary';
-            btnOpen.textContent = 'Mitarbeiter öffnen';
-            btnOpen.addEventListener('click', () => {
-                openEmployeeDetail(p);
-            });
-
-            const btnSaveRole = document.createElement('button');
-            btnSaveRole.className = 'btn-small grey';
-            btnSaveRole.textContent = 'Rolle speichern';
-            btnSaveRole.addEventListener('click', async () => {
-                await updateUserRole(p.id, roleSelect.value, p.email);
-            });
-
+            btnOpen.textContent = 'Öffnen';
+            btnOpen.onclick = () => openEmployeeDetail(p);
+            
             actions.appendChild(btnOpen);
-            actions.appendChild(btnSaveRole);
+            actions.appendChild(btnSave);
 
-            if (!p.is_approved) {
-                const btnApprove = document.createElement('button');
-                btnApprove.className = 'btn-small approve';
-                btnApprove.textContent = 'Freigeben';
-                btnApprove.addEventListener('click', async () => {
-                    const employmentType = (roleSelect.value === 'admin')
-                        ? null
-                        : (typeSelect ? typeSelect.value : null);
-                    await approveUser(p, roleSelect.value, employmentType);
-                });
-                actions.appendChild(btnApprove);
-            }
-
-            infoCol.appendChild(nameEl);
-            infoCol.appendChild(emailEl);
-            infoCol.appendChild(roleRow);
-            infoCol.appendChild(actions);
-
-            card.appendChild(avatar);
-            card.appendChild(infoCol);
-
-            return card;
-        }
-
-        createCategoryBlock('Administratoren', admins);
-        createCategoryBlock('Vollzeit-Mitarbeiter', fulltime);
-        createCategoryBlock('Minijob-Mitarbeiter', minijob);
-        createCategoryBlock('Mitarbeiter (ohne Kategorie)', others);
-
-        adminMessage.textContent = `Es wurden ${data.length} Mitarbeiter geladen.`;
-        populateAdminUnterweisungenUserSelect();
+            card.innerHTML = `
+                <div class="employee-avatar">${initials}</div>
+                <div>
+                    <div class="employee-info-main">${p.full_name || '-'}</div>
+                    <div class="employee-info-sub">${p.email}</div>
+                    <div class="employee-role-selector"><label>Rolle:</label></div>
+                </div>
+            `;
+            
+            card.querySelector('.employee-role-selector').appendChild(roleSel);
+            card.children[1].appendChild(actions); // Append actions
+            
+            grid.appendChild(card);
+        });
+        
+        wrapper.appendChild(grid);
+        approvedEmployeesContent.appendChild(wrapper);
     }
 
-    function populateAdminUnterweisungenUserSelect() {
-        if (!adminUnterwUserSelect) return;
-        const previousValue = adminUnterwUserSelect.value;
+    async function approveUser(id, role, empType) {
+        if(!confirm('Benutzer wirklich freigeben?')) return;
+        
+        const updates = {
+            is_approved: true,
+            approved_at: new Date(),
+            approved_by: currentUser.id,
+            role: role,
+            employment_type: (role === 'admin') ? null : empType
+        };
 
+        const { error } = await supabaseClient.from('profiles').update(updates).eq('id', id);
+        if(error) alert('Fehler: ' + error.message);
+        else loadEmployeeGrid();
+    }
+
+    async function updateUserRole(id, role) {
+        const { error } = await supabaseClient.from('profiles').update({ role: role }).eq('id', id);
+        if(error) alert('Fehler: ' + error.message);
+        else {
+            alert('Rolle aktualisiert');
+            loadEmployeeGrid();
+        }
+    }
+    
+    // --- ADMIN UPLOAD ---
+    
+    function populateAdminUploadSelect(profiles) {
         adminUnterwUserSelect.innerHTML = '';
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = '';
-        defaultOpt.textContent = 'Bitte wählen...';
-        adminUnterwUserSelect.appendChild(defaultOpt);
-
-        const approved = (allProfilesCache || []).filter(p => p.is_approved);
-        approved.forEach(p => {
+        profiles.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.id;
-            opt.textContent = p.full_name || p.email || '(kein Name)';
+            opt.textContent = p.full_name || p.email;
             adminUnterwUserSelect.appendChild(opt);
         });
-
-        if (approved.some(p => p.id === previousValue)) {
-            adminUnterwUserSelect.value = previousValue;
-        }
     }
 
-    async function updateUserRole(userId, newRole, email) {
-        if (!currentProfile || currentProfile.role !== 'admin') return;
+    adminUnterwScope.addEventListener('change', () => {
+        if(adminUnterwScope.value === 'single') adminUnterwUserSelectWrapper.classList.remove('hidden');
+        else adminUnterwUserSelectWrapper.classList.add('hidden');
+    });
 
-        const sicher = confirm(`Soll die Rolle von "${email}" wirklich auf "${newRole === 'admin' ? 'Administrator' : 'Mitarbeiter'}" geändert werden?`);
-        if (!sicher) return;
+    adminUnterwUploadBtn.addEventListener('click', async () => {
+        const file = adminUnterwInput.files[0];
+        if (!file) return alert('Bitte Datei wählen');
+        
+        adminUnterwMessage.textContent = 'Upload läuft...';
+        
+        try {
+            const category = adminUploadCategory.value; // 'unterweisung' or 'krankmeldung' (though UI mostly implies Unterweisung)
+            const scope = adminUnterwScope.value;
+            
+            // Filter Targets
+            let targets = [];
+            const approved = allProfilesCache.filter(p => p.is_approved);
+            
+            if (scope === 'all') targets = approved;
+            else if (scope === 'fulltime') targets = approved.filter(p => p.employment_type === 'fulltime');
+            else if (scope === 'minijob') targets = approved.filter(p => p.employment_type === 'minijob');
+            else if (scope === 'single') {
+                const uid = adminUnterwUserSelect.value;
+                targets = approved.filter(p => p.id === uid);
+            }
 
-        const { error } = await supabase
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', userId);
+            if(targets.length === 0) throw new Error('Keine Mitarbeiter ausgewählt.');
 
-        if (error) {
-            adminMessage.textContent = 'Fehler beim Speichern der Rolle: ' + error.message;
-            return;
+            // Upload Once
+            const url = await uploadFileToStorage(file, `unterweisungen/admin`);
+            
+            // Insert Rows
+            for (const t of targets) {
+                const title = `${file.name} – ${t.full_name}`;
+                await insertDocumentRow(t.id, title, category, url);
+            }
+            
+            adminUnterwMessage.textContent = `Erfolgreich an ${targets.length} Mitarbeiter verteilt.`;
+            adminUnterwInput.value = '';
+
+        } catch (e) {
+            adminUnterwMessage.textContent = 'Fehler: ' + e.message;
         }
+    });
 
-        adminMessage.textContent = 'Rolle erfolgreich geändert.';
-        await loadEmployeeGrid();
-    }
+    // --- ADMIN OVERVIEW (NEW UPLOADS) ---
 
-    async function approveUser(profileRow, desiredRole, employmentType) {
-        if (!currentProfile || currentProfile.role !== 'admin') return;
-        const name = profileRow.full_name || profileRow.email;
-        const roleText = desiredRole === 'admin' ? 'Administrator' : 'Mitarbeiter';
-        const sicher = confirm(`Mitarbeiter "${name}" als "${roleText}" freigeben?`);
-        if (!sicher) return;
-
-        const updateData = {
-            is_approved: true,
-            approved_at: new Date().toISOString(),
-            approved_by: currentUser.id
-        };
-        if (desiredRole) {
-            updateData.role = desiredRole;
-        }
-        // Beschäftigungsart nur setzen, wenn nicht Admin
-        if (desiredRole !== 'admin' && employmentType) {
-            updateData.employment_type = employmentType;
-        }
-
-        const { error } = await supabase
-            .from('profiles')
-            .update(updateData)
-            .eq('id', profileRow.id);
-
-        if (error) {
-            adminMessage.textContent = 'Fehler beim Freigeben: ' + error.message;
-            return;
-        }
-
-        const typeText = (desiredRole === 'admin')
-            ? ''
-            : (employmentType === 'fulltime' ? ' (Vollzeit)' :
-               employmentType === 'minijob' ? ' (Minijob)' : '');
-        adminMessage.textContent = `Mitarbeiter "${name}" wurde freigeschaltet (${roleText}${typeText}).`;
-        await loadEmployeeGrid();
-    }
-
-    // Admin-Dokumentübersicht (Stundenzettel & Krankmeldungen)
     async function loadAdminDocumentOverviews() {
-        if (!currentProfile || currentProfile.role !== 'admin') {
-            adminTimesheetsOverview.textContent = '';
-            adminSicknotesOverview.textContent = '';
-            return;
-        }
-
-        adminTimesheetsOverview.textContent = 'Lade Stundenzettel...';
-        adminSicknotesOverview.textContent = 'Lade Krankmeldungen...';
-
-        const { data, error } = await supabase
+        const { data: docs, error } = await supabaseClient
             .from('documents')
-            .select('id, title, file_url, doc_type, created_at, user_id')
+            .select('*')
             .in('doc_type', ['stundenzettel', 'krankmeldung'])
             .order('created_at', { ascending: false });
 
-        if (error) {
-            adminTimesheetsOverview.textContent = 'Fehler beim Laden: ' + error.message;
-            adminSicknotesOverview.textContent = 'Fehler beim Laden: ' + error.message;
-            return;
-        }
+        if(error) return;
 
-        const docs = data || [];
-        const userIds = [...new Set(docs.map(d => d.user_id).filter(Boolean))];
+        // Load Last Seen
+        const lastTs = localStorage.getItem('bayrak_admin_last_opened_timesheets') || '1970-01-01';
+        const lastSn = localStorage.getItem('bayrak_admin_last_opened_sicknotes') || '1970-01-01';
 
-        let profileMap = {};
-        if (userIds.length > 0) {
-            const { data: profs, error: pErr } = await supabase
-                .from('profiles')
-                .select('id, full_name, email')
-                .in('id', userIds);
+        // Filter Lists
+        const tsDocs = docs.filter(d => d.doc_type === 'stundenzettel');
+        const snDocs = docs.filter(d => d.doc_type === 'krankmeldung');
 
-            if (!pErr && profs) {
-                profileMap = profs.reduce((acc, p) => {
-                    acc[p.id] = p;
-                    return acc;
-                }, {});
-            }
-        }
+        // Count New
+        const newTs = tsDocs.filter(d => new Date(d.created_at) > new Date(lastTs)).length;
+        const newSn = snDocs.filter(d => new Date(d.created_at) > new Date(lastSn)).length;
 
-        const timesheets = docs.filter(d => (d.doc_type || '').toLowerCase() === 'stundenzettel');
-        const sicknotes  = docs.filter(d => (d.doc_type || '').toLowerCase() === 'krankmeldung');
+        adminTimesheetsNewCount.textContent = newTs > 0 ? `${newTs} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
+        adminSicknotesNewCount.textContent = newSn > 0 ? `${newSn} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
 
-        const nowIso = new Date().toISOString();
-        const tsKey  = 'bayrak_admin_last_opened_timesheets';
-        const snKey  = 'bayrak_admin_last_opened_sicknotes';
+        renderAdminGroupedList(tsDocs, adminTimesheetsOverview);
+        renderAdminGroupedList(snDocs, adminSicknotesOverview);
 
-        const lastTsOpened = new Date(localStorage.getItem(tsKey) || 0);
-        const lastSnOpened = new Date(localStorage.getItem(snKey) || 0);
-
-        let tsNewCount = 0;
-        let snNewCount = 0;
-
-        function groupDocsByUserYearMonth(list, lastOpened) {
-            const grouped = {};
-            list.forEach(doc => {
-                const createdAt = doc.created_at ? new Date(doc.created_at) : null;
-                if (createdAt && createdAt > lastOpened) {
-                    if ((doc.doc_type || '').toLowerCase() === 'stundenzettel') tsNewCount++;
-                    if ((doc.doc_type || '').toLowerCase() === 'krankmeldung') snNewCount++;
-                }
-
-                const userId = doc.user_id;
-                if (!userId) return;
-                const profile = profileMap[userId];
-                const userName = profile?.full_name || profile?.email || '(Unbekannt)';
-
-                const year = createdAt ? createdAt.getFullYear() : 'Unbekannt';
-                const month = createdAt ? (createdAt.getMonth() + 1).toString().padStart(2, '0') : '??';
-
-                if (!grouped[userName]) grouped[userName] = {};
-                const ymKey = `${year}-${month}`;
-                if (!grouped[userName][ymKey]) grouped[userName][ymKey] = [];
-                grouped[userName][ymKey].push(doc);
-            });
-            return grouped;
-        }
-
-        const tsGrouped = groupDocsByUserYearMonth(timesheets, lastTsOpened);
-        const snGrouped = groupDocsByUserYearMonth(sicknotes, lastSnOpened);
-
-        function renderAdminOverview(container, grouped, emptyText, newCount) {
-            container.innerHTML = '';
-            if (Object.keys(grouped).length === 0) {
-                container.textContent = emptyText;
-                return;
-            }
-
-            const infoTop = document.createElement('div');
-            infoTop.style.marginBottom = '6px';
-            infoTop.textContent = newCount > 0
-                ? `Es gibt ${newCount} neue Uploads seit Ihrem letzten Besuch dieses Bereichs.`
-                : 'Keine neuen Uploads seit Ihrem letzten Besuch dieses Bereichs.';
-            container.appendChild(infoTop);
-
-            Object.keys(grouped).sort().forEach(userName => {
-                const userHeader = document.createElement('div');
-                userHeader.style.fontWeight = '600';
-                userHeader.style.marginTop = '6px';
-                userHeader.textContent = userName;
-                container.appendChild(userHeader);
-
-                const ymEntries = grouped[userName];
-                Object.keys(ymEntries).sort().forEach(ym => {
-                    const ymDiv = document.createElement('div');
-                    ymDiv.style.marginLeft = '10px';
-                    ymDiv.style.marginTop = '2px';
-                    ymDiv.textContent = `• ${ym}: ${ymEntries[ym].length} Datei(en)`;
-                    container.appendChild(ymDiv);
-                });
-            });
-        }
-
-        renderAdminOverview(
-            adminTimesheetsOverview,
-            tsGrouped,
-            'Es wurden noch keine Stundenzettel-Nachweise hochgeladen.',
-            tsNewCount
-        );
-        renderAdminOverview(
-            adminSicknotesOverview,
-            snGrouped,
-            'Es wurden noch keine Krankmeldungen hochgeladen.',
-            snNewCount
-        );
-
-        // Markierung "neu" zurücksetzen, weil Admin Bereich jetzt geöffnet wurde
-        localStorage.setItem(tsKey, nowIso);
-        localStorage.setItem(snKey, nowIso);
+        // Update Last Seen
+        localStorage.setItem('bayrak_admin_last_opened_timesheets', new Date().toISOString());
+        localStorage.setItem('bayrak_admin_last_opened_sicknotes', new Date().toISOString());
     }
 
-    async function showPortal(user) {
-        currentUser = user;
-        currentProfile = await loadProfile(user);
-
-        const displayName = currentProfile.full_name || currentProfile.email || user.email;
-
-        if (!currentProfile.is_approved) {
-            // Benutzer ist noch nicht freigegeben -> Pending-Ansicht
-            authSection.classList.add('hidden');
-            portalSection.classList.add('hidden');
-            pendingSection.classList.remove('hidden');
-
-            topUserText.textContent = `${displayName} (wartet auf Freigabe)`;
-            logoutBtn.classList.remove('hidden');
-
-            pendingMessage.textContent = `Angemeldet als: ${displayName} (${currentProfile.role || 'Mitarbeiter'}). Ihr Zugang ist noch nicht freigegeben.`;
-            resetInactivityTimer();
+    function renderAdminGroupedList(docs, container) {
+        container.innerHTML = '';
+        if(docs.length === 0) {
+            container.textContent = 'Keine Einträge.';
             return;
         }
-
-        // Benutzer ist freigegeben -> volles Portal
-        userNameText.textContent = displayName;
-        topUserText.textContent = `${displayName} (${currentProfile.role === 'admin' ? 'Administrator' : 'Mitarbeiter'})`;
-
-        sidebarUserRole.textContent = `Rolle: ${currentProfile.role === 'admin' ? 'Administrator' : 'Mitarbeiter'}`;
-
-        if (currentProfile.role === 'admin') {
-            roleBadge.classList.remove('hidden');
-            roleBadge.textContent = 'Administrator';
-            sidebarAdminLabel.classList.remove('hidden');
-            sidebarAdminLink.classList.remove('hidden');
-            tileAdmin.classList.remove('hidden');
-        } else {
-            roleBadge.classList.add('hidden');
-            sidebarAdminLabel.classList.add('hidden');
-            sidebarAdminLink.classList.add('hidden');
-            tileAdmin.classList.add('hidden');
-            updatePendingBadges(0);
-        }
-
-        authSection.classList.add('hidden');
-        pendingSection.classList.add('hidden');
-        portalSection.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-
-        populateSettingsForm(currentProfile, user);
-
-        await loadDocumentsForUser(user);
-
-        if (currentProfile.role === 'admin') {
-            await loadEmployeeGrid();
-            await loadAdminDocumentOverviews();
-        }
-
-        setActiveSection('section-dashboard');
-        resetInactivityTimer();
-    }
-
-    function showLogin() {
-        currentUser = null;
-        currentProfile = null;
-        selectedEmployee = null;
-        if (inactivityTimer) {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = null;
-        }
-        authSection.classList.remove('hidden');
-        portalSection.classList.add('hidden');
-        pendingSection.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-        topUserText.textContent = '';
-        clearAuthMessages();
-        loginBox.classList.remove('hidden');
-        registerBox.classList.add('hidden');
-        resetBox.classList.add('hidden');
-    }
-
-    // SETTINGS: Profil speichern
-    settingsSaveProfile.addEventListener('click', async () => {
-        if (!currentUser || !currentProfile) return;
-        setSettingsProfileMessage('');
-
-        const firstName = settingsFirstName.value.trim();
-        const lastName  = settingsLastName.value.trim();
-
-        if (!firstName || !lastName) {
-            setSettingsProfileMessage('Bitte Vor- und Nachnamen ausfüllen.', 'error');
-            return;
-        }
-
-        const fullName = `${firstName} ${lastName}`;
-
-        // Profile-Tabelle aktualisieren
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-                first_name: firstName,
-                last_name:  lastName,
-                full_name:  fullName
-            })
-            .eq('id', currentUser.id);
-
-        if (profileError) {
-            setSettingsProfileMessage('Fehler beim Speichern des Profils: ' + profileError.message, 'error');
-            return;
-        }
-
-        // Auth-User-Metadaten aktualisieren
-        const { error: userError } = await supabase.auth.updateUser({
-            data: {
-                first_name: firstName,
-                last_name: lastName,
-                full_name: fullName
-            }
+        
+        // Group by User -> Month
+        const map = {};
+        docs.forEach(d => {
+            // Find name from cache
+            const prof = allProfilesCache.find(p => p.id === d.user_id);
+            const name = prof ? prof.full_name : 'Unbekannt';
+            const date = new Date(d.created_at);
+            const key = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
+            
+            if(!map[name]) map[name] = {};
+            if(!map[name][key]) map[name][key] = 0;
+            map[name][key]++;
         });
 
-        if (userError) {
-            setSettingsProfileMessage('Profil gespeichert, aber Fehler bei den Auth-Daten: ' + userError.message, 'error');
-        } else {
-            setSettingsProfileMessage('Profil erfolgreich gespeichert.', 'success');
+        for (const [name, months] of Object.entries(map)) {
+            const div = document.createElement('div');
+            div.className = 'admin-overview-entry';
+            
+            let html = `<div class="admin-overview-name">${name}</div>`;
+            for(const [m, count] of Object.entries(months)) {
+                html += `<div class="admin-overview-details">• ${m}: ${count} Datei(en)</div>`;
+            }
+            div.innerHTML = html;
+            container.appendChild(div);
         }
-
-        // UI aktualisieren
-        currentProfile.first_name = firstName;
-        currentProfile.last_name  = lastName;
-        currentProfile.full_name  = fullName;
-
-        const displayName = fullName || currentProfile.email || currentUser.email;
-        userNameText.textContent = displayName;
-        topUserText.textContent  = `${displayName} (${currentProfile.role === 'admin' ? 'Administrator' : 'Mitarbeiter'})`;
-
-        // Admin-Ansicht neu laden, damit Namen dort auch aktualisiert sind
-        if (currentProfile.role === 'admin') {
-            await loadEmployeeGrid();
-            await loadAdminDocumentOverviews();
-        }
-    });
-
-    // SETTINGS: Passwort ändern
-    settingsChangePw.addEventListener('click', async () => {
-        if (!currentUser || !currentProfile) return;
-        setSettingsPasswordMessage('');
-
-        const currentPw = settingsCurrentPw.value.trim();
-        const newPw     = settingsNewPw.value.trim();
-        const newPw2    = settingsNewPw2.value.trim();
-
-        if (!currentPw || !newPw || !newPw2) {
-            setSettingsPasswordMessage('Bitte alle Passwort-Felder ausfüllen.', 'error');
-            return;
-        }
-        if (!isStrongPassword(newPw)) {
-            setSettingsPasswordMessage('Neues Passwort zu schwach. Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen.', 'error');
-            return;
-        }
-        if (newPw !== newPw2) {
-            setSettingsPasswordMessage('Die neuen Passwörter stimmen nicht überein.', 'error');
-            return;
-        }
-
-        const email = currentProfile.email || currentUser.email;
-
-        // Aktuelles Passwort validieren
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password: currentPw
-        });
-
-        if (signInError) {
-            setSettingsPasswordMessage('Aktuelles Passwort ist falsch.', 'error');
-            return;
-        }
-
-        // Neues Passwort setzen
-        const { error: updateError } = await supabase.auth.updateUser({
-            password: newPw
-        });
-
-        if (updateError) {
-            setSettingsPasswordMessage('Fehler beim Ändern des Passworts: ' + updateError.message, 'error');
-            return;
-        }
-
-        setSettingsPasswordMessage('Passwort erfolgreich geändert.', 'success');
-        settingsCurrentPw.value = '';
-        settingsNewPw.value     = '';
-        settingsNewPw2.value    = '';
-    });
-
-    // Hilfsfunktionen für Uploads
-    function makeSafeFileName(name) {
-        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
     }
-
-    async function uploadFileToStorage(file, pathPrefix) {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const safeName = makeSafeFileName(file.name || 'upload');
-        const filePath = `${pathPrefix}/${timestamp}_${safeName}`;
-
-        const { data, error } = await supabase
-            .storage
-            .from(STORAGE_BUCKET)
-            .upload(filePath, file);
-
-        if (error) {
-            throw new Error('Upload-Fehler: ' + error.message);
-        }
-
-        const { data: pub } = supabase
-            .storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(filePath);
-
-        return pub.publicUrl;
-    }
-
-    async function insertDocumentRow(userId, title, docType, fileUrl) {
-        const { error } = await supabase
+    
+    // --- EMPLOYEE DETAIL ---
+    
+    async function openEmployeeDetail(p) {
+        setActiveSection('section-employee-detail');
+        employeeDetailInfoTitle.textContent = p.full_name || p.email;
+        employeeDetailMeta.textContent = `E-Mail: ${p.email} | Status: ${p.is_approved ? 'Freigegeben' : 'Pending'}`;
+        
+        // Load Docs
+        const { data: docs } = await supabaseClient
             .from('documents')
-            .insert({
-                user_id: userId,
-                title,
-                doc_type: docType,
-                file_url: fileUrl
-            });
+            .select('*')
+            .eq('user_id', p.id)
+            .order('created_at', { ascending: false });
+            
+        renderDocumentList(employeeDetailDocs, docs || []);
+    }
 
+    // --- SETTINGS ---
+
+    function populateSettingsForm(profile, user) {
+        settingsFirstName.value = profile.first_name || '';
+        settingsLastName.value = profile.last_name || '';
+        settingsEmail.value = user.email;
+        settingsEmploymentType.value = profile.employment_type || 'fulltime';
+    }
+
+    settingsSaveProfile.addEventListener('click', async () => {
+        const first = settingsFirstName.value;
+        const last = settingsLastName.value;
+        
+        if (!first || !last) return alert('Bitte Namen ausfüllen');
+        
+        const updates = {
+            first_name: first,
+            last_name: last,
+            full_name: `${first} ${last}`,
+            employment_type: settingsEmploymentType.value
+        };
+
+        const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
+        
         if (error) {
-            throw new Error('Fehler beim Speichern des Dokumenteintrags: ' + error.message);
-        }
-    }
-
-    // Upload Stundenzettel (Mitarbeiter)
-    if (uploadTimesheetBtn && uploadTimesheetInput) {
-        uploadTimesheetBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                alert('Bitte zuerst einloggen.');
-                return;
-            }
-            uploadTimesheetInput.click();
-        });
-
-        uploadTimesheetInput.addEventListener('change', async (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file || !currentUser) return;
-            docsTimesheetsMessage.textContent = 'Lade Datei hoch...';
-            try {
-                const url = await uploadFileToStorage(file, `stundenzettel/${currentUser.id}`);
-                const title = `Stundenzettel ${new Date().toLocaleDateString('de-DE')} – ${file.name}`;
-                await insertDocumentRow(currentUser.id, title, 'stundenzettel', url);
-                docsTimesheetsMessage.textContent = 'Stundenzettel erfolgreich hochgeladen.';
-                await loadDocumentsForUser(currentUser);
-            } catch (err) {
-                console.error(err);
-                docsTimesheetsMessage.textContent = String(err.message || err);
-            } finally {
-                uploadTimesheetInput.value = '';
-            }
-        });
-    }
-
-    // Upload Krankmeldung (Mitarbeiter)
-    if (uploadSicknoteBtn && uploadSicknoteInput) {
-        uploadSicknoteBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                alert('Bitte zuerst einloggen.');
-                return;
-            }
-            uploadSicknoteInput.click();
-        });
-
-        uploadSicknoteInput.addEventListener('change', async (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file || !currentUser) return;
-            docsSicknotesMessage.textContent = 'Lade Datei hoch...';
-            try {
-                const url = await uploadFileToStorage(file, `krankmeldungen/${currentUser.id}`);
-                const title = `Krankmeldung ${new Date().toLocaleDateString('de-DE')} – ${file.name}`;
-                await insertDocumentRow(currentUser.id, title, 'krankmeldung', url);
-                docsSicknotesMessage.textContent = 'Krankmeldung erfolgreich hochgeladen.';
-                await loadDocumentsForUser(currentUser);
-            } catch (err) {
-                console.error(err);
-                docsSicknotesMessage.textContent = String(err.message || err);
-            } finally {
-                uploadSicknoteInput.value = '';
-            }
-        });
-    }
-
-    // Admin: Unterweisungen hochladen
-    if (adminUnterwScopeSelect && adminUnterwUserSelect) {
-        adminUnterwScopeSelect.addEventListener('change', () => {
-            const val = adminUnterwScopeSelect.value;
-            const single = (val === 'single');
-            adminUnterwUserSelect.disabled = !single;
-        });
-    }
-
-    if (adminUnterwUploadBtn && adminUnterwInput) {
-        adminUnterwUploadBtn.addEventListener('click', () => {
-            if (!currentProfile || currentProfile.role !== 'admin') {
-                alert('Nur Administratoren können Unterweisungen hochladen.');
-                return;
-            }
-            adminUnterwInput.click();
-        });
-
-        adminUnterwInput.addEventListener('change', async (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file || !currentProfile || currentProfile.role !== 'admin') return;
-
-            adminUnterwMessage.textContent = 'Lade Unterweisung hoch...';
-            try {
-                const scope = adminUnterwScopeSelect.value;
-                let targetProfiles = [];
-
-                const approved = (allProfilesCache || []).filter(p => p.is_approved);
-
-                if (scope === 'all') {
-                    targetProfiles = approved;
-                } else if (scope === 'fulltime') {
-                    targetProfiles = approved.filter(p => p.role !== 'admin' && p.employment_type === 'fulltime');
-                } else if (scope === 'minijob') {
-                    targetProfiles = approved.filter(p => p.role !== 'admin' && p.employment_type === 'minijob');
-                } else if (scope === 'single') {
-                    const selId = adminUnterwUserSelect.value;
-                    if (!selId) {
-                        adminUnterwMessage.textContent = 'Bitte einen Mitarbeiter auswählen.';
-                        adminUnterwInput.value = '';
-                        return;
-                    }
-                    const prof = approved.find(p => p.id === selId);
-                    if (!prof) {
-                        adminUnterwMessage.textContent = 'Ausgewählter Mitarbeiter wurde nicht gefunden.';
-                        adminUnterwInput.value = '';
-                        return;
-                    }
-                    targetProfiles = [prof];
-                }
-
-                if (targetProfiles.length === 0) {
-                    adminUnterwMessage.textContent = 'Keine passenden Mitarbeiter für diese Auswahl gefunden.';
-                    adminUnterwInput.value = '';
-                    return;
-                }
-
-                const url = await uploadFileToStorage(file, 'unterweisungen/admin');
-                const baseTitle = file.name || 'Unterweisung';
-
-                for (const prof of targetProfiles) {
-                    const title = `${baseTitle} – ${prof.full_name || prof.email || ''}`.trim();
-                    await insertDocumentRow(prof.id, title, 'unterweisung', url);
-                }
-
-                adminUnterwMessage.textContent = `Unterweisung wurde für ${targetProfiles.length} Mitarbeiter gespeichert.`;
-                if (currentUser) {
-                    await loadDocumentsForUser(currentUser);
-                }
-            } catch (err) {
-                console.error(err);
-                adminUnterwMessage.textContent = String(err.message || err);
-            } finally {
-                adminUnterwInput.value = '';
-            }
-        });
-    }
-
-    // AUTH EVENTS
-    async function handleLogin() {
-        clearAuthMessages();
-        const email = emailInput.value.trim();
-        const pw    = passwordInput.value.trim();
-
-        if (!email || !pw) {
-            showAuthError('Bitte E-Mail und Passwort eingeben.');
-            return;
-        }
-
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
-
-        if (error) {
-            showAuthError('Login fehlgeschlagen: ' + error.message);
-            return;
-        }
-
-        showAuthSuccess('Login erfolgreich.');
-        if (data.user) await showPortal(data.user);
-    }
-
-    loginBtn.addEventListener('click', handleLogin);
-    emailInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            handleLogin();
+            settingsProfileMsg.textContent = 'Fehler: ' + error.message;
+            settingsProfileMsg.style.color = 'red';
+        } else {
+            // Update Auth Meta (Optional but good practice)
+            await supabaseClient.auth.updateUser({ data: { full_name: updates.full_name } });
+            
+            settingsProfileMsg.textContent = 'Gespeichert.';
+            settingsProfileMsg.style.color = 'green';
+            userNameText.textContent = updates.full_name; // Immediate UI update
         }
     });
-    passwordInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            handleLogin();
+
+    settingsChangePw.addEventListener('click', async () => {
+        const cur = settingsCurrentPw.value;
+        const n1 = settingsNewPw.value;
+        const n2 = settingsNewPw2.value;
+
+        if(!isStrongPassword(n1)) return alert('Passwort zu schwach (min 8, Großbuchstabe, Zahl/Sonderzeichen).');
+        if(n1 !== n2) return alert('Neue Passwörter stimmen nicht überein.');
+
+        // Re-Auth to verify current password
+        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+            email: currentUser.email,
+            password: cur
+        });
+
+        if(signInError) {
+            settingsPasswordMsg.textContent = 'Aktuelles Passwort falsch.';
+            settingsPasswordMsg.style.color = 'red';
+            return;
         }
+
+        const { error: updateError } = await supabaseClient.auth.updateUser({ password: n1 });
+        
+        if(updateError) {
+            settingsPasswordMsg.textContent = 'Fehler: ' + updateError.message;
+        } else {
+            settingsPasswordMsg.textContent = 'Passwort geändert.';
+            settingsPasswordMsg.style.color = 'green';
+            settingsCurrentPw.value = '';
+            settingsNewPw.value = '';
+            settingsNewPw2.value = '';
+        }
+    });
+
+    // --- AUTH ACTIONS (EVENT LISTENERS) ---
+
+    loginBtn.addEventListener('click', async () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) showAuthError(error.message);
+        else showPortal(data.user);
     });
 
     registerBtn.addEventListener('click', async () => {
-        clearAuthMessages();
-        const firstName = regFirstName.value.trim();
-        const lastName  = regLastName.value.trim();
-        const email     = regEmail.value.trim();
-        const pw        = regPassword.value.trim();
-        const pw2       = regPassword2.value.trim();
+        const email = regEmail.value;
+        const pw = regPassword.value;
+        const pw2 = regPassword2.value;
+        const first = regFirstName.value;
+        const last = regLastName.value;
 
-        if (!firstName || !lastName || !email || !pw || !pw2) {
-            showAuthError('Bitte alle Felder ausfüllen.');
-            return;
-        }
-        if (!isStrongPassword(pw)) {
-            showAuthError('Passwort zu schwach. Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen.');
-            return;
-        }
-        if (pw !== pw2) {
-            showAuthError('Die Passwörter stimmen nicht überein.');
-            return;
-        }
+        if (!first || !last) return showAuthError('Bitte Namen ausfüllen');
+        if (pw !== pw2) return showAuthError('Passwörter ungleich');
+        if (!isStrongPassword(pw)) return showAuthError('Passwort zu schwach');
 
-        const fullName = `${firstName} ${lastName}`;
-
-        const { error } = await supabase.auth.signUp({
+        const { error } = await supabaseClient.auth.signUp({
             email,
             password: pw,
             options: {
                 data: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    full_name: fullName
+                    first_name: first,
+                    last_name: last,
+                    full_name: `${first} ${last}`
                 }
             }
         });
 
-        if (error) {
-            showAuthError('Registrierung fehlgeschlagen: ' + error.message);
-            return;
+        if (error) showAuthError(error.message);
+        else {
+            showAuthSuccess('Registrierung erfolgreich! Bitte E-Mail bestätigen.');
+            setTimeout(() => {
+                registerBox.classList.add('hidden');
+                loginBox.classList.remove('hidden');
+                clearAuthMessages();
+            }, 3000);
         }
-
-        showAuthSuccess('Registrierung erfolgreich. Bitte prüfen Sie Ihre E-Mails und bestätigen Sie Ihre Adresse. Danach muss ein Admin Ihren Zugang freigeben.');
-
-        // Formular leeren und zurück zum Login wechseln
-        regFirstName.value = '';
-        regLastName.value  = '';
-        regEmail.value     = '';
-        regPassword.value  = '';
-        regPassword2.value = '';
-
-        setTimeout(() => {
-            toggleToLogin();
-        }, 1500);
     });
 
     forgotPasswordBtn.addEventListener('click', async () => {
-        clearAuthMessages();
-        const email = emailInput.value.trim();
-        if (!email) {
-            showAuthError('Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.');
-            return;
-        }
-
-        const redirectTo = window.location.origin + window.location.pathname;
-
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo
+        const email = emailInput.value;
+        if (!email) return showAuthError('Bitte E-Mail eingeben für Reset');
+        
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href // Redirect back here
         });
-
-        if (error) {
-            showAuthError('Fehler beim Senden der Reset-E-Mail: ' + error.message);
-            return;
-        }
-
-        showAuthSuccess('Falls ein Konto existiert, wurde eine E-Mail zum Zurücksetzen des Passworts gesendet.');
+        
+        if (error) showAuthError(error.message);
+        else showAuthSuccess('Link gesendet.');
     });
 
     resetPasswordBtn.addEventListener('click', async () => {
-        clearAuthMessages();
-        const pw  = resetPasswordInput.value.trim();
-        const pw2 = resetPassword2Input.value.trim();
-
-        if (!pw || !pw2) {
-            showAuthError('Bitte beide Passwort-Felder ausfüllen.');
-            return;
-        }
-        if (!isStrongPassword(pw)) {
-            showAuthError('Passwort zu schwach. Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen.');
-            return;
-        }
-        if (pw !== pw2) {
-            showAuthError('Die Passwörter stimmen nicht überein.', 'error');
-            return;
-        }
-
-        const { error } = await supabase.auth.updateUser({ password: pw });
-
-        if (error) {
-            showAuthError('Fehler beim Aktualisieren des Passworts: ' + error.message);
-            return;
-        }
-
-        showAuthSuccess('Passwort aktualisiert. Sie werden ins Portal eingeloggt.');
-        resetPasswordInput.value = '';
-        resetPassword2Input.value = '';
-
-        window.location.hash = '';
-
-        const sessionResult = await supabase.auth.getSession();
-        const user = sessionResult?.data?.session?.user;
-        if (user) {
-            await showPortal(user);
-        } else {
-            showLogin();
+        const pw = resetPasswordInput.value;
+        if (pw !== resetPassword2Input.value) return alert('Ungleich');
+        
+        const { error } = await supabaseClient.auth.updateUser({ password: pw });
+        if(error) alert(error.message);
+        else {
+            alert('Passwort geändert.');
+            window.location.hash = ''; // Clear recovery token
+            resetBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
         }
     });
 
     logoutBtn.addEventListener('click', async () => {
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         showLogin();
     });
-
+    
     pendingLogoutBtn.addEventListener('click', async () => {
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         showLogin();
     });
 
-    // SESSION CHECK & INIT (inkl. Recovery-Check)
-    async function checkSession() {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-            console.error('Fehler bei getSession:', error.message);
-            showLogin();
-            return;
+    showRegisterBtn.addEventListener('click', () => {
+        loginBox.classList.add('hidden');
+        registerBox.classList.remove('hidden');
+        clearAuthMessages();
+    });
+
+    backToLoginBtn.addEventListener('click', () => {
+        registerBox.classList.add('hidden');
+        loginBox.classList.remove('hidden');
+        clearAuthMessages();
+    });
+
+    // --- INITIALIZATION ---
+
+    async function init() {
+        initNavigation();
+        
+        // Check for Recovery Hash
+        if(window.location.hash.includes('type=recovery')) {
+             authSection.classList.remove('hidden');
+             loginBox.classList.add('hidden');
+             resetBox.classList.remove('hidden');
+             return; // Stop here, user needs to reset pw
         }
 
-        const hash = window.location.hash || '';
-        const isRecovery = hash.includes('type=recovery');
-
-        if (isRecovery && data.session && data.session.user) {
-            currentUser = data.session.user;
-            authSection.classList.remove('hidden');
-            portalSection.classList.add('hidden');
-            pendingSection.classList.add('hidden');
-            loginBox.classList.add('hidden');
-            registerBox.classList.add('hidden');
-            resetBox.classList.remove('hidden');
-            logoutBtn.classList.remove('hidden');
-            topUserText.textContent = `${currentUser.email} (Passwort zurücksetzen)`;
-            clearAuthMessages();
-            resetInactivityTimer();
-            return;
-        }
-
-        if (data.session && data.session.user) {
-            await showPortal(data.session.user);
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session) {
+            showPortal(data.session.user);
         } else {
             showLogin();
         }
     }
 
-    initNavigation();
-    checkSession();
+    init();
+
 </script>
 </body>
 </html>
