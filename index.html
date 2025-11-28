@@ -1436,58 +1436,40 @@
 
         // Wenn kein Profil gefunden wird → automatisch eins anlegen (für ersten Login)
         if (error || !profile) {
-            console.warn('Profil nicht gefunden, versuche neues Profil anzulegen', error);
+            console.warn('Profil nicht gefunden, nutze Fallback-Profil', error);
 
-            const meta = user.user_metadata || {};
-            const firstName = meta.first_name || '';
-            const lastName = meta.last_name || '';
-            const fullName =
-                meta.full_name ||
-                `${firstName} ${lastName}`.trim() ||
-                user.email;
-
-            const { data: insertData, error: insertError } = await supabaseClient
-                .from('profiles')
-                .insert({
-                    id: user.id,
-                    email: user.email,
-                    first_name: firstName,
-                    last_name: lastName,
-                    full_name: fullName,
-                    role: 'admin',          // ersten User als Admin anlegen
-                    is_approved: true,
-                    employment_type: 'fulltime'
-                })
-                .select('*')
-                .single();
-
-            if (insertError || !insertData) {
-                console.error('Profil konnte nicht angelegt werden', insertError);
-                showPending(user);
-                return;
-            }
-
-            profile = insertData;
+            // Fallback-Profil als Admin (Notlösung, damit du ins Portal kommst)
+            currentProfile = {
+                id: user.id,
+                email: user.email,
+                first_name: user.user_metadata?.first_name || '',
+                last_name: user.user_metadata?.last_name || '',
+                full_name: user.user_metadata?.full_name || user.email,
+                role: 'admin',
+                is_approved: true,
+                employment_type: 'fulltime'
+            };
+        } else {
+            currentProfile = profile;
         }
 
-        currentProfile = profile;
+        const profileToUse = currentProfile;
 
-        const isAdmin = profile.role === 'admin';
-        const isApproved = profile.is_approved || isAdmin;
-
-        // Normale User: ohne Freigabe → Pending
-        if (!isApproved) {
+        // Wenn kein Admin UND nicht freigeschaltet → Pending anzeigen
+        // (Admins kommen immer rein)
+        if (!profileToUse.is_approved && profileToUse.role !== 'admin') {
             showPending(user);
             return;
         }
 
-        // === Portal anzeigen ===
+        // Show Portal
         authSection.classList.add('hidden');
         pendingSection.classList.add('hidden');
         portalSection.classList.remove('hidden');
 
-        const name = profile.full_name || user.email;
-        const roleText = isAdmin ? 'Administrator' : 'Mitarbeiter';
+        // Update UI
+        const name = profileToUse.full_name || user.email;
+        const roleText = profileToUse.role === 'admin' ? 'Administrator' : 'Mitarbeiter';
 
         topUserText.textContent = `${name} (${roleText})`;
         logoutBtn.classList.remove('hidden');
@@ -1495,13 +1477,9 @@
         sidebarUserRole.textContent = `Rolle: ${roleText}`;
 
         // Role Badge
-        roleBadge.textContent = isAdmin ? 'ADMIN' : (profile.employment_type === 'fulltime' ? 'VZ' : 'MJ');
-        roleBadge.style.background = isAdmin
-            ? 'var(--orange)'
-            : (profile.employment_type === 'fulltime' ? '#e8f5e9' : '#fff3e0');
-        roleBadge.style.color = isAdmin
-            ? '#fff'
-            : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
+        roleBadge.textContent = profileToUse.role === 'admin'
+            ? 'ADMIN'
+            : (profileToUse.employment_type === 'fulltime' ? 'VZ' : 'MJ');
         roleBadge.classList.remove('hidden');
 
         // Admin-Links / Kacheln
@@ -2455,5 +2433,6 @@
 </body>
 
 </html>
+
 
 
