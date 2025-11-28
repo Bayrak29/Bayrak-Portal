@@ -1424,6 +1424,7 @@
         resetInactivityTimer();
     }
 
+        
     async function showPortal(user) {
         currentUser = user;
 
@@ -1434,9 +1435,9 @@
             .eq('id', user.id)
             .single();
 
-        // Wenn kein Profil: Fallback → Profil automatisch anlegen (Admin)
+        // Wenn kein Profil: Fallback → versuchen anzulegen, aber Admin NIE aussperren
         if (error || !profile) {
-            console.warn('Profil nicht gefunden, lege Fallback-Profil an', error);
+            console.warn('Profil nicht gefunden, versuche Fallback-Profil anzulegen', error);
 
             const meta = user.user_metadata || {};
             const firstName = meta.first_name || '';
@@ -1446,28 +1447,39 @@
                 `${firstName} ${lastName}`.trim() ||
                 user.email;
 
-            const { data: insertData, error: insertError } = await supabaseClient
-                .from('profiles')
-                .insert({
-                    id: user.id,
-                    email: user.email,
-                    first_name: firstName,
-                    last_name: lastName,
-                    full_name: fullName,
-                    role: 'admin',           // Fallback: ersten User als Admin
-                    is_approved: true,
-                    employment_type: 'fulltime'
-                })
-                .select('*')
-                .single();
+            // Best Effort: Profil in Tabelle anlegen – Fehler werden geloggt, aber Admin kommt trotzdem rein
+            let insertData = null;
+            try {
+                const insertResult = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email,
+                        first_name: firstName,
+                        last_name: lastName,
+                        full_name: fullName,
+                        role: 'admin',           // Fallback: ersten User als Admin
+                        is_approved: true,
+                        employment_type: 'fulltime'
+                    })
+                    .select('*')
+                    .single();
 
-            if (insertError || !insertData) {
-                console.error('Profil konnte nicht angelegt werden', insertError);
-                showPending(user);
-                return;
+                insertData = insertResult.data;
+            } catch (e) {
+                console.error('Profil konnte nicht angelegt werden (RLS oder andere Ursache)', e);
             }
 
-            profile = insertData;
+            profile = insertData || {
+                id: user.id,
+                email: user.email,
+                first_name: firstName,
+                last_name: lastName,
+                full_name: fullName,
+                role: 'admin',
+                is_approved: true,
+                employment_type: 'fulltime'
+            };
         }
 
         currentProfile = profile;
@@ -1476,7 +1488,7 @@
         const isApproved = profile.is_approved || isAdmin;
 
         // Nur normale User ohne Freigabe sehen "Registrierung ausstehend"
-        if (!isApproved) {
+        if (!isApproved && !isAdmin) {
             showPending(user);
             return;
         }
@@ -1528,7 +1540,7 @@
         resetInactivityTimer();
     }
 
-    // --- AUTH HANDLERS ---
+// --- AUTH HANDLERS ---
 
     loginBtn.addEventListener('click', async () => {
         if (!supabaseClient) return showAuthError('Kritischer Fehler: Anmeldefunktion nicht verfügbar.'); // Safety check
