@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bayrak Mitarbeiter-Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --blue-dark: #004b7a;
+            --blue-light: #e7f2fb;
+            --orange: #f57c00;
+            --grey-bg: #f5f5f5;
+            --card-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--grey-bg);
+            color: #333;
+        }
+
+        /* TOP-LEISTE */
+        header {
+            background: var(--blue-dark);
+            color: #fff;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.85;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-user {
+            font-size: 0.85rem;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-top {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: #c0392b;
+            color: #fff;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 10px 25px 10px;
+        }
+
+        /* AUTH-BEREICH */
+        #auth-section {
+            max-width: 460px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 20px 18px 22px 18px;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+        }
+
+        #auth-section h2 {
+            margin-top: 0;
+        }
+
+        #auth-section h3 {
+            margin: 10px 0 4px 0;
+            font-size: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="email"],
+        input[type="password"],
+        input[type="text"],
+        select { 
+            width: 100%;
+            padding: 7px 8px;
+            margin-top: 3px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+            background: #fff;
+        }
+        
+        /* NEU: Passwort-Eingabe Wrapper für Toggle-Icon */
+        .password-input-wrapper {
+            position: relative;
+            margin-top: 3px;
+        }
+        
+        .password-input-wrapper input {
+            padding-right: 35px; /* Platz für das Icon */
+            margin-top: 0;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+            font-size: 1.1rem;
+            line-height: 1;
+            background: none;
+            border: none;
+            padding: 0;
+            z-index: 10;
+        }
+        /* ENDE NEU */
+
+        .btn-primary,
+        .btn-secondary {
+            margin-top: 12px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--blue-dark);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #777;
+            color: #fff;
+            margin-left: 6px;
+        }
+
+        .btn-link {
+            background: transparent;
+            border: none;
+            color: var(--blue-dark);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0;
+            margin-top: 8px;
+        }
+
+        .info {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .error {
+            color: #b00020;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .success {
+            color: #0a7a1b;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .separator-line {
+            margin: 14px 0;
+            border-top: 1px solid #eee;
+        }
+
+        /* PORTAL-LAYOUT (Sidebar + Inhalt) */
+        #portal-section {
+            background: transparent;
+        }
+
+        .portal-layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 900px) {
+            .portal-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            padding: 14px 12px;
+            align-self: flex-start; /* Fixiert Sidebar, wenn Hauptcontent lang ist */
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-user {
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-list li {
+            padding: 7px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.1s;
+        }
+
+        .sidebar-list li span.icon {
+            width: 18px;
+            text-align: center;
+        }
+
+        .sidebar-list li.active,
+        .sidebar-list li:hover {
+            background: var(--blue-light);
+            color: var(--blue-dark);
+        }
+
+        .sidebar-admin {
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        .request-badge {
+            display: inline-block;
+            background: #e53935;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 0 6px;
+            margin-left: 4px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* Hauptbereich */
+        .main-content {
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            padding: 16px 16px 18px 16px;
+        }
+
+        .portal-greeting {
+            margin-bottom: 14px;
+        }
+
+        .portal-greeting h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .portal-greeting p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .role-badge {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 0.75rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* SECTIONS + DASHBOARD-TILES */
+        .portal-section-content {
+            margin-top: 10px;
+        }
+
+        .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .tile-card {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+        }
+
+        .tile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            background: #fdfdfd;
+        }
+
+        .tile-card.active {
+            border: 2px solid var(--orange);
+            padding: 14px 10px;
+        }
+
+        .tile-icon {
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+            color: var(--orange);
+        }
+
+        .tile-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .tile-sub {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        h3.section-title {
+            margin: 12px 0 6px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* DOKUMENT-KATEGORIEN */
+        .document-category {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        .document-category h4 {
+            margin: 0 0 4px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .document-list {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0 0 0;
+        }
+
+        .document-item {
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eee;
+        }
+
+        .document-item-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .document-item-meta {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .document-item a {
+            background: var(--blue-dark);
+            color: #fff;
+            padding: 6px 9px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .doc-badge-new {
+            display: inline-block;
+            background: #ff9800;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 0 6px;
+            margin-left: 4px;
+        }
+        
+        /* ADMIN OVERVIEW */
+        .admin-overview-section {
+            background: #fcfcfc;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        
+        .admin-overview-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        
+        .admin-overview-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .admin-overview-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        
+        .admin-overview-details {
+            font-size: 0.8rem;
+            color: #555;
+            margin-left: 10px;
+        }
+
+        /* ADMIN: MITARBEITER-KACHELN */
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .employee-card {
+            border-radius: 6px;
+            padding: 10px 10px 12px 10px;
+            box-shadow: var(--card-shadow);
+            background: #fafafa;
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .employee-card.pending {
+            border: 2px solid #ff9800;
+            background: #fff7e6;
+        }
+
+        .employee-card.admin {
+            border: 2px solid var(--blue-dark);
+            background: #e7f2fb;
+        }
+
+        .employee-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+            border: 2px solid #4caf50;
+        }
+
+        .employee-info-main {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .employee-info-sub {
+            font-size: 0.8rem;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .employee-role-selector {
+            margin-top: 4px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .employee-role-selector label {
+             margin: 0;
+             margin-right: 4px;
+        }
+
+        .employee-role-selector select {
+            font-size: 0.75rem;
+            padding: 3px 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: auto;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .employee-actions {
+            grid-column: 1 / 3;
+            margin-top: 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .btn-small.primary {
+            background: var(--blue-dark);
+            color: #fff;
+        }
+
+        .btn-small.grey {
+            background: #777;
+            color: #fff;
+        }
+
+        .btn-small.approve {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .admin-message {
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .employee-category-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .employee-category-heading {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 18px 0 6px 0;
+            color: #444;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .employee-category-heading:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        /* SETTINGS */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .settings-card {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 12px 12px 14px 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .settings-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .settings-card p {
+            margin: 4px 0 8px 0;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .settings-inline {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-inline > div {
+            flex: 1;
+        }
+
+        .settings-message {
+            margin-top: 6px;
+            font-size: 0.8rem;
+        }
+
+        /* PENDING-SECTION (nicht freigegeben) */
+        #pending-section {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 20px 18px 22px 18px;
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+        }
+
+        #pending-section h2 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .top-right {
+                align-self: stretch;
+                justify-content: space-between;
+            }
+            .top-user {
+                max-width: none;
+            }
+
+            .settings-inline {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo">B</div>
+        <div>
+            <div class="brand-title">Bayrak Mitarbeiter-Portal</div>
+            <div class="brand-subtitle">Interne Web-App · Testversion</div>
+        </div>
+    </div>
+    <div class="top-right">
+        <div class="top-user" id="top-user-text"></div>
+        <span id="inactivity-timer" class="hidden" style="color: #f57c00; font-weight: bold; font-size: 0.8rem; margin-right: 6px;">10:00</span>
+        <button id="logout-btn" class="btn-top hidden">Abmelden</button>
+    </div>
+</header>
+
+<main>
+    <section id="auth-section">
+        <h2>Anmeldung</h2>
+        <div id="auth-error" class="error hidden"></div>
+        <div id="auth-success" class="success hidden"></div>
+
+        <div id="login-box">
+            <h3>Einloggen</h3>
+            <label for="email">E-Mail</label>
+            <input type="email" id="email" placeholder="deine@email.de" autocomplete="username">
+
+            <label for="password">Passwort</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="password" placeholder="Passwort" autocomplete="current-password">
+                <button class="password-toggle" data-target="password" type="button" aria-label="Passwort anzeigen">👁️</button>
+            </div>
+
+            <button id="login-btn" class="btn-primary">Einloggen</button>
+
+            <button id="forgot-password-btn" class="btn-link" type="button">Passwort vergessen?</button>
+
+            <div class="separator-line"></div>
+
+            <p class="info">Sie haben noch kein Konto?</p>
+            <button id="show-register-btn" class="btn-secondary">Neu anmelden</button>
+        </div>
+
+        <div id="register-box" class="hidden">
+            <h3>Neu anmelden</h3>
+
+            <label for="reg-first-name">Vorname</label>
+            <input type="text" id="reg-first-name" placeholder="Vorname" autocomplete="given-name">
+
+            <label for="reg-last-name">Nachname</label>
+            <input type="text" id="reg-last-name" placeholder="Nachname" autocomplete="family-name">
+
+            <label for="reg-email">E-Mail</label>
+            <input type="email" id="reg-email" placeholder="E-Mail" autocomplete="email">
+
+            <label for="reg-password">Passwort</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="reg-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
+                <button class="password-toggle" data-target="reg-password" type="button" aria-label="Passwort anzeigen">👁️</button>
+            </div>
+
+            <label for="reg-password2">Passwort wiederholen</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="reg-password2" placeholder="Passwort bestätigen" autocomplete="new-password">
+                <button class="password-toggle" data-target="reg-password2" type="button" aria-label="Passwort anzeigen">👁️</button>
+            </div>
+
+            <button id="register-btn" class="btn-primary">Registrierung abschließen</button>
+            <button id="back-to-login-btn" class="btn-secondary">Zurück zum Login</button>
+
+            <p class="info">
+                Nach der Registrierung erhalten Sie eine E-Mail zur Bestätigung Ihrer Adresse.<br>
+                Anschließend muss ein Administrator Ihren Zugang freigeben, bevor Sie das Portal nutzen können.
+            </p>
+        </div>
+
+        <div id="reset-box" class="hidden">
+            <h3>Neues Passwort setzen</h3>
+            <p class="info">
+                Sie haben einen Link „Passwort zurücksetzen“ verwendet. Bitte wählen Sie jetzt ein neues Passwort.
+            </p>
+
+            <label for="reset-password">Neues Passwort</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="reset-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
+                <button class="password-toggle" data-target="reset-password" type="button" aria-label="Passwort anzeigen">👁️</button>
+            </div>
+
+            <label for="reset-password2">Passwort wiederholen</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="reset-password2" placeholder="Neues Passwort bestätigen" autocomplete="new-password">
+                <button class="password-toggle" data-target="reset-password2" type="button" aria-label="Passwort anzeigen">👁️</button>
+            </div>
+
+            <button id="reset-password-btn" class="btn-primary">Passwort speichern</button>
+        </div>
+    </section>
+
+    <section id="pending-section" class="hidden">
+        <h2>Registrierung ausstehend</h2>
+        <p id="pending-message" class="info"></p>
+        <p class="info">
+            Ihre Registrierung wurde erfolgreich gespeichert und Ihre E-Mail-Adresse ist bestätigt.<br>
+            Ein Administrator wird Ihren Zugang prüfen und freigeben. Sobald dies erfolgt ist, können Sie sich normal einloggen.
+        </p>
+        <button id="pending-logout-btn" class="btn-primary">Abmelden</button>
+    </section>
+
+    <section id="portal-section" class="hidden">
+        <div class="portal-layout">
+            
+            <div class="sidebar">
+                <div class="sidebar-title">Navigation</div>
+                <div class="sidebar-user" id="sidebar-user-role">Rolle: Mitarbeiter</div>
+                
+                <ul class="sidebar-list" id="sidebar-nav">
+                    <li data-section-id="section-dashboard" class="active">
+                        <span class="icon">🏠</span> Startseite
+                    </li>
+                    <li data-section-id="section-documents">
+                        <span class="icon">📄</span> Dokumente & Uploads
+                    </li>
+                    <li data-section-id="section-timesheet">
+                        <span class="icon">⌚</span> Stundenzettel
+                    </li>
+                    <li data-section-id="section-arbeitsvertrag">
+                        <span class="icon">📝</span> Arbeitsvertrag
+                    </li>
+                    <li data-section-id="section-settings">
+                        <span class="icon">⚙️</span> Einstellungen
+                    </li>
+                </ul>
+
+                <div class="sidebar-admin hidden" id="sidebar-admin-link">
+                    <div class="sidebar-title" id="sidebar-admin-label">
+                        Admin-Bereich 
+                        <span id="sidebar-admin-badge" class="request-badge hidden">0</span>
+                    </div>
+                    <ul class="sidebar-list">
+                        <li data-section-id="section-admin-users">
+                            <span class="icon">👥</span> Mitarbeiterverwaltung
+                        </li>
+                        <li data-section-id="section-admin-documents">
+                            <span class="icon">📊</span> Dokumenten-Overviews
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="portal-greeting">
+                    <h2>Guten Tag, <span id="user-name-text"></span><span id="role-badge" class="role-badge"></span></h2>
+                    <p>Willkommen im Bayrak Mitarbeiter-Portal.</p>
+                </div>
+
+                <div id="section-dashboard" class="portal-section-content">
+                    <h3 class="section-title">Schnellzugriff</h3>
+                    <div class="tile-grid">
+                        <div class="tile-card" data-section-id="section-documents">
+                            <div class="tile-icon">📄</div>
+                            <div class="tile-title">Dokumente</div>
+                            <div class="tile-sub">Unterweisungen & Uploads</div>
+                        </div>
+                        <div class="tile-card" data-section-id="section-timesheet">
+                            <div class="tile-icon">⌚</div>
+                            <div class="tile-title">Stundenzettel</div>
+                            <div class="tile-sub">Vordruck und Infos</div>
+                        </div>
+                        <div class="tile-card" data-section-id="section-arbeitsvertrag">
+                            <div class="tile-icon">📝</div>
+                            <div class="tile-title">Arbeitsvertrag</div>
+                            <div class="tile-sub">Ihr aktueller Vertrag</div>
+                        </div>
+                        <div class="tile-card" data-section-id="section-settings">
+                            <div class="tile-icon">⚙️</div>
+                            <div class="tile-title">Einstellungen</div>
+                            <div class="tile-sub">Profil & Passwort</div>
+                        </div>
+                        <div class="tile-card hidden" id="tile-admin" data-section-id="section-admin-users">
+                            <div class="tile-icon">👑</div>
+                            <div class="tile-title">Admin</div>
+                            <div class="tile-sub">
+                                Mitarbeiter 
+                                <span id="tile-admin-badge" class="request-badge hidden">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-documents" class="portal-section-content hidden">
+                    <h3 class="section-title">Dokumente, Nachweise & Uploads</h3>
+                    <p class="info"> 
+                        In diesem Bereich sehen Sie: <br>• Unterweisungsnachweise (vom Admin bereitgestellt) <br>• Ihre hochgeladenen Stundenzettel-Nachweise <br>• Ihre hochgeladenen Krankmeldungen-Nachweise 
+                    </p>
+
+                    <div class="document-category">
+                        <h4>Unterweisungen (vom Admin bereitgestellt)</h4>
+                        <div id="docs-unterweisungen-message" class="info">Es sind keine Unterweisungen für Sie hinterlegt.</div>
+                        <ul id="docs-unterweisungen-list" class="document-list"></ul>
+                    </div>
+
+                    <div class="document-category">
+                        <h4>Stundenzettel-Nachweise (Ihr Upload)</h4>
+                        <p class="info"> Laden Sie hier Ihre Stundenzettel / Rapporte als PDF oder Foto hoch. </p>
+                        <button id="upload-timesheet-btn" class="btn-primary">Stundenzettel hochladen</button>
+                        <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" capture="environment" class="hidden">
+                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Stundenzettel von Ihnen hochgeladen.</div>
+                        <ul id="docs-timesheets-list" class="document-list"></ul>
+                    </div>
+
+                    <div class="document-category">
+                        <h4>Krankmeldungen (Ihr Upload)</h4>
+                        <p class="info"> Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen. Die Admins sehen diese in ihrer Übersicht. </p>
+                        <button id="upload-sicknote-btn" class="btn-primary">Krankmeldung hochladen</button>
+                        <input type="file" id="upload-sicknote-input" accept="image/*,application/pdf" capture="environment" class="hidden">
+                        <div id="docs-sicknotes-message" class="info">Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.</div>
+                        <ul id="docs-sicknotes-list" class="document-list"></ul>
+                    </div>
+                </div>
+
+                <div id="section-timesheet" class="portal-section-content hidden">
+                    <h3 class="section-title">Stundenzettel</h3>
+                    <p class="info">Dieser Bereich dient zur Information und zum Download des aktuellen Stundenzettel-Vordrucks.</p>
+                </div>
+                
+                <div id="section-arbeitsvertrag" class="portal-section-content hidden">
+                    <h3 class="section-title">Arbeitsvertrag</h3>
+                    <p class="info">Ihr aktueller Arbeitsvertrag ist hier hinterlegt (wird von Admin bereitgestellt).</p>
+                </div>
+
+                <div id="section-settings" class="portal-section-content hidden">
+                    <h3 class="section-title">Einstellungen</h3>
+                    
+                    <div class="settings-grid">
+                        
+                        <div class="settings-card">
+                            <h4>Profildaten ändern</h4>
+                            <div id="settings-profile-msg" class="settings-message"></div>
+                            
+                            <label for="settings-first-name">Vorname</label>
+                            <input type="text" id="settings-first-name" autocomplete="given-name">
+
+                            <label for="settings-last-name">Nachname</label>
+                            <input type="text" id="settings-last-name" autocomplete="family-name">
+                            
+                            <label for="settings-email">E-Mail (nicht änderbar)</label>
+                            <input type="email" id="settings-email" readonly style="background: #eee;">
+                            
+                            <button id="settings-save-profile" class="btn-primary" style="width: 100%;">Profil speichern</button>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h4>Passwort ändern</h4>
+                            <div id="settings-password-msg" class="settings-message"></div>
+
+                            <label for="settings-current-pw">Aktuelles Passwort</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="settings-current-pw" autocomplete="current-password">
+                                <button class="password-toggle" data-target="settings-current-pw" type="button" aria-label="Passwort anzeigen">👁️</button>
+                            </div>
+
+                            <label for="settings-new-pw">Neues Passwort</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="settings-new-pw" autocomplete="new-password">
+                                <button class="password-toggle" data-target="settings-new-pw" type="button" aria-label="Passwort anzeigen">👁️</button>
+                            </div>
+
+                            <label for="settings-new-pw2">Neues Passwort wiederholen</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="settings-new-pw2" autocomplete="new-password">
+                                <button class="password-toggle" data-target="settings-new-pw2" type="button" aria-label="Passwort anzeigen">👁️</button>
+                            </div>
+
+                            <button id="settings-change-pw" class="btn-primary" style="width: 100%;">Passwort ändern</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-admin-users" class="portal-section-content hidden">
+                    <h3 class="section-title">Admin · Mitarbeiterverwaltung 
+                        <span id="admin-requests-counter" class="request-badge hidden"></span>
+                    </h3>
+                    <p class="info"> Verwalten Sie hier alle registrierten Mitarbeiter, geben Sie neue Benutzer frei und ändern Sie Rollen (Admin/User). </p>
+                    <div id="admin-message" class="admin-message success hidden"></div>
+
+                    <div class="employee-category-wrapper">
+                        <div class="employee-category-heading"> Neue Registrierungen (Wartet auf Freigabe) </div>
+                        <div id="pending-employees-content">
+                            <p class="info" id="no-pending-users">Keine Benutzer warten auf Freigabe.</p>
+                        </div>
+                    </div>
+
+                    <div class="employee-category-wrapper">
+                        <div class="employee-category-heading"> Alle freigegebenen Mitarbeiter </div>
+                        <div id="approved-employees-content">
+                            <p class="info">Wird geladen...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-admin-documents" class="portal-section-content hidden">
+                    <h3 class="section-title">Admin · Uploads und Dokumentenverwaltung</h3>
+                    
+                    <div class="settings-grid">
+                        
+                        <div class="settings-card">
+                            <h4>Unterweisungsnachweise hochladen</h4>
+                            <p>Stellen Sie hier ein Dokument für einen oder alle Mitarbeiter bereit.</p>
+                            
+                            <div class="settings-inline">
+                                <div>
+                                    <label for="admin-unterweisungen-scope">Geltungsbereich</label>
+                                    <select id="admin-unterweisungen-scope">
+                                        <option value="all">Alle freigegebenen Mitarbeiter</option>
+                                        <option value="fulltime">Vollzeit-Mitarbeiter</option>
+                                        <option value="minijob">Minijob-Mitarbeiter</option>
+                                        <option value="single">Einzelner Mitarbeiter</option>
+                                    </select>
+                                </div>
+                                <div id="admin-unterweisungen-user-select-wrapper" class="hidden">
+                                    <label for="admin-unterweisungen-user-select">Mitarbeiter auswählen</label>
+                                    <select id="admin-unterweisungen-user-select"></select>
+                                </div>
+                            </div>
+                            
+                            <label for="admin-unterweisungen-input" style="margin-top: 10px;">Datei auswählen (PDF/Bild)</label>
+                            <input type="file" id="admin-unterweisungen-input" accept="image/*,application/pdf">
+                            <button id="admin-unterweisungen-upload-btn" class="btn-primary" style="width: 100%; margin-top: 10px;">Dokument hochladen</button>
+                            <div id="admin-unterweisungen-message" class="settings-message"></div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h4>Übersicht Stundenzettel-Uploads (Mitarbeiter)</h4>
+                            <p id="admin-timesheets-new-count" class="info">Laden...</p>
+                            <div id="admin-timesheets-overview" class="admin-overview-section">Wird geladen...</div>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h4>Übersicht Krankmeldungen-Uploads (Mitarbeiter)</h4>
+                            <p id="admin-sicknotes-new-count" class="info">Laden...</p>
+                            <div id="admin-sicknotes-overview" class="admin-overview-section">Wird geladen...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="section-employee-detail" class="portal-section-content hidden">
+                    <h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
+                    <p class="info" id="employee-detail-meta"></p>
+                    
+                    <div class="document-category">
+                        <h4>Alle Dokumente dieses Mitarbeiters</h4>
+                        <div id="employee-docs-message" class="info">Wird geladen...</div>
+                        <ul id="employee-docs-list" class="document-list"></ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/index.esm.js';
+
+    // 2. SUPABASE / DATENMODELLE
+    // ERSETZEN SIE DIESE PLATZHALTER mit Ihren Supabase-Details!
+    const SUPABASE_URL = 'https://fiwrxvummgrrtqexchzp.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpd3J4dnVtbWdycnRxZXhjaHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNTQ4OTQsImV4cCI6MjA3OTgzMDg5NH0.XdOI3klueP8VcuPy5wIUoH6xwb4TqmowNdBw2Cpr1SU'; 
+
+    const STORAGE_BUCKET = 'documents';
+    
+    let supabaseClient = null;
+    let currentUser = null;
+    let currentProfile = null;
+    let allProfilesCache = []; // Cache für Admin-Bereich
+    
+    // 9. SICHERHEIT / KOMFORT - Auto-Logout
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 Minuten
+    let inactivityTimeout;
+    let timerInterval;
+    let timeRemaining = INACTIVITY_LIMIT_MS / 1000;
+
+    // --- ELEMENT REFERENCES ---
+    // Sections
+    const authSection = document.getElementById('auth-section');
+    const pendingSection = document.getElementById('pending-section');
+    const portalSection = document.getElementById('portal-section');
+    const loginBox = document.getElementById('login-box');
+    const registerBox = document.getElementById('register-box');
+    const resetBox = document.getElementById('reset-box');
+
+    // Top Bar
+    const logoutBtn = document.getElementById('logout-btn');
+    const pendingLogoutBtn = document.getElementById('pending-logout-btn');
+    const topUserText = document.getElementById('top-user-text');
+    const inactivityTimerEl = document.getElementById('inactivity-timer');
+
+    // Auth Messages
+    const authError = document.getElementById('auth-error');
+    const authSuccess = document.getElementById('auth-success');
+
+    // Login Inputs
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('login-btn');
+    const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+    const showRegisterBtn = document.getElementById('show-register-btn');
+    const backToLoginBtn = document.getElementById('back-to-login-btn');
+
+    // Register Inputs
+    const regFirstName = document.getElementById('reg-first-name');
+    const regLastName = document.getElementById('reg-last-name');
+    const regEmail = document.getElementById('reg-email');
+    const regPassword = document.getElementById('reg-password');
+    const regPassword2 = document.getElementById('reg-password2');
+    const registerBtn = document.getElementById('register-btn');
+
+    // Reset Inputs
+    const resetPassword = document.getElementById('reset-password');
+    const resetPassword2 = document.getElementById('reset-password2');
+    const resetPasswordBtn = document.getElementById('reset-password-btn');
+
+    // Portal UI
+    const userNameText = document.getElementById('user-name-text');
+    const roleBadge = document.getElementById('role-badge');
+    const sidebarUserRole = document.getElementById('sidebar-user-role');
+    const sidebarAdminLink = document.getElementById('sidebar-admin-link');
+    const sidebarAdminBadge = document.getElementById('sidebar-admin-badge');
+    const tileAdmin = document.getElementById('tile-admin');
+    const tileAdminBadge = document.getElementById('tile-admin-badge');
+    const sidebarNav = document.getElementById('sidebar-nav');
+    const portalSections = document.querySelectorAll('.portal-section-content');
+
+    // Documents (User View)
+    const docsUnterwList = document.getElementById('docs-unterweisungen-list');
+    const docsUnterwMsg = document.getElementById('docs-unterweisungen-message');
+    const docsTimesheetsList = document.getElementById('docs-timesheets-list');
+    const docsTimesheetsMsg = document.getElementById('docs-timesheets-message');
+    const docsSicknotesList = document.getElementById('docs-sicknotes-list');
+    const docsSicknotesMsg = document.getElementById('docs-sicknotes-message');
+    const uploadTimesheetBtn = document.getElementById('upload-timesheet-btn');
+    const uploadTimesheetInput = document.getElementById('upload-timesheet-input');
+    const uploadSicknoteBtn = document.getElementById('upload-sicknote-btn');
+    const uploadSicknoteInput = document.getElementById('upload-sicknote-input');
+
+    // Settings
+    const settingsFirstName = document.getElementById('settings-first-name');
+    const settingsLastName = document.getElementById('settings-last-name');
+    const settingsEmail = document.getElementById('settings-email');
+    const settingsSaveProfile = document.getElementById('settings-save-profile');
+    const settingsProfileMsg = document.getElementById('settings-profile-msg');
+    const settingsCurrentPw = document.getElementById('settings-current-pw');
+    const settingsNewPw = document.getElementById('settings-new-pw');
+    const settingsNewPw2 = document.getElementById('settings-new-pw2');
+    const settingsChangePw = document.getElementById('settings-change-pw');
+    const settingsPasswordMsg = document.getElementById('settings-password-msg');
+
+    // Admin Users
+    const pendingEmployeesContent = document.getElementById('pending-employees-content');
+    const approvedEmployeesContent = document.getElementById('approved-employees-content');
+    const noPendingUsers = document.getElementById('no-pending-users');
+    const adminRequestsCounter = document.getElementById('admin-requests-counter');
+    const adminMessage = document.getElementById('admin-message');
+    
+    // Admin Uploads
+    const adminUnterwScope = document.getElementById('admin-unterweisungen-scope');
+    const adminUnterwUserSelect = document.getElementById('admin-unterweisungen-user-select');
+    const adminUnterwUserSelectWrapper = document.getElementById('admin-unterweisungen-user-select-wrapper');
+    const adminUnterwInput = document.getElementById('admin-unterweisungen-input');
+    const adminUnterwUploadBtn = document.getElementById('admin-unterweisungen-upload-btn');
+    const adminUnterwMessage = document.getElementById('admin-unterweisungen-message');
+    
+    // Admin Overviews
+    const adminTimesheetsNewCount = document.getElementById('admin-timesheets-new-count');
+    const adminSicknotesNewCount = document.getElementById('admin-sicknotes-new-count');
+    const adminTimesheetsOverview = document.getElementById('admin-timesheets-overview');
+    const adminSicknotesOverview = document.getElementById('admin-sicknotes-overview');
+
+    // Employee Detail
+    const employeeDetailInfoTitle = document.getElementById('employee-detail-info-title');
+    const employeeDetailMeta = document.getElementById('employee-detail-meta');
+    const employeeDocsList = document.getElementById('employee-docs-list');
+    const employeeDocsMessage = document.getElementById('employee-docs-message');
+
+    // --- HELPER FUNCTIONS ---
+
+    function isStrongPassword(pw) {
+        if (pw.length < 8) return false;
+        const hasUpper = /[A-ZÄÖÜ]/.test(pw);
+        const hasDigitOrSpecial = /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw);
+        return hasUpper && hasDigitOrSpecial;
+    }
+
+    function makeSafeFileName(name) {
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    }
+    
+    function showAuthError(msg) {
+        authError.textContent = msg;
+        authError.classList.remove('hidden');
+        authSuccess.classList.add('hidden');
+    }
+    
+    function showAuthSuccess(msg) {
+        authSuccess.textContent = msg;
+        authSuccess.classList.remove('hidden');
+        authError.classList.add('hidden');
+    }
+
+    function clearAuthMessages() {
+        authError.textContent = '';
+        authError.classList.add('hidden');
+        authSuccess.textContent = '';
+        authSuccess.classList.add('hidden');
+    }
+
+    // NEU: Passwort-Umschalter Logik
+    function handlePasswordToggle(e) {
+        const toggle = e.currentTarget;
+        const targetId = toggle.getAttribute('data-target');
+        const targetInput = document.getElementById(targetId);
+        if (targetInput.type === 'password') {
+            targetInput.type = 'text';
+            toggle.textContent = '🔒'; // Icon für Ausblenden
+            toggle.setAttribute('aria-label', 'Passwort ausblenden');
+        } else {
+            targetInput.type = 'password';
+            toggle.textContent = '👁️'; // Icon für Anzeigen
+            toggle.setAttribute('aria-label', 'Passwort anzeigen');
+        }
+    }
+
+    // --- INACTIVITY TIMER (9. Sicherheit / Komfort) ---
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        inactivityTimerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining <= 60) {
+            inactivityTimerEl.style.color = '#c0392b'; // Rot für letzte Minute
+        } else {
+            inactivityTimerEl.style.color = '#f57c00'; // Orange
+        }
+    }
+
+    function signOutDueToInactivity() {
+        supabaseClient.auth.signOut();
+        alert('Aus Sicherheitsgründen wurden Sie nach 10 Minuten Inaktivität abgemeldet.');
+        showLogin();
+    }
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        clearInterval(timerInterval);
+        timeRemaining = INACTIVITY_LIMIT_MS / 1000;
+        updateTimerDisplay();
+        
+        inactivityTimeout = setTimeout(signOutDueToInactivity, INACTIVITY_LIMIT_MS);
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+            }
+        }, 1000);
+
+        if(currentUser) inactivityTimerEl.classList.remove('hidden');
+    }
+
+    function setupActivityListeners() {
+        ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, { passive: true });
+        });
+    }
+
+    // --- PORTAL NAVIGATION (5. Portal & Rollen) ---
+    function setActiveSection(targetId) {
+        // 1. Alle Sektionen ausblenden
+        portalSections.forEach(s => s.classList.add('hidden'));
+        
+        // 2. Zielsektion einblenden
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+        }
+
+        // 3. Sidebar und Tiles aktualisieren
+        const allNavItems = document.querySelectorAll('.sidebar-list li');
+        const allTiles = document.querySelectorAll('.tile-card');
+
+        allNavItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-section-id') === targetId) {
+                item.classList.add('active');
+            }
+        });
+
+        allTiles.forEach(tile => {
+            tile.classList.remove('active');
+            if (tile.getAttribute('data-section-id') === targetId) {
+                tile.classList.add('active');
+            }
+        });
+        
+        // 4. Daten für Sektionen laden
+        if (targetId === 'section-documents') {
+            loadDocumentsForUser(currentUser);
+        } else if (targetId === 'section-admin-users') {
+            loadEmployeeGrid();
+        } else if (targetId === 'section-admin-documents') {
+            loadAdminDocumentOverviews();
+        } else if (targetId === 'section-settings') {
+            populateSettingsForm(currentProfile, currentUser);
+        } else if (targetId === 'section-dashboard') {
+             // Nichts spezifisches laden
+        }
+    }
+    
+    function initNavigation() {
+        // Event Listener für Sidebar-Items
+        document.querySelectorAll('.sidebar-list li').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-section-id');
+                setActiveSection(targetId);
+            });
+        });
+
+        // Event Listener für Dashboard-Tiles
+        document.querySelectorAll('.tile-grid .tile-card').forEach(tile => {
+            tile.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-section-id');
+                setActiveSection(targetId);
+            });
+        });
+    }
+
+    // --- AUTH FLOW UI ---
+    function disableAuthButtons() {
+        loginBtn.disabled = true;
+        forgotPasswordBtn.disabled = true;
+        showRegisterBtn.disabled = true;
+        registerBtn.disabled = true;
+        backToLoginBtn.disabled = true;
+        resetPasswordBtn.disabled = true;
+    }
+
+    function showLogin() {
+        currentUser = null;
+        currentProfile = null;
+        clearTimeout(inactivityTimeout);
+        clearInterval(timerInterval);
+        inactivityTimerEl.classList.add('hidden');
+        authSection.classList.remove('hidden');
+        portalSection.classList.add('hidden');
+        pendingSection.classList.add('hidden');
+        loginBox.classList.remove('hidden');
+        registerBox.classList.add('hidden');
+        resetBox.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+        topUserText.textContent = '';
+        clearAuthMessages();
+        
+        if (supabaseClient) {
+            loginBtn.disabled = false;
+            forgotPasswordBtn.disabled = false;
+            showRegisterBtn.disabled = false;
+        }
+    }
+
+    // 4. FREIGABE-LOGIK
+    function showPending(user) {
+        currentUser = user;
+        authSection.classList.add('hidden');
+        portalSection.classList.add('hidden');
+        pendingSection.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        topUserText.textContent = `${user.email} (wartet auf Freigabe)`;
+        document.getElementById('pending-message').textContent = `Angemeldet als: ${user.email}. Bitte warten Sie auf die Freischaltung.`;
+        resetInactivityTimer();
+    }
+
+    // 5. PORTAL & ROLLEN
+    async function showPortal(user) {
+        currentUser = user;
+        
+        // 1. Profil laden / anlegen
+        let { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        // Profil anlegen, wenn nicht vorhanden (z.B. nach erster E-Mail-Bestätigung)
+        if (error && error.code === 'PGRST116') { // no rows found
+             const { data: insertData, error: insertError } = await supabaseClient
+                .from('profiles')
+                .insert({ 
+                    id: user.id, 
+                    email: user.email, 
+                    full_name: user.user_metadata.full_name || user.email,
+                    first_name: user.user_metadata.first_name || '',
+                    last_name: user.user_metadata.last_name || '',
+                    role: 'user', 
+                    is_approved: false, 
+                    employment_type: 'fulltime' 
+                })
+                .select('*')
+                .single();
+            if (insertError || !insertData) {
+                console.error('Profil konnte nicht angelegt werden', insertError);
+                showPending(user);
+                return;
+            }
+            profile = insertData;
+        } else if (error) {
+            console.error('Fehler beim Laden des Profils', error);
+            showPending(user); // Im Zweifel pending anzeigen
+            return;
+        }
+
+        currentProfile = profile;
+        const isAdmin = profile.role === 'admin';
+        const isApproved = profile.is_approved || isAdmin; 
+
+        // 2. Freigabe prüfen
+        if (!isApproved) {
+            showPending(user);
+            return;
+        }
+        
+        // 3. Portal anzeigen
+        authSection.classList.add('hidden');
+        pendingSection.classList.add('hidden');
+        portalSection.classList.remove('hidden');
+        
+        // UI aktualisieren
+        const name = profile.full_name || user.email;
+        const roleText = isAdmin ? 'Administrator' : 'Mitarbeiter';
+        
+        topUserText.textContent = `${name} (${roleText})`;
+        logoutBtn.classList.remove('hidden');
+        userNameText.textContent = name;
+        sidebarUserRole.textContent = `Rolle: ${roleText}`;
+        
+        // Role Badge
+        roleBadge.textContent = isAdmin ? 'ADMIN' : (profile.employment_type === 'fulltime' ? 'Vollzeit' : 'Minijob');
+        roleBadge.style.background = isAdmin ? '#bbdefb' : (profile.employment_type === 'fulltime' ? '#e8f5e9' : '#fff3e0');
+        roleBadge.style.color = isAdmin ? var(--blue-dark) : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#f57c00');
+
+        // Admin-Elemente ein-/ausblenden
+        if (isAdmin) {
+            sidebarAdminLink.classList.remove('hidden');
+            tileAdmin.classList.remove('hidden');
+            loadEmployeeGrid(); // Admin-Daten vorab laden
+            loadAdminDocumentOverviews(); // Admin-Overviews vorab laden
+        } else {
+            sidebarAdminLink.classList.add('hidden');
+            tileAdmin.classList.add('hidden');
+        }
+        
+        // Standard-Sektion setzen und Timer starten
+        setActiveSection('section-dashboard');
+        resetInactivityTimer();
+    }
+    
+    async function handleLogin() {
+        clearAuthMessages();
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            return showAuthError('Bitte E-Mail und Passwort eingeben.');
+        }
+
+        disableAuthButtons();
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            showAuthError(error.message);
+        } else if (data.user) {
+            await showPortal(data.user);
+        }
+        
+        // Re-enable in showLogin/showPortal, otherwise here
+        if (error) disableAuthButtons();
+        if (loginBox.classList.contains('hidden')) { // nur wenn noch in loginBox
+             loginBtn.disabled = false; forgotPasswordBtn.disabled = false; showRegisterBtn.disabled = false;
+        }
+    }
+
+    async function handleRegister() {
+        clearAuthMessages();
+        const firstName = regFirstName.value.trim();
+        const lastName = regLastName.value.trim();
+        const email = regEmail.value.trim();
+        const password = regPassword.value;
+        const password2 = regPassword2.value;
+
+        if (!firstName || !lastName || !email || !password || !password2) {
+            return showAuthError('Bitte alle Felder ausfüllen.');
+        }
+        if (password !== password2) {
+            return showAuthError('Passwörter stimmen nicht überein.');
+        }
+        if (!isStrongPassword(password)) {
+            return showAuthError('Passwort zu schwach (min 8 Zeichen, 1 Großbuchstabe, 1 Zahl/Sonderzeichen).');
+        }
+        
+        disableAuthButtons();
+
+        const { data, error } = await supabaseClient.auth.signUp({ 
+            email: email, 
+            password: password, 
+            options: { 
+                data: { 
+                    full_name: `${firstName} ${lastName}`,
+                    first_name: firstName,
+                    last_name: lastName
+                },
+                emailRedirectTo: window.location.origin + window.location.pathname
+            } 
+        });
+
+        if (error) {
+            showAuthError(error.message);
+        } else {
+            // Profil-Eintrag wird nach E-Mail-Bestätigung (oder in showPortal) erstellt
+            showAuthSuccess('Registrierung erfolgreich! Bitte E-Mail bestätigen. Nach Bestätigung muss ein Admin Ihren Zugang freigeben.');
+            registerBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
+        }
+        
+        registerBtn.disabled = false;
+        backToLoginBtn.disabled = false;
+    }
+    
+    async function handleForgotPassword() {
+        clearAuthMessages();
+        const email = emailInput.value.trim();
+        
+        if (!email) {
+            return showAuthError('Bitte E-Mail im Anmeldefeld eingeben.');
+        }
+
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+        });
+
+        if (error) {
+            showAuthError(error.message);
+        } else {
+            showAuthSuccess('Passwort-Reset-Link gesendet. Bitte prüfen Sie Ihr Postfach.');
+        }
+    }
+
+    async function handleResetPassword() {
+        clearAuthMessages();
+        const n1 = resetPassword.value;
+        const n2 = resetPassword2.value;
+
+        if (!isStrongPassword(n1)) {
+            return showAuthError('Passwort zu schwach (min 8, Großbuchstabe, Zahl/Sonderzeichen).');
+        }
+        if (n1 !== n2) {
+            return showAuthError('Neue Passwörter stimmen nicht überein.');
+        }
+
+        disableAuthButtons();
+
+        const { error } = await supabaseClient.auth.updateUser({ password: n1 });
+
+        if (error) {
+            showAuthError('Fehler beim Speichern des Passworts: ' + error.message);
+        } else {
+            showAuthSuccess('Passwort erfolgreich geändert! Bitte loggen Sie sich ein.');
+            resetBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
+        }
+        resetPasswordBtn.disabled = false;
+    }
+    
+    async function handleLogout() {
+        clearTimeout(inactivityTimeout);
+        clearInterval(timerInterval);
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) console.error('Logout error:', error);
+        showLogin();
+    }
+
+    // --- STORAGE & DOCUMENTS (COMMON) (6. Dokumente & Uploads) ---
+    async function uploadFileToStorage(file, pathPrefix) {
+        const fileExtension = file.name.split('.').pop();
+        const safeFileName = makeSafeFileName(file.name);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        
+        // Pfad-Beispiele: stundenzettel/<userId>/<timestamp>_Datei.pdf
+        const filePath = `${pathPrefix}/${timestamp}_${safeFileName}`; 
+        
+        const { error } = await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .upload(filePath, file);
+
+        if (error) {
+            throw error;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+        return urlData.publicUrl;
+    }
+
+    async function insertDocumentRow(userId, title, docType, fileUrl) {
+        const { error } = await supabaseClient
+            .from('documents')
+            .insert({ 
+                user_id: userId, 
+                title: title, 
+                file_url: fileUrl, 
+                doc_type: docType 
+            });
+        
+        if (error) {
+            throw error;
+        }
+    }
+
+    function renderDocumentList(listEl, msgEl, docs, newUploadsCount = 0) {
+        listEl.innerHTML = '';
+        if (docs.length === 0) {
+            msgEl.textContent = 'Keine Einträge vorhanden.';
+            msgEl.classList.remove('hidden');
+            return;
+        }
+        msgEl.classList.add('hidden');
+
+        docs.forEach(doc => {
+            const li = document.createElement('li');
+            li.className = 'document-item';
+            
+            const isNew = doc.is_new || false; // Für Admin Overviews
+            
+            const meta = `${doc.doc_type.charAt(0).toUpperCase() + doc.doc_type.slice(1)} • ${new Date(doc.created_at).toLocaleDateString('de-DE')}`;
+            
+            li.innerHTML = `
+                <div>
+                    <div class="document-item-title">
+                        ${doc.title}
+                        ${isNew ? '<span class="doc-badge-new">Neu</span>' : ''}
+                    </div>
+                    <div class="document-item-meta">${meta}</div>
+                </div>
+                <a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">Öffnen</a>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
+    async function loadDocumentsForUser(user) {
+        if (!user) return;
+        
+        const { data: docs, error } = await supabaseClient
+            .from('documents')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error loading documents:', error);
+            return;
+        }
+
+        const unterweisungen = docs.filter(d => d.doc_type === 'unterweisung');
+        const timesheets = docs.filter(d => d.doc_type === 'stundenzettel');
+        const sicknotes = docs.filter(d => d.doc_type === 'krankmeldung');
+
+        renderDocumentList(docsUnterwList, docsUnterwMsg, unterweisungen);
+        renderDocumentList(docsTimesheetsList, docsTimesheetsMsg, timesheets);
+        renderDocumentList(docsSicknotesList, docsSicknotesMsg, sicknotes);
+    }
+    
+    // Konkrete Upload-Logik für Mitarbeiter
+    async function handleUserUpload(fileInput, docType, folder) {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        try {
+            const dateStr = new Date().toLocaleDateString('de-DE');
+            const pathPrefix = `${folder}/${currentUser.id}`;
+            const title = `${docType === 'stundenzettel' ? 'Stundenzettel' : 'Krankmeldung'} ${dateStr} – ${file.name}`;
+            
+            const url = await uploadFileToStorage(file, pathPrefix);
+            await insertDocumentRow(currentUser.id, title, docType, url);
+            
+            alert('Upload erfolgreich!');
+            loadDocumentsForUser(currentUser);
+        } catch (e) {
+            console.error('Upload Error:', e);
+            alert('Upload fehlgeschlagen: ' + (e.message || e));
+        } finally {
+            fileInput.value = null; // Reset input field
+        }
+    }
+
+    uploadTimesheetBtn.addEventListener('click', () => { uploadTimesheetInput.click(); });
+    uploadTimesheetInput.addEventListener('change', () => { handleUserUpload(uploadTimesheetInput, 'stundenzettel', 'timesheets'); });
+    
+    uploadSicknoteBtn.addEventListener('click', () => { uploadSicknoteInput.click(); });
+    uploadSicknoteInput.addEventListener('change', () => { handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'sicknotes'); });
+
+    // --- ADMIN USER MANAGEMENT (7.1) ---
+    async function loadAllProfiles() {
+        const { data: profiles, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .order('full_name', { ascending: true }); // Nach vollem Namen sortieren
+        
+        if (error) {
+            console.error('Error loading profiles:', error);
+            return [];
+        }
+        
+        allProfilesCache = profiles;
+        return profiles;
+    }
+    
+    function renderEmployeeCard(p, isPending = false) {
+        const card = document.createElement('div');
+        card.className = `employee-card ${isPending ? 'pending' : (p.role === 'admin' ? 'admin' : '')}`;
+        
+        const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
+        const statusText = isPending ? 'Wartet auf Freigabe' : (p.is_approved ? 'Freigegeben' : 'Nicht freigegeben');
+        
+        // Avatar-Randfarbe
+        let avatarColor = '#9e9e9e'; // Grau für Pending/Nicht freigegeben
+        if (!isPending) {
+            if (p.role === 'admin') avatarColor = 'var(--blue-dark)';
+            else if (p.employment_type === 'fulltime') avatarColor = '#4caf50';
+            else if (p.employment_type === 'minijob') avatarColor = '#ff9800';
+        }
+
+        // Role Selector
+        const roleSel = document.createElement('select');
+        roleSel.innerHTML = `
+            <option value="user">Mitarbeiter</option>
+            <option value="admin">Administrator</option>
+        `;
+        roleSel.value = p.role;
+
+        // Employment Type Selector (nur für User)
+        const typeSel = document.createElement('select');
+        typeSel.innerHTML = `
+            <option value="fulltime">Vollzeit</option>
+            <option value="minijob">Minijob</option>
+            <option value="null">Keine Angabe</option>
+        `;
+        typeSel.value = p.employment_type || 'null';
+        if (p.role === 'admin') typeSel.disabled = true;
+
+        // Role/Type Change Listener
+        roleSel.onchange = () => {
+            typeSel.disabled = roleSel.value === 'admin';
+        };
+
+        const actions = document.createElement('div');
+        actions.className = 'employee-actions';
+
+        const btnOpen = document.createElement('button');
+        btnOpen.className = 'btn-small grey';
+        btnOpen.textContent = 'Details';
+        btnOpen.onclick = () => openEmployeeDetail(p);
+        actions.appendChild(btnOpen);
+        
+        if (isPending) {
+            const btnApprove = document.createElement('button');
+            btnApprove.className = 'btn-small approve';
+            btnApprove.textContent = 'Freigeben';
+            btnApprove.onclick = () => approveUser(p.id, roleSel.value, typeSel.value);
+            actions.appendChild(btnApprove);
+        } else {
+            const btnSave = document.createElement('button');
+            btnSave.className = 'btn-small primary';
+            btnSave.textContent = 'Rolle speichern';
+            btnSave.onclick = () => updateUserStatus(p.id, roleSel.value, typeSel.value);
+            actions.appendChild(btnSave);
+        }
+
+        card.innerHTML = `
+            <div class="employee-avatar" style="border-color:${avatarColor}">${initials}</div>
+            <div>
+                <div class="employee-info-main">${p.full_name || '-'} <span style="font-size: 0.7rem; color: #888;">(${statusText})</span></div>
+                <div class="employee-info-sub">${p.email}</div>
+                <div class="employee-role-selector">
+                    <label>Rolle:</label>
+                </div>
+            </div>
+        `;
+        card.querySelector('.employee-role-selector').appendChild(roleSel);
+
+        const typeDiv = document.createElement('div');
+        typeDiv.className = 'employee-role-selector';
+        typeDiv.innerHTML = '<label>Art:</label>';
+        typeDiv.appendChild(typeSel);
+        card.children[1].appendChild(typeDiv);
+        card.children[1].appendChild(actions);
+        
+        return card;
+    }
+
+    async function loadEmployeeGrid() {
+        if (!currentUser || currentProfile.role !== 'admin') return;
+
+        const allProfiles = await loadAllProfiles();
+        
+        pendingEmployeesContent.innerHTML = '';
+        approvedEmployeesContent.innerHTML = '';
+        adminMessage.classList.add('hidden');
+        noPendingUsers.classList.add('hidden');
+
+        const pending = allProfiles.filter(p => !p.is_approved && p.email_confirmed_at);
+        const approved = allProfiles.filter(p => p.is_approved);
+        
+        updatePendingBadges(pending.length);
+        
+        // Render Pending
+        if(pending.length === 0) {
+            noPendingUsers.classList.remove('hidden');
+        } else {
+            const grid = document.createElement('div');
+            grid.className = 'employee-grid';
+            pending.forEach(p => grid.appendChild(renderEmployeeCard(p, true)));
+            pendingEmployeesContent.appendChild(grid);
+        }
+
+        // Render Approved
+        approvedEmployeesContent.innerHTML = '';
+        const groups = {
+            'Administratoren': approved.filter(p => p.role === 'admin'),
+            'Vollzeit-Mitarbeiter': approved.filter(p => p.role === 'user' && p.employment_type === 'fulltime'),
+            'Minijob-Mitarbeiter': approved.filter(p => p.role === 'user' && p.employment_type === 'minijob'),
+            'Mitarbeiter (ohne Kategorie)': approved.filter(p => p.role === 'user' && !p.employment_type)
+        };
+        
+        for (const [title, profiles] of Object.entries(groups)) {
+            if (profiles.length > 0) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'employee-category-wrapper';
+                
+                const heading = document.createElement('div');
+                heading.className = 'employee-category-heading';
+                heading.textContent = `${title} (${profiles.length})`;
+                wrapper.appendChild(heading);
+                
+                const grid = document.createElement('div');
+                grid.className = 'employee-grid';
+                profiles.forEach(p => grid.appendChild(renderEmployeeCard(p, false)));
+                wrapper.appendChild(grid);
+                approvedEmployeesContent.appendChild(wrapper);
+            }
+        }
+
+        // Admin Upload Select befüllen
+        populateAdminUploadSelect(approved.filter(p => p.role !== 'admin'));
+    }
+
+    function updatePendingBadges(count) {
+        const txt = count.toString();
+        sidebarAdminBadge.textContent = txt;
+        tileAdminBadge.textContent = txt;
+        adminRequestsCounter.textContent = txt;
+        
+        if(count > 0) {
+            sidebarAdminBadge.classList.remove('hidden');
+            tileAdminBadge.classList.remove('hidden');
+            adminRequestsCounter.classList.remove('hidden');
+        } else {
+            sidebarAdminBadge.classList.add('hidden');
+            tileAdminBadge.classList.add('hidden');
+            adminRequestsCounter.classList.add('hidden');
+        }
+    }
+
+    async function approveUser(id, role, empType) {
+        if(!confirm('Benutzer wirklich freigeben?')) return;
+        
+        const updates = { 
+            is_approved: true, 
+            approved_at: new Date().toISOString(), 
+            approved_by: currentUser.id, 
+            role: role, 
+            employment_type: (role === 'admin') ? null : empType 
+        };
+        
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update(updates)
+            .eq('id', id);
+            
+        if(error) {
+            adminMessage.textContent = 'Fehler bei der Freigabe: ' + error.message;
+            adminMessage.classList.remove('success');
+            adminMessage.classList.remove('hidden');
+        } else {
+            adminMessage.textContent = `Benutzer ${id} erfolgreich freigegeben.`;
+            adminMessage.classList.add('success');
+            adminMessage.classList.remove('hidden');
+            loadEmployeeGrid();
+        }
+    }
+
+    async function updateUserStatus(id, role, empType) {
+        const updates = { 
+            role: role, 
+            employment_type: (role === 'admin') ? null : empType 
+        };
+        
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update(updates)
+            .eq('id', id);
+            
+        if(error) {
+            alert('Fehler beim Speichern: ' + error.message);
+        } else {
+            alert('Daten aktualisiert');
+            loadEmployeeGrid();
+        }
+    }
+    
+    // --- EMPLOYEE DETAIL (7.1) ---
+    async function openEmployeeDetail(profile) {
+        setActiveSection('section-employee-detail');
+        employeeDetailInfoTitle.textContent = profile.full_name || profile.email;
+        
+        const roleText = profile.role === 'admin' ? 'Administrator' : `Mitarbeiter (${profile.employment_type || 'N/A'})`;
+        const approvalText = profile.is_approved ? `Freigegeben am ${new Date(profile.approved_at).toLocaleDateString('de-DE')}` : 'Wartet auf Freigabe';
+        employeeDetailMeta.textContent = `E-Mail: ${profile.email} · Rolle: ${roleText} · Status: ${approvalText}`;
+        
+        // Dokumente für diesen Mitarbeiter laden
+        const { data: docs, error } = await supabaseClient
+            .from('documents')
+            .select('*')
+            .eq('user_id', profile.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            employeeDocsMessage.textContent = 'Fehler beim Laden der Dokumente.';
+            employeeDocsMessage.classList.remove('hidden');
+        } else {
+            renderDocumentList(employeeDocsList, employeeDocsMessage, docs);
+            employeeDocsMessage.textContent = docs.length === 0 ? 'Keine Dokumente für diesen Mitarbeiter hinterlegt.' : '';
+            if(docs.length === 0) employeeDocsMessage.classList.remove('hidden');
+        }
+    }
+
+    // --- ADMIN UPLOAD (7.2) ---
+    function populateAdminUploadSelect(profiles) {
+        adminUnterwUserSelect.innerHTML = '';
+        profiles.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.full_name || p.email;
+            adminUnterwUserSelect.appendChild(option);
+        });
+    }
+
+    adminUnterwScope.addEventListener('change', (e) => {
+        if (e.target.value === 'single') {
+            adminUnterwUserSelectWrapper.classList.remove('hidden');
+        } else {
+            adminUnterwUserSelectWrapper.classList.add('hidden');
+        }
+    });
+
+    adminUnterwUploadBtn.addEventListener('click', async () => {
+        if (!currentUser || currentProfile.role !== 'admin') return;
+
+        const file = adminUnterwInput.files[0];
+        if (!file) {
+            adminUnterwMessage.textContent = 'Bitte eine Datei auswählen.';
+            adminUnterwMessage.style.color = 'red';
+            return;
+        }
+
+        adminUnterwUploadBtn.disabled = true;
+        adminUnterwMessage.textContent = 'Lade Datei hoch...';
+        adminUnterwMessage.style.color = '#555';
+
+        try {
+            // 1. Datei einmal hochladen
+            const pathPrefix = `unterweisungen/admin`;
+            const fileUrl = await uploadFileToStorage(file, pathPrefix);
+            
+            // 2. Zielprofile ermitteln
+            const scope = adminUnterwScope.value;
+            let targetProfiles = allProfilesCache.filter(p => p.is_approved && p.role !== 'admin'); // Nur freigegebene Mitarbeiter
+            
+            if (scope === 'fulltime') {
+                targetProfiles = targetProfiles.filter(p => p.employment_type === 'fulltime');
+            } else if (scope === 'minijob') {
+                targetProfiles = targetProfiles.filter(p => p.employment_type === 'minijob');
+            } else if (scope === 'single') {
+                targetProfiles = targetProfiles.filter(p => p.id === adminUnterwUserSelect.value);
+            }
+            
+            if (targetProfiles.length === 0) {
+                 throw new Error('Keine Zielmitarbeiter für den gewählten Geltungsbereich gefunden.');
+            }
+
+            // 3. Dokumente für jeden Mitarbeiter einfügen
+            const inserts = targetProfiles.map(p => ({
+                user_id: p.id,
+                title: `${file.name} - Unterweisung ${p.full_name || p.email}`,
+                file_url: fileUrl,
+                doc_type: 'unterweisung'
+            }));
+
+            const { error } = await supabaseClient
+                .from('documents')
+                .insert(inserts);
+
+            if (error) throw error;
+            
+            adminUnterwMessage.textContent = `Unterweisung wurde erfolgreich für ${targetProfiles.length} Mitarbeiter gespeichert.`;
+            adminUnterwMessage.style.color = 'green';
+            adminUnterwInput.value = null;
+
+        } catch (e) {
+            console.error('Admin Upload Error:', e);
+            adminUnterwMessage.textContent = 'Upload fehlgeschlagen: ' + (e.message || e);
+            adminUnterwMessage.style.color = 'red';
+        } finally {
+            adminUnterwUploadBtn.disabled = false;
+        }
+    });
+
+    // --- ADMIN OVERVIEWS (7.3) ---
+    
+    function renderAdminGroupedList(docs, container, newCount) {
+        container.innerHTML = '';
+        const docType = docs.length > 0 ? docs[0].doc_type : '';
+        const lastOpenedKey = docType === 'stundenzettel' ? 'bayrak_admin_last_opened_timesheets' : 'bayrak_admin_last_opened_sicknotes';
+        const newCountEl = docType === 'stundenzettel' ? adminTimesheetsNewCount : adminSicknotesNewCount;
+        
+        newCountEl.textContent = newCount > 0 
+            ? `Es gibt ${newCount} neue Uploads seit Ihrem letzten Besuch dieses Bereichs.` 
+            : 'Keine neuen Uploads seit Ihrem letzten Besuch.';
+
+        if(docs.length === 0) {
+            container.textContent = 'Keine Einträge.';
+            return;
+        }
+
+        // Group by User -> Year-Month
+        const map = {};
+        docs.forEach(d => {
+            const prof = allProfilesCache.find(p => p.id === d.user_id);
+            const name = prof ? prof.full_name : `Unbekannt (${d.user_id.substring(0, 4)}...)`;
+            const date = new Date(d.created_at);
+            const key = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
+
+            if(!map[name]) map[name] = {};
+            if(!map[name][key]) map[name][key] = [];
+            map[name][key].push(d);
+        });
+
+        for (const [name, months] of Object.entries(map)) {
+            const userDiv = document.createElement('div');
+            userDiv.className = 'admin-overview-entry';
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'admin-overview-name';
+            nameDiv.textContent = name;
+            userDiv.appendChild(nameDiv);
+
+            for (const [monthKey, monthDocs] of Object.entries(months)) {
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'admin-overview-details';
+                detailsDiv.textContent = `• ${monthKey}: ${monthDocs.length} Datei(en) - (Details: Zum Mitarbeiter navigieren)`;
+                userDiv.appendChild(detailsDiv);
+            }
+            container.appendChild(userDiv);
+        }
+        
+        // Aktualisiert am Ende die last_opened-Zeitpunkte in localStorage (jetzt)
+        localStorage.setItem(lastOpenedKey, new Date().toISOString());
+    }
+
+    async function loadAdminDocumentOverviews() {
+        if (!currentUser || currentProfile.role !== 'admin') return;
+
+        const { data: docs, error } = await supabaseClient
+            .from('documents')
+            .select('*')
+            .in('doc_type', ['stundenzettel', 'krankmeldung'])
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading admin docs:', error);
+            adminTimesheetsOverview.textContent = 'Fehler beim Laden der Übersicht.';
+            adminSicknotesOverview.textContent = 'Fehler beim Laden der Übersicht.';
+            return;
+        }
+
+        const timesheets = docs.filter(d => d.doc_type === 'stundenzettel');
+        const sicknotes = docs.filter(d => d.doc_type === 'krankmeldung');
+        
+        const lastTsOpen = localStorage.getItem('bayrak_admin_last_opened_timesheets') || new Date(0).toISOString();
+        const lastSnOpen = localStorage.getItem('bayrak_admin_last_opened_sicknotes') || new Date(0).toISOString();
+        
+        const tsNewCount = timesheets.filter(d => d.created_at > lastTsOpen).length;
+        const snNewCount = sicknotes.filter(d => d.created_at > lastSnOpen).length;
+
+        renderAdminGroupedList(timesheets, adminTimesheetsOverview, tsNewCount);
+        renderAdminGroupedList(sicknotes, adminSicknotesOverview, snNewCount);
+    }
+
+
+    // --- EINSTELLUNGEN (8. Einstellungen) ---
+    function populateSettingsForm(profile, user) {
+        settingsFirstName.value = profile.first_name || '';
+        settingsLastName.value = profile.last_name || '';
+        settingsEmail.value = user.email;
+        settingsProfileMsg.textContent = '';
+        settingsPasswordMsg.textContent = '';
+        settingsProfileMsg.style.color = 'green';
+        settingsPasswordMsg.style.color = 'green';
+        
+        settingsCurrentPw.value = '';
+        settingsNewPw.value = '';
+        settingsNewPw2.value = '';
+    }
+
+    settingsSaveProfile.addEventListener('click', async () => {
+        if (!currentUser) return;
+
+        const firstName = settingsFirstName.value.trim();
+        const lastName = settingsLastName.value.trim();
+        const fullName = `${firstName} ${lastName}`;
+
+        if (!firstName || !lastName) {
+            settingsProfileMsg.textContent = 'Vorname und Nachname müssen ausgefüllt sein.';
+            settingsProfileMsg.style.color = 'red';
+            return;
+        }
+        
+        settingsSaveProfile.disabled = true;
+
+        // 1. profiles-Tabelle aktualisieren
+        const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .update({ first_name: firstName, last_name: lastName, full_name: fullName })
+            .eq('id', currentUser.id);
+
+        // 2. Auth-User Metadaten aktualisieren
+        const { error: authError } = await supabaseClient.auth.updateUser({
+            data: { first_name: firstName, last_name: lastName, full_name: fullName }
+        });
+
+        settingsSaveProfile.disabled = false;
+
+        if (profileError || authError) {
+            settingsProfileMsg.textContent = 'Fehler beim Speichern: ' + (profileError?.message || authError?.message);
+            settingsProfileMsg.style.color = 'red';
+        } else {
+            settingsProfileMsg.textContent = 'Profil erfolgreich gespeichert!';
+            settingsProfileMsg.style.color = 'green';
+            
+            // UI aktualisieren (Kopfzeile, Begrüßung)
+            currentProfile.full_name = fullName;
+            currentProfile.first_name = firstName;
+            currentProfile.last_name = lastName;
+            
+            showPortal(currentUser); // Aktualisiert Top-Leiste und Sidebar
+
+            // Admin-Bereich neu laden, falls Admin
+            if (currentProfile.role === 'admin') {
+                loadEmployeeGrid(); 
+                loadAdminDocumentOverviews();
+            }
+        }
+    });
+
+    settingsChangePw.addEventListener('click', async () => {
+        if (!currentUser) return;
+        settingsPasswordMsg.textContent = '';
+
+        const cur = settingsCurrentPw.value;
+        const n1 = settingsNewPw.value;
+        const n2 = settingsNewPw2.value;
+        
+        if (!cur || !n1 || !n2) {
+             settingsPasswordMsg.textContent = 'Bitte alle Felder ausfüllen.';
+             settingsPasswordMsg.style.color = 'red';
+             return;
+        }
+
+        if (!isStrongPassword(n1)) {
+            settingsPasswordMsg.textContent = 'Neues Passwort zu schwach (min 8, Großbuchstabe, Zahl/Sonderzeichen).';
+            settingsPasswordMsg.style.color = 'red';
+            return;
+        }
+        if (n1 !== n2) {
+            settingsPasswordMsg.textContent = 'Neue Passwörter stimmen nicht überein.';
+            settingsPasswordMsg.style.color = 'red';
+            return;
+        }
+        
+        settingsChangePw.disabled = true;
+
+        // 1. Aktuelles Passwort überprüfen (Re-Auth)
+        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+            email: currentUser.email,
+            password: cur
+        });
+
+        if (signInError) {
+            settingsPasswordMsg.textContent = 'Aktuelles Passwort falsch.';
+            settingsPasswordMsg.style.color = 'red';
+            settingsChangePw.disabled = false;
+            return;
+        }
+
+        // 2. Passwort ändern
+        const { error: updateError } = await supabaseClient.auth.updateUser({ password: n1 });
+        
+        settingsChangePw.disabled = false;
+
+        if (updateError) {
+            settingsPasswordMsg.textContent = 'Fehler beim Ändern: ' + updateError.message;
+            settingsPasswordMsg.style.color = 'red';
+        } else {
+            settingsPasswordMsg.textContent = 'Passwort erfolgreich geändert.';
+            settingsPasswordMsg.style.color = 'green';
+            settingsCurrentPw.value = '';
+            settingsNewPw.value = '';
+            settingsNewPw2.value = '';
+        }
+    });
+
+    // --- INITIALIZATION ---
+    async function init() {
+        if (SUPABASE_URL === 'IHR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'IHR_SUPABASE_ANON_KEY') {
+            alert('FEHLER: Supabase-Keys müssen in der <script> Sektion gesetzt werden!');
+            disableAuthButtons(); 
+            return;
+        }
+
+        try {
+            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.error('Supabase Init Error:', e);
+            alert('FEHLER: Supabase konnte nicht initialisiert werden. Bitte prüfen Sie Ihre Supabase-Konfiguration oder die Internetverbindung (siehe Konsole).');
+            disableAuthButtons(); // Deaktiviert alle Anmelde-Buttons
+            return;
+        }
+
+        initNavigation();
+        setupActivityListeners();
+
+        // Event-Listener für Passwort-Umschalter hinzufügen
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', handlePasswordToggle);
+        });
+
+        // Auth Event Listeners
+        loginBtn.addEventListener('click', handleLogin);
+        registerBtn.addEventListener('click', handleRegister);
+        logoutBtn.addEventListener('click', handleLogout);
+        pendingLogoutBtn.addEventListener('click', handleLogout);
+        forgotPasswordBtn.addEventListener('click', handleForgotPassword);
+        showRegisterBtn.addEventListener('click', () => { 
+            loginBox.classList.add('hidden'); 
+            registerBox.classList.remove('hidden'); 
+            clearAuthMessages();
+        });
+        backToLoginBtn.addEventListener('click', () => { 
+            registerBox.classList.add('hidden'); 
+            loginBox.classList.remove('hidden'); 
+            clearAuthMessages();
+        });
+        resetPasswordBtn.addEventListener('click', handleResetPassword);
+
+        // Supabase Realtime/Auth Change Listener
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                 // Wird in showPortal gehandelt, um Profil zu laden
+            } else if (event === 'SIGNED_OUT') {
+                showLogin();
+            }
+        });
+
+        // Check for Recovery Hash
+        if(window.location.hash.includes('type=recovery')) {
+            authSection.classList.remove('hidden');
+            loginBox.classList.add('hidden');
+            resetBox.classList.remove('hidden');
+            // Der Rest wird über den AuthStateChange Listener oder manuell im reset-Handler abgewickelt
+            return; 
+        }
+
+        // Check current session
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session) {
+            await showPortal(data.session.user);
+        } else {
+            showLogin();
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
