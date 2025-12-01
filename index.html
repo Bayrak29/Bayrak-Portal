@@ -1924,35 +1924,22 @@
     // --- ADMIN USER MANAGEMENT ---
 
     async function loadAllProfiles() {
-        // ... (Logik wie zuvor)
+        // Lädt alle Profile nur aus der Tabelle "profiles"
         const { data: profiles, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .order('created_at', { ascending: true });
-        
+
         if (error) {
             console.error('Error loading profiles:', error);
             return [];
         }
 
-        // Add user full name from auth if missing
-        const { data: { users } } = await supabaseClient.auth.admin.listUsers();
-        
-        const profileMap = new Map(profiles.map(p => [p.id, p]));
-        const userMap = new Map(users.map(u => [u.id, u]));
-
-        profiles.forEach(p => {
-            const authUser = userMap.get(p.id);
-            if (authUser && !p.full_name && authUser.user_metadata?.full_name) {
-                p.full_name = authUser.user_metadata.full_name;
-            }
-        });
-        
+        // Kein auth.admin.listUsers() im Browser – nur Profile verwenden
         allProfilesCache = profiles;
         return profiles;
     }
-
-    async function loadPendingUserCount() {
+async function loadPendingUserCount() {
         const profiles = await loadAllProfiles();
         const pending = profiles.filter(p => !p.is_approved);
         updatePendingBadges(pending.length);
