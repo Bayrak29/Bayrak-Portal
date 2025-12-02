@@ -486,6 +486,26 @@
             margin-left: 10px;
         }
 
+        .admin-overview-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-link-danger {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #b00020;
+        }
+
+        .btn-link-danger:hover {
+            text-decoration: underline;
+        }
+
         /* ADMIN: MITARBEITER-KACHELN */
         .employee-grid {
             display: grid;
@@ -1219,7 +1239,6 @@
     const settingsLastName = document.getElementById('settings-last-name');
     const settingsEmail = document.getElementById('settings-email');
     const settingsEmploymentType = document.getElementById('settings-employment-type');
-    const settingsEmploymentLabel = document.getElementById('settings-employment-label');
     const settingsSaveProfile = document.getElementById('settings-save-profile');
     const settingsProfileMsg = document.getElementById('settings-profile-msg');
     const settingsCurrentPw = document.getElementById('settings-current-password');
@@ -1362,11 +1381,13 @@
         });
 
         // Load content on demand
-        if(targetId === 'section-training-records' || targetId === 'section-sicknotes') {
+        if (targetId === 'section-training-records' || targetId === 'section-sicknotes') {
             loadDocumentsForUser(currentUser);
         }
-        if(targetId === 'section-admin' && currentProfile?.role === 'admin') {
+        if (targetId === 'section-admin' && currentProfile?.role === 'admin') {
             loadEmployeeGrid();
+        }
+        if (targetId === 'section-admin-uploads' && currentProfile?.role === 'admin') {
             loadAdminDocumentOverviews();
         }
     }
@@ -1545,9 +1566,6 @@
             ? 'var(--blue-dark)'
             : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
         roleBadge.classList.remove('hidden');
-
-        // Settings mit aktuellen Profildaten füllen
-        initSettingsFromProfile();
 
         // Admin Links
         if (isAdmin) {
@@ -2381,19 +2399,81 @@ async function loadPendingUserCount() {
                     li.style.padding = '2px 0';
 
                     const date = new Date(doc.created_at).toLocaleDateString('de-DE');
-                    
+
+                    const infoSpan = document.createElement('span');
+                    infoSpan.textContent = `${date} – ${doc.title}`;
+                    infoSpan.style.fontSize = '0.8rem';
+
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'admin-overview-actions';
+
                     const link = document.createElement('a');
                     link.href = doc.file_url;
                     link.target = '_blank';
-                    link.textContent = `Öffnen (${date})`;
+                    link.textContent = 'Öffnen';
                     link.style.fontSize = '0.8rem';
-                    
-                    li.appendChild(link);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'btn-link-danger';
+                    delBtn.textContent = 'Löschen';
+                    delBtn.addEventListener('click', () => {
+                        deleteDocumentAsAdmin(doc);
+                    });
+
+                    actionsDiv.appendChild(link);
+                    actionsDiv.appendChild(delBtn);
+
+                    li.appendChild(infoSpan);
+                    li.appendChild(actionsDiv);
                     ul.appendChild(li);
                 });
             }
             userDiv.appendChild(ul);
             container.appendChild(userDiv);
+        }
+    }
+
+
+    async function deleteDocumentAsAdmin(doc) {
+        if (!currentProfile || currentProfile.role !== 'admin') return;
+        if (!confirm('Möchten Sie dieses Dokument wirklich löschen?')) return;
+
+        try {
+            // Pfad aus der öffentlichen URL extrahieren
+            let path = null;
+            if (doc.file_url) {
+                const prefix = '/storage/v1/object/public/documents/';
+                const idx = doc.file_url.indexOf(prefix);
+                if (idx !== -1) {
+                    path = doc.file_url.substring(idx + prefix.length);
+                }
+            }
+
+            if (path) {
+                const { error: storageError } = await supabaseClient
+                    .storage
+                    .from('documents')
+                    .remove([path]);
+                if (storageError) {
+                    console.error('Fehler beim Löschen aus Storage:', storageError);
+                }
+            }
+
+            const { error: dbError } = await supabaseClient
+                .from('documents')
+                .delete()
+                .eq('id', doc.id);
+
+            if (dbError) {
+                throw dbError;
+            }
+
+            // Übersicht neu laden
+            await loadAdminDocumentOverviews();
+        } catch (e) {
+            console.error('Admin Delete Error:', e);
+            alert('Löschen fehlgeschlagen: ' + (e.message || e));
         }
     }
 
@@ -2469,33 +2549,6 @@ async function loadPendingUserCount() {
 
     // --- SETTINGS HANDLERS ---
 
-    function initSettingsFromProfile() {
-        if (!currentProfile || !currentUser) return;
-
-        settingsFirstName.value = currentProfile.first_name || '';
-        settingsLastName.value = currentProfile.last_name || '';
-        settingsEmail.value = currentProfile.email || currentUser.email || '';
-
-        const employment = currentProfile.employment_type;
-        if (employment === 'fulltime' || employment === 'minijob') {
-            settingsEmploymentType.value = employment;
-        }
-
-        const isAdmin = currentProfile.role === 'admin';
-
-        if (!isAdmin) {
-            settingsEmploymentType.disabled = true;
-            if (settingsEmploymentLabel) {
-                settingsEmploymentLabel.textContent = 'Beschäftigungsart (vom Admin festgelegt)';
-            }
-        } else {
-            settingsEmploymentType.disabled = false;
-            if (settingsEmploymentLabel) {
-                settingsEmploymentLabel.textContent = 'Beschäftigungsart';
-            }
-        }
-    }
-
     settingsSaveProfile.addEventListener('click', async () => {
         // ... (Logik wie zuvor)
         settingsProfileMsg.textContent = '';
@@ -2504,7 +2557,6 @@ async function loadPendingUserCount() {
         const firstName = settingsFirstName.value.trim();
         const lastName = settingsLastName.value.trim();
         const employmentType = settingsEmploymentType.value;
-        const isAdmin = currentProfile?.role === 'admin';
         const fullName = `${firstName} ${lastName}`;
 
         if (!firstName || !lastName) {
@@ -2515,14 +2567,8 @@ async function loadPendingUserCount() {
         // 1. Update Profile Table
         const updates = {
             full_name: fullName,
-            first_name: firstName,
-            last_name: lastName
+            employment_type: employmentType
         };
-
-        // Beschäftigungsart darf nur von Admins geändert werden
-        if (isAdmin) {
-            updates.employment_type = employmentType;
-        }
 
         const { error: profileError } = await supabaseClient
             .from('profiles')
@@ -2537,7 +2583,7 @@ async function loadPendingUserCount() {
 
         // 2. Update Auth Meta
         const { error: authError } = await supabaseClient.auth.updateUser({
-            data: { full_name: fullName, first_name: firstName, last_name: lastName }
+            data: { full_name: fullName }
         });
         
         if (authError) {
@@ -2547,17 +2593,9 @@ async function loadPendingUserCount() {
             settingsProfileMsg.textContent = 'Gespeichert.';
             settingsProfileMsg.style.color = 'green';
             userNameText.textContent = fullName;
-
-            // Lokalen Profil-Cache aktualisieren
-            currentProfile.full_name = fullName;
-            currentProfile.first_name = firstName;
-            currentProfile.last_name = lastName;
-            if (isAdmin) {
-                currentProfile.employment_type = employmentType;
-            }
-
-            // Felder und Anzeige neu befüllen
-            initSettingsFromProfile();
+            currentProfile.full_name = fullName; // Update cache
+            // Reload user info in top bar and sidebar for immediate effect
+            showPortal(currentUser); 
         }
     });
 
