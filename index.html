@@ -1219,6 +1219,7 @@
     const settingsLastName = document.getElementById('settings-last-name');
     const settingsEmail = document.getElementById('settings-email');
     const settingsEmploymentType = document.getElementById('settings-employment-type');
+    const settingsEmploymentLabel = document.getElementById('settings-employment-label');
     const settingsSaveProfile = document.getElementById('settings-save-profile');
     const settingsProfileMsg = document.getElementById('settings-profile-msg');
     const settingsCurrentPw = document.getElementById('settings-current-password');
@@ -1544,6 +1545,9 @@
             ? 'var(--blue-dark)'
             : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
         roleBadge.classList.remove('hidden');
+
+        // Settings mit aktuellen Profildaten füllen
+        initSettingsFromProfile();
 
         // Admin Links
         if (isAdmin) {
@@ -2465,6 +2469,33 @@ async function loadPendingUserCount() {
 
     // --- SETTINGS HANDLERS ---
 
+    function initSettingsFromProfile() {
+        if (!currentProfile || !currentUser) return;
+
+        settingsFirstName.value = currentProfile.first_name || '';
+        settingsLastName.value = currentProfile.last_name || '';
+        settingsEmail.value = currentProfile.email || currentUser.email || '';
+
+        const employment = currentProfile.employment_type;
+        if (employment === 'fulltime' || employment === 'minijob') {
+            settingsEmploymentType.value = employment;
+        }
+
+        const isAdmin = currentProfile.role === 'admin';
+
+        if (!isAdmin) {
+            settingsEmploymentType.disabled = true;
+            if (settingsEmploymentLabel) {
+                settingsEmploymentLabel.textContent = 'Beschäftigungsart (vom Admin festgelegt)';
+            }
+        } else {
+            settingsEmploymentType.disabled = false;
+            if (settingsEmploymentLabel) {
+                settingsEmploymentLabel.textContent = 'Beschäftigungsart';
+            }
+        }
+    }
+
     settingsSaveProfile.addEventListener('click', async () => {
         // ... (Logik wie zuvor)
         settingsProfileMsg.textContent = '';
@@ -2473,6 +2504,7 @@ async function loadPendingUserCount() {
         const firstName = settingsFirstName.value.trim();
         const lastName = settingsLastName.value.trim();
         const employmentType = settingsEmploymentType.value;
+        const isAdmin = currentProfile?.role === 'admin';
         const fullName = `${firstName} ${lastName}`;
 
         if (!firstName || !lastName) {
@@ -2483,8 +2515,14 @@ async function loadPendingUserCount() {
         // 1. Update Profile Table
         const updates = {
             full_name: fullName,
-            employment_type: employmentType
+            first_name: firstName,
+            last_name: lastName
         };
+
+        // Beschäftigungsart darf nur von Admins geändert werden
+        if (isAdmin) {
+            updates.employment_type = employmentType;
+        }
 
         const { error: profileError } = await supabaseClient
             .from('profiles')
@@ -2499,7 +2537,7 @@ async function loadPendingUserCount() {
 
         // 2. Update Auth Meta
         const { error: authError } = await supabaseClient.auth.updateUser({
-            data: { full_name: fullName }
+            data: { full_name: fullName, first_name: firstName, last_name: lastName }
         });
         
         if (authError) {
@@ -2509,9 +2547,17 @@ async function loadPendingUserCount() {
             settingsProfileMsg.textContent = 'Gespeichert.';
             settingsProfileMsg.style.color = 'green';
             userNameText.textContent = fullName;
-            currentProfile.full_name = fullName; // Update cache
-            // Reload user info in top bar and sidebar for immediate effect
-            showPortal(currentUser); 
+
+            // Lokalen Profil-Cache aktualisieren
+            currentProfile.full_name = fullName;
+            currentProfile.first_name = firstName;
+            currentProfile.last_name = lastName;
+            if (isAdmin) {
+                currentProfile.employment_type = employmentType;
+            }
+
+            // Felder und Anzeige neu befüllen
+            initSettingsFromProfile();
         }
     });
 
