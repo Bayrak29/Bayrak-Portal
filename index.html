@@ -742,6 +742,18 @@
             <button id="show-register-btn" class="btn-secondary">Neu anmelden</button>
         </div>
 
+
+        <div id="forgot-box" class="hidden">
+            <h3>Passwort zurücksetzen</h3>
+            <p class="info">Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen des Passworts.</p>
+            <label for="forgot-email">E-Mail</label>
+            <input type="email" id="forgot-email" placeholder="deine@email.de" autocomplete="username">
+            <div class="button-row">
+                <button id="forgot-send-btn" class="btn-primary" type="button">Senden</button>
+                <button id="forgot-back-btn" class="btn-secondary" type="button">Zurück zum Login</button>
+            </div>
+        </div>
+
         <div id="register-box" class="hidden">
             <h3>Neu anmelden</h3>
 
@@ -1122,6 +1134,7 @@
     const loginBox = document.getElementById('login-box');
     const registerBox = document.getElementById('register-box');
     const resetBox = document.getElementById('reset-box');
+    const forgotBox = document.getElementById('forgot-box');
     const authError = document.getElementById('auth-error');
     const authSuccess = document.getElementById('auth-success');
 
@@ -1132,6 +1145,9 @@
     const forgotPasswordBtn = document.getElementById('forgot-password-btn');
     const showRegisterBtn = document.getElementById('show-register-btn');
     const backToLoginBtn = document.getElementById('back-to-login-btn');
+    const forgotEmailInput = document.getElementById('forgot-email');
+    const forgotSendBtn = document.getElementById('forgot-send-btn');
+    const forgotBackBtn = document.getElementById('forgot-back-btn');
 
     // Register Inputs
     const regFirstName = document.getElementById('reg-first-name');
@@ -1571,11 +1587,23 @@
         }
     });
 
-    forgotPasswordBtn.addEventListener('click', async () => {
+    // Passwort-vergessen Flow: erst eigenes Formular mit nur E-Mail-Feld anzeigen
+    forgotPasswordBtn.addEventListener('click', () => {
+        clearAuthMessages();
+        // Wenn im Login schon eine E-Mail eingetragen ist, übernehmen
+        forgotEmailInput.value = emailInput.value.trim();
+        loginBox.classList.add('hidden');
+        registerBox.classList.add('hidden');
+        resetBox.classList.add('hidden');
+        forgotBox.classList.remove('hidden');
+    });
+
+    // E-Mail zum Zurücksetzen des Passworts senden
+    forgotSendBtn.addEventListener('click', async () => {
         if (!supabaseClient) return showAuthError('Kritischer Fehler: Funktion nicht verfügbar.'); // Safety check
 
         clearAuthMessages();
-        const email = emailInput.value;
+        const email = forgotEmailInput.value.trim();
         if (!email) {
             return showAuthError('Bitte E-Mail eingeben.');
         }
@@ -1588,7 +1616,17 @@
             showAuthError('Fehler: ' + error.message);
         } else {
             showAuthSuccess('E-Mail zum Zurücksetzen des Passworts gesendet. Bitte Posteingang prüfen.');
+            // Nach erfolgreichem Versand zurück zum Login
+            forgotBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
         }
+    });
+
+    // Zurück vom "Passwort vergessen"-Formular zum Login
+    forgotBackBtn.addEventListener('click', () => {
+        clearAuthMessages();
+        forgotBox.classList.add('hidden');
+        loginBox.classList.remove('hidden');
     });
 
     registerBtn.addEventListener('click', async () => {
@@ -1617,6 +1655,7 @@
             email: email,
             password: password,
             options: {
+                emailRedirectTo: window.location.origin + window.location.pathname,
                 data: {
                     first_name: firstName,
                     last_name: lastName,
