@@ -745,7 +745,7 @@
 
 <main>
     <section id="auth-section">
-        <h2>Anmeldung</h2>
+        <h2 data-i18n="login_title">Anmeldung</h2>
         <div id="auth-error" class="error hidden"></div>
         <div id="auth-success" class="success hidden"></div>
 
@@ -990,36 +990,36 @@
 
                 <div id="section-settings" class="portal-section-content hidden">
                     <h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
-                    <p class="info">
+                    <p class="info" data-i18n="settings_info">
                         Hier können Sie Ihre Profildaten bearbeiten und Ihr Passwort ändern.
                     </p>
 
                     <div class="settings-grid">
                         <div class="settings-card">
-                            <h4>Profildaten</h4>
-                            <p>Aktualisieren Sie hier Ihren Namen.</p>
+                            <h4 data-i18n="settings_profile_heading">Profildaten</h4>
+                            <p data-i18n="settings_profile_text">Aktualisieren Sie hier Ihren Namen.</p>
 
                             <div class="settings-inline">
                                 <div>
-                                    <label for="settings-first-name">Vorname</label>
+                                    <label for="settings-first-name" data-i18n="settings_first_name_label">Vorname</label>
                                     <input type="text" id="settings-first-name" placeholder="Vorname">
                                 </div>
                                 <div>
-                                    <label for="settings-last-name">Nachname</label>
+                                    <label for="settings-last-name" data-i18n="settings_last_name_label">Nachname</label>
                                     <input type="text" id="settings-last-name" placeholder="Nachname">
                                 </div>
                             </div>
 
-                            <label for="settings-email">E-Mail</label>
+                            <label for="settings-email" data-i18n="settings_email_label">E-Mail</label>
                             <input type="email" id="settings-email" disabled>
                             
-                            <label for="settings-employment-type" id="settings-employment-label">Beschäftigungsart</label>
+                            <label for="settings-employment-type" id="settings-employment-label" data-i18n="settings_employment_label">Beschäftigungsart</label>
                             <select id="settings-employment-type">
                                 <option value="fulltime">Vollzeit</option>
                                 <option value="minijob">Minijob</option>
                             </select>
 
-                            <label for="settings-language">Sprache / Language</label>
+                            <label for="settings-language" data-i18n="settings_language_label">Sprache / Language</label>
                             <select id="settings-language">
                                 <option value="de">Deutsch</option>
                                 <option value="tr">Türkçe</option>
@@ -1030,10 +1030,11 @@
                                 <option value="ps">پښتو</option>
                                 <option value="ar">العربية</option>
                                 <option value="ro">Română</option>
+                                <option value="bg">Български</option>
                                 <option value="en">English</option>
                             </select>
 
-                            <button id="settings-save-profile" class="btn-primary">Profil speichern</button>
+                            <button id="settings-save-profile" class="btn-primary" data-i18n="settings_save_profile">Profil speichern</button>
                             <div id="settings-profile-msg" class="settings-message"></div>
                         </div>
 
@@ -1318,6 +1319,23 @@
             section_sicknotes_title: "Concedii medicale",
             section_admin_title: "Admin · Vedere generală angajați",
             section_admin_uploads_title: "Admin · Upload și gestiune documente"
+        },
+        bg: {
+            nav_dashboard: "Начало",
+            nav_uploads: "Документи и качвания",
+            nav_timesheets: "Табели с работно време",
+            nav_sicknotes: "Болнични листове",
+            nav_settings: "Настройки",
+            nav_admin: "Админ · Служители",
+            nav_admin_uploads: "Админ · Качвания",
+            greeting_hello: "Здравейте,",
+            greeting_subtitle: "Добре дошли в портала за служители на Bayrak. Моля, изберете плочка или елемент от менюто.",
+            section_settings_title: "Настройки",
+            section_uploads_title: "Документи и качвания",
+            section_timesheets_title: "Табели с работно време",
+            section_sicknotes_title: "Болнични листове",
+            section_admin_title: "Админ · Преглед на служителите",
+            section_admin_uploads_title: "Админ · Качвания и управление на документи"
         },
         en: {
             nav_dashboard: "Home",
