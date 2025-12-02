@@ -387,14 +387,6 @@
             color: #777;
         }
 
-        .tile-sub-new {
-            display: block;
-            margin-top: 4px;
-            font-weight: 600;
-            color: #e53935;
-            font-size: 0.8rem;
-        }
-
         h3.section-title {
             margin: 12px 0 6px 0;
             font-size: 1.2rem;
@@ -492,26 +484,6 @@
             font-size: 0.8rem;
             color: #555;
             margin-left: 10px;
-        }
-
-        .admin-overview-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .btn-link-danger {
-            background: none;
-            border: none;
-            padding: 0;
-            margin: 0;
-            cursor: pointer;
-            font-size: 0.8rem;
-            color: #b00020;
-        }
-
-        .btn-link-danger:hover {
-            text-decoration: underline;
         }
 
         /* ADMIN: MITARBEITER-KACHELN */
@@ -855,27 +827,26 @@
 
                 <ul class="sidebar-list" id="sidebar-nav">
                     <li data-target="section-dashboard" class="active">
-                        <span class="icon">🏠</span> <span>Startseite</span>
+                        <span class="icon">🏠</span> <span data-i18n="nav_dashboard">Startseite</span>
                     </li>
                     <li data-target="section-training-records">
-                        <span class="icon">✅</span> <span>Dokumente & Uploads</span>
+                        <span class="icon">✅</span> <span data-i18n="nav_uploads">Dokumente & Uploads</span>
                     </li>
                     <li data-target="section-timesheet">
-                        <span class="icon">🕒</span> <span>Stundenzettel</span>
+                        <span class="icon">🕒</span> <span data-i18n="nav_timesheets">Stundenzettel</span>
                     </li>
                     <li data-target="section-sicknotes">
-                        <span class="icon">🏥</span> <span>Krankmeldungen</span>
+                        <span class="icon">🏥</span> <span data-i18n="nav_sicknotes">Krankmeldungen</span>
                     </li>
                     <li data-target="section-settings">
-                        <span class="icon">⚙️</span> <span>Einstellungen</span>
+                        <span class="icon">⚙️</span> <span data-i18n="nav_settings">Einstellungen</span>
                     </li>
                     <li data-target="section-admin" id="sidebar-admin-link" class="hidden">
-                        <span class="icon">🛠</span> <span>Admin · Mitarbeiter</span>
+                        <span class="icon">🛠</span> <span data-i18n="nav_admin">Admin · Mitarbeiter</span>
                         <span id="sidebar-admin-badge" class="request-badge hidden"></span>
                     </li>
                     <li data-target="section-admin-uploads" id="sidebar-admin-uploads-link" class="hidden">
-                        <span class="icon">📥</span> <span>Admin · Uploads</span>
-                        <span id="sidebar-admin-uploads-badge" class="request-badge hidden"></span>
+                        <span class="icon">📥</span> <span data-i18n="nav_admin_uploads">Admin · Uploads</span>
                     </li>
                 </ul>
 
@@ -887,25 +858,19 @@
             <div class="main-content">
                 <div class="portal-greeting">
                     <h2>
-                        Guten Tag,
+                        <span data-i18n="greeting_hello">Guten Tag,</span>
                         <span id="user-name-text">Mitarbeiter</span>
                         <span id="role-badge" class="role-badge hidden"></span>
                     </h2>
-                    <p>Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
+                    <p data-i18n="greeting_subtitle">Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
                 </div>
 
                 <div id="section-dashboard" class="portal-section-content">
                     <div class="tile-grid">
                         <div class="tile-card active" data-target="section-training-records">
                             <div class="tile-icon">✅</div>
-                            <div class="tile-title">
-                                Dokumente & Uploads
-                                <span id="docs-new-badge" class="request-badge hidden"></span>
-                            </div>
-                            <div class="tile-sub">
-                                Nachweise, Stundenzettel, Krankmeldungen
-                                <span id="docs-new-sub" class="tile-sub-new hidden"></span>
-                            </div>
+                            <div class="tile-title">Dokumente & Uploads</div>
+                            <div class="tile-sub">Nachweise, Stundenzettel, Krankmeldungen</div>
                         </div>
                         <div class="tile-card" data-target="section-timesheet">
                             <div class="tile-icon">🕒</div>
@@ -981,7 +946,7 @@
                 </div>
 
                 <div id="section-timesheet" class="portal-section-content hidden">
-                    <h3 class="section-title">Stundenzettel</h3>
+                    <h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
                     <p class="info">
                         Hier wird später die Stundenzettel-Funktion integriert (mit Speicherung in Supabase).
                         <br><strong>Aktuell ist dies nur ein Platzhalter.</strong>
@@ -989,7 +954,7 @@
                 </div>
 
                 <div id="section-settings" class="portal-section-content hidden">
-                    <h3 class="section-title">Einstellungen</h3>
+                    <h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
                     <p class="info">
                         Hier können Sie Ihre Profildaten bearbeiten und Ihr Passwort ändern.
                     </p>
@@ -1017,6 +982,20 @@
                             <select id="settings-employment-type">
                                 <option value="fulltime">Vollzeit</option>
                                 <option value="minijob">Minijob</option>
+                            </select>
+
+                            <label for="settings-language">Sprache / Language</label>
+                            <select id="settings-language">
+                                <option value="de">Deutsch</option>
+                                <option value="tr">Türkçe</option>
+                                <option value="ru">Русский</option>
+                                <option value="uk">Українська</option>
+                                <option value="fa">فارسی</option>
+                                <option value="prs">دری</option>
+                                <option value="ps">پښتو</option>
+                                <option value="ar">العربية</option>
+                                <option value="ro">Română</option>
+                                <option value="en">English</option>
                             </select>
 
                             <button id="settings-save-profile" class="btn-primary">Profil speichern</button>
@@ -1080,7 +1059,7 @@
                 </div>
                 
                 <div id="section-admin-uploads" class="portal-section-content hidden">
-                    <h3 class="section-title">Admin · Uploads und Dokumentenverwaltung</h3>
+                    <h3 class="section-title" data-i18n="section_admin_uploads_title">Admin · Uploads und Dokumentenverwaltung</h3>
                     
                     <div class="settings-grid">
                         <div class="settings-card">
@@ -1093,8 +1072,6 @@
                                     <select id="admin-unterweisungen-scope">
                                         <option value="all">Alle freigegebenen Mitarbeiter</option>
                                         <option value="single">Einzelner Mitarbeiter</option>
-                                        <option value="fulltime">Alle Vollzeit-Mitarbeiter</option>
-                                        <option value="minijob">Alle Minijob-Mitarbeiter</option>
                                     </select>
                                 </div>
                                 <div id="admin-unterweisungen-user-select-wrapper" class="hidden">
@@ -1149,6 +1126,194 @@
     // Supabase-Client initialisieren
     // WICHTIG: Verwenden von 'let' und defensive Initialisierung, um Fatal Errors zu vermeiden.
     let supabaseClient = null; 
+
+    // --- INTERNATIONALISIERUNG (Sprachen) ---
+    const translations = {
+        de: {
+            nav_dashboard: "Startseite",
+            nav_uploads: "Dokumente & Uploads",
+            nav_timesheets: "Stundenzettel",
+            nav_sicknotes: "Krankmeldungen",
+            nav_settings: "Einstellungen",
+            nav_admin: "Admin · Mitarbeiter",
+            nav_admin_uploads: "Admin · Uploads",
+            greeting_hello: "Guten Tag,",
+            greeting_subtitle: "Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.",
+            section_settings_title: "Einstellungen",
+            section_uploads_title: "Dokumente & Uploads",
+            section_timesheets_title: "Stundenzettel",
+            section_sicknotes_title: "Krankmeldungen",
+            section_admin_title: "Admin · Mitarbeiterübersicht",
+            section_admin_uploads_title: "Admin · Uploads und Dokumentenverwaltung"
+        },
+        tr: {
+            nav_dashboard: "Ana Sayfa",
+            nav_uploads: "Belgeler & Yüklemeler",
+            nav_timesheets: "Çalışma Saatleri",
+            nav_sicknotes: "Raporlar",
+            nav_settings: "Ayarlar",
+            nav_admin: "Admin · Çalışanlar",
+            nav_admin_uploads: "Admin · Yüklemeler",
+            greeting_hello: "Merhaba,",
+            greeting_subtitle: "Bayrak çalışan portalına hoş geldiniz. Bir kutucuk veya menü seçin.",
+            section_settings_title: "Ayarlar",
+            section_uploads_title: "Belgeler & Yüklemeler",
+            section_timesheets_title: "Çalışma Saatleri",
+            section_sicknotes_title: "Raporlar",
+            section_admin_title: "Admin · Çalışan Genel Bakış",
+            section_admin_uploads_title: "Admin · Yükleme ve Doküman Yönetimi"
+        },
+        ru: {
+            nav_dashboard: "Главная",
+            nav_uploads: "Документы и загрузки",
+            nav_timesheets: "Табели учета времени",
+            nav_sicknotes: "Больничные",
+            nav_settings: "Настройки",
+            nav_admin: "Админ · Сотрудники",
+            nav_admin_uploads: "Админ · Загрузки",
+            greeting_hello: "Здравствуйте,",
+            greeting_subtitle: "Добро пожаловать в портал сотрудников Bayrak. Выберите плитку или пункт меню.",
+            section_settings_title: "Настройки",
+            section_uploads_title: "Документы и загрузки",
+            section_timesheets_title: "Табели учета времени",
+            section_sicknotes_title: "Больничные",
+            section_admin_title: "Админ · Обзор сотрудников",
+            section_admin_uploads_title: "Админ · Загрузки и управление документами"
+        },
+        uk: {
+            nav_dashboard: "Головна",
+            nav_uploads: "Документи та завантаження",
+            nav_timesheets: "Табелі робочого часу",
+            nav_sicknotes: "Лікарняні",
+            nav_settings: "Налаштування",
+            nav_admin: "Адмін · Працівники",
+            nav_admin_uploads: "Адмін · Завантаження",
+            greeting_hello: "Добрий день,",
+            greeting_subtitle: "Ласкаво просимо до порталу співробітників Bayrak. Виберіть плитку або пункт меню.",
+            section_settings_title: "Налаштування",
+            section_uploads_title: "Документи та завантаження",
+            section_timesheets_title: "Табелі робочого часу",
+            section_sicknotes_title: "Лікарняні",
+            section_admin_title: "Адмін · Огляд працівників",
+            section_admin_uploads_title: "Адмін · Завантаження та керування документами"
+        },
+        fa: {
+            nav_dashboard: "صفحه اصلی",
+            nav_uploads: "مدارک و بارگذاری‌ها",
+            nav_timesheets: "برگه‌های ساعات کاری",
+            nav_sicknotes: "گواهی‌های بیمار",
+            nav_settings: "تنظیمات",
+            nav_admin: "ادمین · کارمندان",
+            nav_admin_uploads: "ادمین · بارگذاری‌ها",
+            greeting_hello: "سلام،",
+            greeting_subtitle: "به پورتال کارکنان بایراک خوش آمدید. یک کاشی یا یک گزینه از منو انتخاب کنید.",
+            section_settings_title: "تنظیمات",
+            section_uploads_title: "مدارک و بارگذاری‌ها",
+            section_timesheets_title: "برگه‌های ساعات کاری",
+            section_sicknotes_title: "گواهی‌های بیمار",
+            section_admin_title: "ادمین · نمای کلی کارمندان",
+            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت مدارک"
+        },
+        prs: {
+            nav_dashboard: "صفحه اصلی",
+            nav_uploads: "اسناد و بارگذاری‌ها",
+            nav_timesheets: "ورق‌های وقت کاری",
+            nav_sicknotes: "گواهی‌های مریضی",
+            nav_settings: "تنظیمات",
+            nav_admin: "ادمین · کارمندان",
+            nav_admin_uploads: "ادمین · بارگذاری‌ها",
+            greeting_hello: "سلام،",
+            greeting_subtitle: "به پورتال کارمندان بایراک خوش آمدید. یک کاشی یا گزینه منو را انتخاب کنید.",
+            section_settings_title: "تنظیمات",
+            section_uploads_title: "اسناد و بارگذاری‌ها",
+            section_timesheets_title: "ورق‌های وقت کاری",
+            section_sicknotes_title: "گواهی‌های مریضی",
+            section_admin_title: "ادمین · نمای کلی کارمندان",
+            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت اسناد"
+        },
+        ps: {
+            nav_dashboard: "کور پاڼه",
+            nav_uploads: "لاسوندونه او پورته کول",
+            nav_timesheets: "د کار وخت پاڼې",
+            nav_sicknotes: "مرض رپوټونه",
+            nav_settings: "ترتیبات",
+            nav_admin: "ادمین · کارکوونکي",
+            nav_admin_uploads: "ادمین · پورته کول",
+            greeting_hello: "سلام،",
+            greeting_subtitle: "د بایراک د کارکوونکو پورټل ته ښه راغلاست. یوه خانه یا د مینو یو توکی وټاکئ.",
+            section_settings_title: "ترتیبات",
+            section_uploads_title: "لاسوندونه او پورته کول",
+            section_timesheets_title: "د کار وخت پاڼې",
+            section_sicknotes_title: "مرض رپوټونه",
+            section_admin_title: "ادمین · د کارکوونکو لنډیز",
+            section_admin_uploads_title: "ادمین · پورته کول او د اسنادو اداره"
+        },
+        ar: {
+            nav_dashboard: "الصفحة الرئيسية",
+            nav_uploads: "الملفات والتحميلات",
+            nav_timesheets: "سجلات الدوام",
+            nav_sicknotes: "تقارير المرض",
+            nav_settings: "الإعدادات",
+            nav_admin: "المسؤول · الموظفون",
+            nav_admin_uploads: "المسؤول · التحميلات",
+            greeting_hello: "مرحباً،",
+            greeting_subtitle: "مرحباً بك في بوابة موظفي بَيراك. اختر بطاقة أو عنصراً من القائمة.",
+            section_settings_title: "الإعدادات",
+            section_uploads_title: "الملفات والتحميلات",
+            section_timesheets_title: "سجلات الدوام",
+            section_sicknotes_title: "تقارير المرض",
+            section_admin_title: "المسؤول · نظرة عامة على الموظفين",
+            section_admin_uploads_title: "المسؤول · تحميل وإدارة الملفات"
+        },
+        ro: {
+            nav_dashboard: "Acasă",
+            nav_uploads: "Documente & Upload-uri",
+            nav_timesheets: "Foi de pontaj",
+            nav_sicknotes: "Concedii medicale",
+            nav_settings: "Setări",
+            nav_admin: "Admin · Angajați",
+            nav_admin_uploads: "Admin · Upload-uri",
+            greeting_hello: "Bună ziua,",
+            greeting_subtitle: "Bun venit în portalul angajaților Bayrak. Alegeți o țiglă sau un element de meniu.",
+            section_settings_title: "Setări",
+            section_uploads_title: "Documente & Upload-uri",
+            section_timesheets_title: "Foi de pontaj",
+            section_sicknotes_title: "Concedii medicale",
+            section_admin_title: "Admin · Vedere generală angajați",
+            section_admin_uploads_title: "Admin · Upload și gestiune documente"
+        },
+        en: {
+            nav_dashboard: "Home",
+            nav_uploads: "Documents & Uploads",
+            nav_timesheets: "Timesheets",
+            nav_sicknotes: "Sick notes",
+            nav_settings: "Settings",
+            nav_admin: "Admin · Employees",
+            nav_admin_uploads: "Admin · Uploads",
+            greeting_hello: "Hello,",
+            greeting_subtitle: "Welcome to the Bayrak employee portal. Please choose a tile or a menu item.",
+            section_settings_title: "Settings",
+            section_uploads_title: "Documents & Uploads",
+            section_timesheets_title: "Timesheets",
+            section_sicknotes_title: "Sick notes",
+            section_admin_title: "Admin · Employee overview",
+            section_admin_uploads_title: "Admin · Uploads and document management"
+        }
+    };
+
+    let currentLanguage = 'de';
+
+    function applyLanguage(lang) {
+        currentLanguage = lang in translations ? lang : 'de';
+        const dict = translations[currentLanguage];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (dict[key]) {
+                el.textContent = dict[key];
+            }
+        });
+    }
+
 
     if (window.supabase && window.supabase.createClient) {
         // Erfolgreiche Initialisierung
@@ -1225,7 +1390,6 @@
     const adminTimesheetsNewCount = document.getElementById('admin-timesheets-new-count');
     const adminSicknotesOverview = document.getElementById('admin-sicknotes-overview');
     const adminSicknotesNewCount = document.getElementById('admin-sicknotes-new-count');
-    const sidebarAdminUploadsBadge = document.getElementById('sidebar-admin-uploads-badge');
     const adminUnterwScope = document.getElementById('admin-unterweisungen-scope');
     const adminUnterwUserSelectWrapper = document.getElementById('admin-unterweisungen-user-select-wrapper');
     const adminUnterwUserSelect = document.getElementById('admin-unterweisungen-user-select');
@@ -1242,8 +1406,6 @@
     // Documents
     const docsUnterwList = document.getElementById('docs-unterweisungen-list');
     const docsUnterwMessage = document.getElementById('docs-unterweisungen-message');
-    const docsNewBadge = document.getElementById('docs-new-badge');
-    const docsNewSub = document.getElementById('docs-new-sub');
     const uploadTimesheetBtn = document.getElementById('upload-timesheet-btn');
     const uploadTimesheetInput = document.getElementById('upload-timesheet-input');
     const docsTimesheetsList = document.getElementById('docs-timesheets-list');
@@ -1259,7 +1421,7 @@
     const settingsLastName = document.getElementById('settings-last-name');
     const settingsEmail = document.getElementById('settings-email');
     const settingsEmploymentType = document.getElementById('settings-employment-type');
-    const settingsEmploymentLabel = document.getElementById('settings-employment-label');
+    const settingsLanguage = document.getElementById('settings-language');
     const settingsSaveProfile = document.getElementById('settings-save-profile');
     const settingsProfileMsg = document.getElementById('settings-profile-msg');
     const settingsCurrentPw = document.getElementById('settings-current-password');
@@ -1402,15 +1564,12 @@
         });
 
         // Load content on demand
-        if (targetId === 'section-training-records' || targetId === 'section-sicknotes') {
+        if(targetId === 'section-training-records' || targetId === 'section-sicknotes') {
             loadDocumentsForUser(currentUser);
         }
-        if (targetId === 'section-admin' && currentProfile?.role === 'admin') {
+        if(targetId === 'section-admin' && currentProfile?.role === 'admin') {
             loadEmployeeGrid();
-        }
-        if (targetId === 'section-admin-uploads' && currentProfile?.role === 'admin') {
             loadAdminDocumentOverviews();
-            initAdminUploadsSelect();
         }
     }
 
@@ -1557,6 +1716,10 @@
         const isAdmin = profile.role === 'admin';
         const isApproved = profile.is_approved || isAdmin;
 
+        // Sprache ermitteln: Admin immer Deutsch, Mitarbeiter anhand Profil
+        const langToApply = isAdmin ? 'de' : (profile.language || 'de');
+        applyLanguage(langToApply);
+
         // Nur normale User ohne Freigabe sehen "Registrierung ausstehend"
         if (!isApproved && !isAdmin) {
             showPending(user);
@@ -1588,11 +1751,6 @@
             ? 'var(--blue-dark)'
             : (profile.employment_type === 'fulltime' ? '#2e7d32' : '#ff9800');
         roleBadge.classList.remove('hidden');
-
-        updateUserDocumentsBadge();
-
-        // Settings mit Profilwerten füllen
-        initSettingsFromProfile();
 
         // Admin Links
         if (isAdmin) {
@@ -1928,74 +2086,15 @@
             div.appendChild(titleDiv);
             div.appendChild(metaDiv);
 
-            const actionsDiv = document.createElement('div');
-            actionsDiv.style.display = 'flex';
-            actionsDiv.style.gap = '8px';
-            actionsDiv.style.alignItems = 'center';
-
             const link = document.createElement('a');
             link.href = doc.file_url;
             link.target = '_blank';
             link.textContent = 'Öffnen';
 
-            actionsDiv.appendChild(link);
-
-            const isAdmin = currentProfile && currentProfile.role === 'admin';
-            const isOwner = currentUser && doc.user_id === currentUser.id;
-            const userCanDeleteType = (doc.doc_type === 'stundenzettel' || doc.doc_type === 'krankmeldung');
-            const canDelete = isAdmin || (isOwner && userCanDeleteType);
-
-            if (canDelete) {
-                const delBtn = document.createElement('button');
-                delBtn.type = 'button';
-                delBtn.className = 'btn-link-danger';
-                delBtn.textContent = 'Löschen';
-                delBtn.addEventListener('click', () => {
-                    deleteOwnDocument(doc);
-                });
-                actionsDiv.appendChild(delBtn);
-            }
-
             li.appendChild(div);
-            li.appendChild(actionsDiv);
+            li.appendChild(link);
             listEl.appendChild(li);
         });
-    }
-
-
-    async function updateUserDocumentsBadge() {
-        if (!currentUser || !docsNewBadge) return;
-
-        try {
-            const { data: docs, error } = await supabaseClient
-                .from('documents')
-                .select('id, created_at')
-                .eq('user_id', currentUser.id);
-
-            if (error || !docs) return;
-
-            const key = `bayrak_user_last_opened_docs_${currentUser.id}`;
-            const lastSeen = localStorage.getItem(key) || '1970-01-01';
-            const newCount = docs.filter(d => new Date(d.created_at) > new Date(lastSeen)).length;
-
-            if (newCount > 0) {
-                docsNewBadge.textContent = newCount;
-                docsNewBadge.classList.remove('hidden');
-                if (docsNewSub) {
-                    docsNewSub.textContent = `${newCount} neue Dokumente`;
-                    docsNewSub.classList.remove('hidden');
-                }
-            } else {
-                docsNewBadge.textContent = '';
-                docsNewBadge.classList.add('hidden');
-                if (docsNewSub) {
-                    docsNewSub.textContent = '';
-                    docsNewSub.classList.add('hidden');
-                }
-            }
-        } catch (e) {
-            console.error('Badge Update Error:', e);
-        }
     }
 
     async function loadDocumentsForUser(user) {
@@ -2009,22 +2108,6 @@
         if (error) {
             console.error(error);
             return;
-        }
-
-        // Beim Öffnen der Dokumente: als "gesehen" markieren
-        try {
-            const key = `bayrak_user_last_opened_docs_${user.id}`;
-            localStorage.setItem(key, new Date().toISOString());
-            if (docsNewBadge) {
-                docsNewBadge.textContent = '';
-                docsNewBadge.classList.add('hidden');
-            }
-            if (docsNewSub) {
-                docsNewSub.textContent = '';
-                docsNewSub.classList.add('hidden');
-            }
-        } catch (e) {
-            console.error('Set last opened docs failed:', e);
         }
 
         const unterweisungen = docs.filter(d => d.doc_type === 'unterweisung' || !d.doc_type);
@@ -2403,30 +2486,18 @@ async function loadPendingUserCount() {
             return;
         }
 
+        const isMulti = scope === 'all';
         let targetUsers = [];
 
-        // sicherstellen, dass Profile geladen sind
-        if (allProfilesCache.length === 0) {
-            await loadAllProfiles();
+        if (isMulti) {
+            targetUsers = allProfilesCache.filter(p => p.is_approved && p.role === 'user').map(p => p.id);
+            if (targetUsers.length === 0) {
+                adminUnterwMessage.textContent = 'Keine freigegebenen Mitarbeiter zum Hochladen gefunden.';
+                return;
+            }
+        } else {
+            targetUsers = [targetUserId];
         }
-
-        if (scope === 'all') {
-            targetUsers = allProfilesCache.filter(p => p.is_approved && p.role === 'user');
-        } else if (scope === 'fulltime') {
-            targetUsers = allProfilesCache.filter(p => p.is_approved && p.role === 'user' && p.employment_type === 'fulltime');
-        } else if (scope === 'minijob') {
-            targetUsers = allProfilesCache.filter(p => p.is_approved && p.role === 'user' && p.employment_type === 'minijob');
-        } else if (scope === 'single') {
-            targetUsers = allProfilesCache.filter(p => p.id === targetUserId);
-        }
-
-        if (targetUsers.length === 0) {
-            adminUnterwMessage.textContent = 'Keine passenden Mitarbeiter zum Hochladen gefunden.';
-            return;
-        }
-
-        // nur IDs weitergeben
-        targetUsers = targetUsers.map(p => p.id);
 
         adminUnterwMessage.textContent = 'Upload läuft... Bitte warten.';
         adminUnterwMessage.style.color = 'orange';
@@ -2513,133 +2584,19 @@ async function loadPendingUserCount() {
                     li.style.padding = '2px 0';
 
                     const date = new Date(doc.created_at).toLocaleDateString('de-DE');
-
-                    const infoSpan = document.createElement('span');
-                    infoSpan.textContent = `${date} – ${doc.title}`;
-                    infoSpan.style.fontSize = '0.8rem';
-
-                    const actionsDiv = document.createElement('div');
-                    actionsDiv.className = 'admin-overview-actions';
-
+                    
                     const link = document.createElement('a');
                     link.href = doc.file_url;
                     link.target = '_blank';
-                    link.textContent = 'Öffnen';
+                    link.textContent = `Öffnen (${date})`;
                     link.style.fontSize = '0.8rem';
-
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.className = 'btn-link-danger';
-                    delBtn.textContent = 'Löschen';
-                    delBtn.addEventListener('click', () => {
-                        deleteDocumentAsAdmin(doc);
-                    });
-
-                    actionsDiv.appendChild(link);
-                    actionsDiv.appendChild(delBtn);
-
-                    li.appendChild(infoSpan);
-                    li.appendChild(actionsDiv);
+                    
+                    li.appendChild(link);
                     ul.appendChild(li);
                 });
             }
             userDiv.appendChild(ul);
             container.appendChild(userDiv);
-        }
-    }
-
-
-    async function deleteDocumentAsAdmin(doc) {
-        if (!currentProfile || currentProfile.role !== 'admin') return;
-        if (!confirm('Möchten Sie dieses Dokument wirklich löschen?')) return;
-
-        try {
-            let path = null;
-            if (doc.file_url) {
-                const prefix = '/storage/v1/object/public/documents/';
-                const idx = doc.file_url.indexOf(prefix);
-                if (idx !== -1) {
-                    path = doc.file_url.substring(idx + prefix.length);
-                }
-            }
-
-            if (path) {
-                const { error: storageError } = await supabaseClient
-                    .storage
-                    .from('documents')
-                    .remove([path]);
-                if (storageError) {
-                    console.error('Fehler beim Löschen aus Storage:', storageError);
-                }
-            }
-
-            const { error: dbError } = await supabaseClient
-                .from('documents')
-                .delete()
-                .eq('id', doc.id);
-
-            if (dbError) {
-                throw dbError;
-            }
-
-            await loadAdminDocumentOverviews();
-        } catch (e) {
-            console.error('Admin Delete Error:', e);
-            alert('Löschen fehlgeschlagen: ' + (e.message || e));
-        }
-    }
-
-    async function deleteOwnDocument(doc) {
-        if (!currentUser) return;
-
-        const isAdmin = currentProfile && currentProfile.role === 'admin';
-        const isOwner = doc.user_id === currentUser.id;
-        const userCanDeleteType = (doc.doc_type === 'stundenzettel' || doc.doc_type === 'krankmeldung');
-
-        // Mitarbeiter dürfen nur eigene Stundenzettel/Krankmeldungen löschen
-        if (!isAdmin) {
-            if (!isOwner) return;
-            if (!userCanDeleteType) return;
-        }
-
-        if (!confirm('Möchten Sie dieses Dokument wirklich löschen?')) return;
-
-        try {
-            let path = null;
-            if (doc.file_url) {
-                const prefix = '/storage/v1/object/public/documents/';
-                const idx = doc.file_url.indexOf(prefix);
-                if (idx !== -1) {
-                    path = doc.file_url.substring(idx + prefix.length);
-                }
-            }
-
-            if (path) {
-                const { error: storageError } = await supabaseClient
-                    .storage
-                    .from('documents')
-                    .remove([path]);
-                if (storageError) {
-                    console.error('Fehler beim Löschen aus Storage:', storageError);
-                }
-            }
-
-            const { error: dbError } = await supabaseClient
-                .from('documents')
-                .delete()
-                .eq('id', doc.id);
-
-            if (dbError) {
-                throw dbError;
-            }
-
-            if (isAdmin) {
-                await loadAdminDocumentOverviews();
-            }
-            await loadDocumentsForUser(currentUser);
-        } catch (e) {
-            console.error('Delete Error:', e);
-            alert('Löschen fehlgeschlagen: ' + (e.message || e));
         }
     }
 
@@ -2674,17 +2631,6 @@ async function loadPendingUserCount() {
 
         adminTimesheetsNewCount.textContent = newTs > 0 ? `${newTs} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
         adminSicknotesNewCount.textContent = newSn > 0 ? `${newSn} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
-
-        const totalNew = newTs + newSn;
-        if (sidebarAdminUploadsBadge) {
-            if (totalNew > 0) {
-                sidebarAdminUploadsBadge.textContent = totalNew;
-                sidebarAdminUploadsBadge.classList.remove('hidden');
-            } else {
-                sidebarAdminUploadsBadge.textContent = '';
-                sidebarAdminUploadsBadge.classList.add('hidden');
-            }
-        }
 
         renderAdminGroupedList(tsDocs, adminTimesheetsOverview);
         renderAdminGroupedList(snDocs, adminSicknotesOverview);
@@ -2740,15 +2686,14 @@ async function loadPendingUserCount() {
 
         const isAdmin = currentProfile.role === 'admin';
 
-        if (!isAdmin) {
-            settingsEmploymentType.disabled = true;
-            if (settingsEmploymentLabel) {
-                settingsEmploymentLabel.textContent = 'Beschäftigungsart (vom Admin festgelegt)';
-            }
-        } else {
-            settingsEmploymentType.disabled = false;
-            if (settingsEmploymentLabel) {
-                settingsEmploymentLabel.textContent = 'Beschäftigungsart';
+        // Sprache: Standard Deutsch, außer Mitarbeiter mit gesetzter Sprache
+        const lang = isAdmin ? 'de' : (currentProfile.language || 'de');
+        if (settingsLanguage) {
+            settingsLanguage.value = lang;
+            if (isAdmin) {
+                settingsLanguage.disabled = true;
+            } else {
+                settingsLanguage.disabled = false;
             }
         }
     }
@@ -2761,7 +2706,7 @@ async function loadPendingUserCount() {
         const firstName = settingsFirstName.value.trim();
         const lastName = settingsLastName.value.trim();
         const employmentType = settingsEmploymentType.value;
-        const isAdmin = currentProfile?.role === 'admin';
+        const selectedLanguage = settingsLanguage ? settingsLanguage.value : 'de';
         const fullName = `${firstName} ${lastName}`;
 
         if (!firstName || !lastName) {
@@ -2773,13 +2718,9 @@ async function loadPendingUserCount() {
         const updates = {
             full_name: fullName,
             first_name: firstName,
-            last_name: lastName
+            last_name: lastName,
+            language: selectedLanguage
         };
-
-        // Beschäftigungsart darf nur von Admins geändert werden
-        if (isAdmin) {
-            updates.employment_type = employmentType;
-        }
 
         const { error: profileError } = await supabaseClient
             .from('profiles')
@@ -2809,12 +2750,14 @@ async function loadPendingUserCount() {
             currentProfile.full_name = fullName;
             currentProfile.first_name = firstName;
             currentProfile.last_name = lastName;
-            if (isAdmin) {
-                currentProfile.employment_type = employmentType;
-            }
+            currentProfile.language = selectedLanguage;
 
-            // Felder neu setzen
+            // Einstellungen neu befüllen
             initSettingsFromProfile();
+
+            // Sprache neu anwenden (für Mitarbeiter)
+            const langToApply = currentProfile.role === 'admin' ? 'de' : (currentProfile.language || 'de');
+            applyLanguage(langToApply);
         }
     });
 
