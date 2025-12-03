@@ -978,13 +978,13 @@
                     </div>
 
                     <div class="document-category">
-                        <h4>Stundenzettel-Nachweise (Ihr Upload)</h4>
+                        <h4>Dokumente (Ihr Upload)</h4>
                         <p class="info">
-                            Laden Sie hier Ihre Stundenzettel / Rapporte als PDF oder Foto hoch.
+                            Laden Sie hier Ihre Dokumente (z. B. Stundenzettel, Rapporte oder andere Nachweise) als PDF oder Foto hoch.
                         </p>
-                        <button id="upload-timesheet-btn" class="btn-primary">Stundenzettel hochladen</button>
+                        <button id="upload-timesheet-btn" class="btn-primary">Dokumente hochladen</button>
                         <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" class="hidden">
-                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Stundenzettel von Ihnen hochgeladen.</div>
+                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Dokumente von Ihnen hochgeladen.</div>
                         <ul id="docs-timesheets-list" class="document-list"></ul>
                     </div>
                 </div>
@@ -2333,10 +2333,18 @@
         try {
             const url = await uploadFileToStorage(file, `${folder}/${currentUser.id}`);
             const dateStr = new Date().toLocaleDateString('de-DE');
-            const title = `${docType === 'stundenzettel' ? 'Stundenzettel' : 'Krankmeldung'} ${dateStr} – ${file.name}`;
-            
+            let label = 'Dokument';
+            if (docType === 'stundenzettel') {
+                label = 'Stundenzettel';
+            } else if (docType === 'krankmeldung') {
+                label = 'Krankmeldung';
+            } else if (docType === 'dokument') {
+                label = 'Dokument';
+            }
+            const title = `${label} ${dateStr} – ${file.name}`;
+
             await insertDocumentRow(currentUser.id, title, docType, url);
-            
+
             alert('Upload erfolgreich!');
             loadDocumentsForUser(currentUser);
         } catch (e) {
@@ -2347,12 +2355,12 @@
         }
     }
 
-    uploadTimesheetBtn.addEventListener('click', () => {
+uploadTimesheetBtn.addEventListener('click', () => {
         uploadTimesheetInput.click();
     });
 
     uploadTimesheetInput.addEventListener('change', () => {
-        handleUserUpload(uploadTimesheetInput, 'stundenzettel', 'timesheets');
+        handleUserUpload(uploadTimesheetInput, 'dokument', 'timesheets');
     });
 
     uploadSicknoteBtn.addEventListener('click', () => {
@@ -2363,13 +2371,13 @@
         handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'sicknotes');
     });
 
+    
     function formatIsoToGerman(isoStr) {
         if (!isoStr || isoStr.indexOf('-') === -1) return isoStr;
         const [y, m, d] = isoStr.split('-');
         return `${d}-${m}-${y}`;
     }
-
-    digitalSicknoteSubmit?.addEventListener('click', async () => {
+digitalSicknoteSubmit?.addEventListener('click', async () => {
         if (!currentUser || !currentProfile) return;
 
         if (!digitalSicknoteFrom.value || !digitalSicknoteTo.value) {
@@ -2397,17 +2405,17 @@
 
         const createdAtStr = new Date().toLocaleDateString('de-DE');
         const fromIso = digitalSicknoteFrom.value;
+        const fromStr = formatIsoToGerman(fromIso);
         const toIso = digitalSicknoteTo.value;
-        const fromLabel = formatIsoToGerman(fromIso);
-        const toLabel = formatIsoToGerman(toIso);
+        const toStr = formatIsoToGerman(toIso);
 
-        const content = `Digitale Krankmeldung\n\nMitarbeiter: ${name}\nZeitraum: ${fromLabel} bis ${toLabel}\nErstellt am: ${createdAtStr}\n`;
-        const fileName = `digitale_krankmeldung_${fromLabel}_bis_${toLabel}.txt`;
+        const content = `Digitale Krankmeldung\n\nMitarbeiter: ${name}\nZeitraum: ${fromStr} bis ${toStr}\nErstellt am: ${createdAtStr}\n`;
+        const fileName = `digitale_krankmeldung_${fromStr}_bis_${toStr}.txt`;
         const file = new File([content], fileName, { type: 'text/plain' });
 
         try {
             const url = await uploadFileToStorage(file, `sicknotes/${currentUser.id}`);
-            const title = `Digitale Krankmeldung ${fromLabel} bis ${toLabel}`;
+            const title = `Digitale Krankmeldung ${fromStr} bis ${toStr}`;
             await insertDocumentRow(currentUser.id, title, 'krankmeldung', url);
 
             if (digitalSicknoteMessage) {
@@ -2426,8 +2434,8 @@
         }
     });
 
+
     // --- ADMIN USER MANAGEMENT ---
-// --- ADMIN USER MANAGEMENT ---
 
     async function loadAllProfiles() {
         // Lädt alle Profile nur aus der Tabelle "profiles"
@@ -3007,7 +3015,7 @@ async function loadPendingUserCount() {
         const { data: docs, error } = await supabaseClient
             .from('documents')
             .select('*')
-            .in('doc_type', ['stundenzettel', 'krankmeldung'])
+            .in('doc_type', ['stundenzettel', 'krankmeldung', 'dokument'])
             .order('created_at', { ascending: false });
 
         if(error) return;
@@ -3019,17 +3027,18 @@ async function loadPendingUserCount() {
         // Filter Lists
         const tsDocs = docs.filter(d => d.doc_type === 'stundenzettel');
         const snDocs = docs.filter(d => d.doc_type === 'krankmeldung');
-        const allDocs = docs; // alle Mitarbeiter-Uploads (Stundenzettel + Krankmeldungen)
+        const docsDocs = docs.filter(d => d.doc_type === 'dokument');
 
         // Count New
         const newTs = tsDocs.filter(d => new Date(d.created_at) > new Date(lastTs)).length;
         const newSn = snDocs.filter(d => new Date(d.created_at) > new Date(lastSn)).length;
-        const totalNew = newTs + newSn;
+        const newDocs = docsDocs.filter(d => new Date(d.created_at) > new Date(lastSn)).length; // nutzt sicknotes-Timestamp als Näherung
 
         adminTimesheetsNewCount.textContent = newTs > 0 ? `${newTs} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
         adminSicknotesNewCount.textContent = newSn > 0 ? `${newSn} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
-        adminDocsNewCount.textContent = totalNew > 0 ? `${totalNew} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
+        adminDocsNewCount.textContent = newDocs > 0 ? `${newDocs} neue Uploads seit letztem Besuch` : 'Keine neuen Uploads.';
 
+        const totalNew = newTs + newSn + newDocs;
         if (sidebarAdminUploadsBadge) {
             if (totalNew > 0) {
                 sidebarAdminUploadsBadge.textContent = totalNew;
@@ -3042,7 +3051,7 @@ async function loadPendingUserCount() {
 
         renderAdminGroupedList(tsDocs, adminTimesheetsOverview);
         renderAdminGroupedList(snDocs, adminSicknotesOverview);
-        renderAdminGroupedList(allDocs, adminDocsOverview);
+        renderAdminGroupedList(docsDocs, adminDocsOverview);
 
         // Update Last Seen
         localStorage.setItem('bayrak_admin_last_opened_timesheets', new Date().toISOString());
@@ -3096,14 +3105,14 @@ async function loadPendingUserCount() {
 
         const isAdmin = currentProfile.role === 'admin';
 
-        // Sprache: immer aus Profil (oder Deutsch), alle dürfen ihre Sprache wählen
+        // Sprache: immer aus Profil (oder Deutsch), Admin darf jetzt auch Sprache wählen
         const lang = currentProfile.language || 'de';
         if (settingsLanguage) {
             settingsLanguage.value = lang;
             settingsLanguage.disabled = false;
         }
 
-        // Mitarbeiter: Name & Beschäftigungsart fix
+        // Mitarbeiter: Name & Beschäftigungsart fest, nur Sprache änderbar
         // Admin: darf alles bearbeiten
         if (!isAdmin) {
             settingsFirstName.disabled = true;
