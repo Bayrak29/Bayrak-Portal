@@ -1026,10 +1026,15 @@
 
                 <div id="section-timesheet" class="portal-section-content hidden">
                     <h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
-                    <p class="info">
-                        Hier wird später die Stundenzettel-Funktion integriert (mit Speicherung in Supabase).
-                        <br><strong>Aktuell ist dies nur ein Platzhalter.</strong>
-                    </p>
+                    <div class="document-category" style="padding-top: 0; border-top: none;">
+                        <p class="info">
+                            Hier können Sie Ihre <strong>Stundenzettel in Papierform</strong> als Foto oder PDF hochladen.
+                            Die Admins sehen diese in ihrer Übersicht und können sie weiterverarbeiten.
+                        </p>
+                        <button id="upload-timesheet-paper-btn" class="btn-primary">Stundenzettel Papierform einreichen</button>
+                        <input type="file" id="upload-timesheet-paper-input" accept="image/*,application/pdf" class="hidden">
+                        <div id="timesheet-paper-message" class="info"></div>
+                    </div>
                 </div>
 
                 <div id="section-settings" class="portal-section-content hidden">
@@ -1527,6 +1532,8 @@
     const docsSicknotesList = document.getElementById('docs-sicknotes-list');
     const docsSicknotesMessage = document.getElementById('docs-sicknotes-message');
     const sicknotesUserMessage = document.getElementById('sicknotes-user-message');
+    const uploadTimesheetPaperBtn = document.getElementById('upload-timesheet-paper-btn');
+    const uploadTimesheetPaperInput = document.getElementById('upload-timesheet-paper-input');
     const digitalSicknoteFrom = document.getElementById('digital-sicknote-from');
     const digitalSicknoteTo = document.getElementById('digital-sicknote-to');
     const digitalSicknoteSubmit = document.getElementById('digital-sicknote-submit');
@@ -1913,6 +1920,7 @@
             showAuthError(error.message);
         } else if (data.user) {
             await showPortal(data.user);
+            await autoCleanupOldTimesheets();
         }
     });
 
@@ -2150,6 +2158,7 @@
         const { data } = await supabaseClient.auth.getSession();
         if (data.session) {
             await showPortal(data.session.user);
+            await autoCleanupOldTimesheets();
         } else {
             showLogin();
         }
@@ -2372,7 +2381,18 @@ uploadTimesheetBtn.addEventListener('click', () => {
     });
 
     
-    function formatIsoToGerman(isoStr) {
+    
+    if (uploadTimesheetPaperBtn && uploadTimesheetPaperInput) {
+        uploadTimesheetPaperBtn.addEventListener('click', () => {
+            uploadTimesheetPaperInput.click();
+        });
+
+        uploadTimesheetPaperInput.addEventListener('change', () => {
+            handleUserUpload(uploadTimesheetPaperInput, 'stundenzettel', 'timesheets');
+        });
+    }
+
+function formatIsoToGerman(isoStr) {
         if (!isoStr || isoStr.indexOf('-') === -1) return isoStr;
         const [y, m, d] = isoStr.split('-');
         return `${d}-${m}-${y}`;
@@ -2950,7 +2970,79 @@ async function loadPendingUserCount() {
         }
     }
 
-    async function deleteOwnDocument(doc) {
+    
+    async function autoCleanupOldTimesheets() {
+        // Löscht automatisch Stundenzettel-Uploads, die älter als 30 Tage sind
+        if (!currentUser || !supabaseClient) return;
+
+        try {
+            const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+            const cutoffIso = new Date(Date.now() - THIRTY_DAYS_MS).toISOString();
+
+            let query = supabaseClient
+                .from('documents')
+                .select('*')
+                .eq('doc_type', 'stundenzettel')
+                .lt('created_at', cutoffIso);
+
+            // Normale Mitarbeiter dürfen nur eigene Stundenzettel löschen,
+            // Admins sehen alle.
+            if (!currentProfile || currentProfile.role !== 'admin') {
+                query = query.eq('user_id', currentUser.id);
+            }
+
+            const { data: oldDocs, error } = await query;
+
+            if (error) {
+                console.error('Auto-Cleanup Query Error:', error);
+                return;
+            }
+
+            if (!oldDocs || oldDocs.length === 0) {
+                return;
+            }
+
+            for (const doc of oldDocs) {
+                let path = null;
+                if (doc.file_url) {
+                    const prefix = '/storage/v1/object/public/documents/';
+                    const idx = doc.file_url.indexOf(prefix);
+                    if (idx !== -1) {
+                        path = doc.file_url.substring(idx + prefix.length);
+                    }
+                }
+
+                if (path) {
+                    const { error: storageError } = await supabaseClient
+                        .storage
+                        .from('documents')
+                        .remove([path]);
+                    if (storageError) {
+                        console.error('Fehler beim Löschen aus Storage (Auto-Cleanup):', storageError);
+                    }
+                }
+
+                const { error: dbError } = await supabaseClient
+                    .from('documents')
+                    .delete()
+                    .eq('id', doc.id);
+
+                if (dbError) {
+                    console.error('Fehler beim Löschen aus DB (Auto-Cleanup):', dbError);
+                }
+            }
+
+            // Nach dem Aufräumen die Anzeigen aktualisieren
+            await loadDocumentsForUser(currentUser);
+            if (currentProfile && currentProfile.role === 'admin') {
+                await loadAdminDocumentOverviews();
+            }
+        } catch (e) {
+            console.error('Auto-Cleanup Stundenzettel fehlgeschlagen:', e);
+        }
+    }
+
+async function deleteOwnDocument(doc) {
         if (!currentUser) return;
 
         const isAdmin = currentProfile && currentProfile.role === 'admin';
