@@ -725,6 +725,30 @@
                 flex-direction: column;
             }
         }
+    
+        .digital-sicknote-card {
+            margin-top: 18px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(0,0,0,0.1);
+        }
+        .digital-sicknote-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .digital-sicknote-grid label {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .digital-sicknote-grid input[type="date"] {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.12);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -954,13 +978,13 @@
                     </div>
 
                     <div class="document-category">
-                        <h4>Stundenzettel-Nachweise (Ihr Upload)</h4>
+                        <h4>Dokumente (Ihr Upload)</h4>
                         <p class="info">
-                            Laden Sie hier Ihre Stundenzettel / Rapporte als PDF oder Foto hoch.
+                            Laden Sie hier Ihre Dokumente (z. B. Stundenzettel, Rapporte oder andere Nachweise) als PDF oder Foto hoch.
                         </p>
-                        <button id="upload-timesheet-btn" class="btn-primary">Stundenzettel hochladen</button>
+                        <button id="upload-timesheet-btn" class="btn-primary">Dokumente hochladen</button>
                         <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" capture="environment" class="hidden">
-                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Stundenzettel von Ihnen hochgeladen.</div>
+                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Dokumente von Ihnen hochgeladen.</div>
                         <ul id="docs-timesheets-list" class="document-list"></ul>
                     </div>
                 </div>
@@ -974,6 +998,26 @@
                         <button id="upload-sicknote-btn" class="btn-primary">Krankmeldung hochladen</button>
                         <input type="file" id="upload-sicknote-input" accept="image/*,application/pdf" capture="environment" class="hidden">
                         <div id="docs-sicknotes-message" class="info"></div>
+
+                        <div class="digital-sicknote-card">
+                            <h4>Digitale Krankmeldung</h4>
+                            <p class="info">
+                                Wenn Sie keine Krankmeldung in Papierform erhalten, können Sie hier digital eintragen, von wann bis wann Sie krankgeschrieben sind.
+                            </p>
+                            <div class="digital-sicknote-grid">
+                                <div>
+                                    <label for="digital-sicknote-from">Von (Datum)</label>
+                                    <input type="date" id="digital-sicknote-from">
+                                </div>
+                                <div>
+                                    <label for="digital-sicknote-to">Bis (Datum)</label>
+                                    <input type="date" id="digital-sicknote-to">
+                                </div>
+                            </div>
+                            <button id="digital-sicknote-submit" class="btn-secondary">Digitale Krankmeldung senden</button>
+                            <div id="digital-sicknote-message" class="settings-message"></div>
+                        </div>
+
                         <h4 style="margin-top:18px;">Ihre hochgeladenen Krankmeldungen</h4>
                         <div id="sicknotes-user-message" class="info">Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.</div>
                         <ul id="docs-sicknotes-list" class="document-list"></ul>
@@ -1473,6 +1517,10 @@
     const docsSicknotesList = document.getElementById('docs-sicknotes-list');
     const docsSicknotesMessage = document.getElementById('docs-sicknotes-message');
     const sicknotesUserMessage = document.getElementById('sicknotes-user-message');
+    const digitalSicknoteFrom = document.getElementById('digital-sicknote-from');
+    const digitalSicknoteTo = document.getElementById('digital-sicknote-to');
+    const digitalSicknoteSubmit = document.getElementById('digital-sicknote-submit');
+    const digitalSicknoteMessage = document.getElementById('digital-sicknote-message');
 
     // Settings
     const settingsFirstName = document.getElementById('settings-first-name');
@@ -1777,7 +1825,7 @@
         const isAdmin = profile.role === 'admin';
         const isApproved = profile.is_approved || isAdmin;
 
-        const langToApply = isAdmin ? 'de' : (profile.language || 'de');
+        const langToApply = profile.language || 'de';
         applyLanguage(langToApply);
 
         // Nur normale User ohne Freigabe sehen "Registrierung ausstehend"
@@ -2304,6 +2352,62 @@
     uploadSicknoteInput.addEventListener('change', () => {
         handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'sicknotes');
     });
+
+    digitalSicknoteSubmit?.addEventListener('click', async () => {
+        if (!currentUser || !currentProfile) return;
+
+        if (!digitalSicknoteFrom.value || !digitalSicknoteTo.value) {
+            if (digitalSicknoteMessage) {
+                digitalSicknoteMessage.textContent = 'Bitte Start- und Enddatum eingeben.';
+                digitalSicknoteMessage.style.color = 'red';
+            }
+            return;
+        }
+
+        const fromDate = new Date(digitalSicknoteFrom.value);
+        const toDate = new Date(digitalSicknoteTo.value);
+        if (fromDate > toDate) {
+            if (digitalSicknoteMessage) {
+                digitalSicknoteMessage.textContent = 'Das Startdatum darf nicht nach dem Enddatum liegen.';
+                digitalSicknoteMessage.style.color = 'red';
+            }
+            return;
+        }
+
+        const nameParts = [];
+        if (currentProfile.first_name) nameParts.push(currentProfile.first_name);
+        if (currentProfile.last_name) nameParts.push(currentProfile.last_name);
+        const name = currentProfile.full_name || nameParts.join(' ') || currentUser.email;
+
+        const createdAtStr = new Date().toLocaleDateString('de-DE');
+        const fromStr = digitalSicknoteFrom.value;
+        const toStr = digitalSicknoteTo.value;
+
+        const content = `Digitale Krankmeldung\n\nMitarbeiter: ${name}\nZeitraum: ${fromStr} bis ${toStr}\nErstellt am: ${createdAtStr}\n`;
+        const fileName = `digitale_krankmeldung_${fromStr}_bis_${toStr}.txt`;
+        const file = new File([content], fileName, { type: 'text/plain' });
+
+        try {
+            const url = await uploadFileToStorage(file, `sicknotes/${currentUser.id}`);
+            const title = `Digitale Krankmeldung ${fromStr} bis ${toStr}`;
+            await insertDocumentRow(currentUser.id, title, 'krankmeldung', url);
+
+            if (digitalSicknoteMessage) {
+                digitalSicknoteMessage.textContent = 'Digitale Krankmeldung wurde gespeichert.';
+                digitalSicknoteMessage.style.color = 'green';
+            }
+            digitalSicknoteFrom.value = '';
+            digitalSicknoteTo.value = '';
+            await loadDocumentsForUser(currentUser);
+        } catch (e) {
+            console.error('Digitale Krankmeldung Fehler:', e);
+            if (digitalSicknoteMessage) {
+                digitalSicknoteMessage.textContent = 'Fehler beim Speichern der digitalen Krankmeldung.';
+                digitalSicknoteMessage.style.color = 'red';
+            }
+        }
+    });
+
 
     // --- ADMIN USER MANAGEMENT ---
 
@@ -2971,19 +3075,27 @@ async function loadPendingUserCount() {
 
         const isAdmin = currentProfile.role === 'admin';
 
-        // Sprache: Admin immer Deutsch, sonst Profil oder Deutsch
-        const lang = isAdmin ? 'de' : (currentProfile.language || 'de');
+        // Sprache: immer aus Profil (oder Deutsch), Admin darf jetzt auch Sprache wählen
+        const lang = currentProfile.language || 'de';
         if (settingsLanguage) {
             settingsLanguage.value = lang;
-            if (isAdmin) {
-                settingsLanguage.disabled = true;
-            } else {
-                settingsLanguage.disabled = false;
-            }
+            settingsLanguage.disabled = false;
+        }
+
+        // Mitarbeiter: Name & Beschäftigungsart fest, nur Sprache änderbar
+        // Admin: darf alles bearbeiten
+        if (!isAdmin) {
+            settingsFirstName.disabled = true;
+            settingsLastName.disabled = true;
+            settingsEmploymentType.disabled = true;
+        } else {
+            settingsFirstName.disabled = false;
+            settingsLastName.disabled = false;
+            settingsEmploymentType.disabled = false;
         }
     }
 
-    settingsSaveProfile.addEventListener('click', async () => {
+settingsSaveProfile.addEventListener('click', async () => {
         // ... (Logik wie zuvor)
         settingsProfileMsg.textContent = '';
         settingsProfileMsg.style.color = 'red';
@@ -3046,7 +3158,7 @@ async function loadPendingUserCount() {
 
             initSettingsFromProfile();
 
-            const langToApply = currentProfile.role === 'admin' ? 'de' : (currentProfile.language || 'de');
+            const langToApply = currentProfile.language || 'de';
             applyLanguage(langToApply);
         }
     });
