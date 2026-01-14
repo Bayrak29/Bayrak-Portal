@@ -1,12 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Bayrak Mitarbeiter-Portal</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
+<meta charset="utf-8"/>
+<title>Bayrak Mitarbeiter-Portal</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
         :root {
             --blue-dark: #004b7a;
             --blue-light: #e7f2fb;
@@ -753,465 +753,406 @@
 </head>
 <body>
 <header>
-    <div class="brand">
-        <div class="brand-logo">B</div>
-        <div>
-            <div class="brand-title">Bayrak Mitarbeiter-Portal</div>
-            <div class="brand-subtitle">Interne Web-App · Testversion</div>
-        </div>
-    </div>
-    <div class="top-right">
-        <div class="top-user" id="top-user-text"></div>
-        <span id="inactivity-timer" class="hidden" style="color: #f57c00; font-weight: bold; font-size: 0.8rem; margin-right: 6px;">10:00</span>
-        <button id="logout-btn" class="btn-top hidden">Abmelden</button>
-    </div>
+<div class="brand">
+<div class="brand-logo">B</div>
+<div>
+<div class="brand-title">Bayrak Mitarbeiter-Portal</div>
+<div class="brand-subtitle">Interne Web-App · Testversion</div>
+</div>
+</div>
+<div class="top-right">
+<div class="top-user" id="top-user-text"></div>
+<span class="hidden" id="inactivity-timer" style="color: #f57c00; font-weight: bold; font-size: 0.8rem; margin-right: 6px;">10:00</span>
+<button class="btn-top hidden" id="logout-btn">Abmelden</button>
+</div>
 </header>
-
 <main>
-    <section id="auth-section">
-        <h2 data-i18n="login_title">Anmeldung</h2>
-        <div id="auth-error" class="error hidden"></div>
-        <div id="auth-success" class="success hidden"></div>
-
-        <div id="login-box">
-            <h3>Einloggen</h3>
-            <label for="email">E-Mail</label>
-            <input type="email" id="email" placeholder="deine@email.de" autocomplete="username">
-
-            <label for="password">Passwort</label>
-            <div class="password-input-wrapper">
-                <input type="password" id="password" placeholder="Passwort" autocomplete="current-password">
-                <button class="password-toggle" data-target="password" type="button" aria-label="Passwort anzeigen">👁️</button>
-            </div>
-
-            <button id="login-btn" class="btn-primary">Einloggen</button>
-
-            <button id="forgot-password-btn" class="btn-link" type="button">Passwort vergessen?</button>
-
-            <div class="separator-line"></div>
-
-            <p class="info">Sie haben noch kein Konto?</p>
-            <button id="show-register-btn" class="btn-secondary">Neu anmelden</button>
-        </div>
-
-
-        <div id="forgot-box" class="hidden">
-            <h3>Passwort zurücksetzen</h3>
-            <p class="info">Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen des Passworts.</p>
-            <label for="forgot-email">E-Mail</label>
-            <input type="email" id="forgot-email" placeholder="deine@email.de" autocomplete="username">
-            <div class="button-row">
-                <button id="forgot-send-btn" class="btn-primary" type="button">Senden</button>
-                <button id="forgot-back-btn" class="btn-secondary" type="button">Zurück zum Login</button>
-            </div>
-        </div>
-
-        <div id="register-box" class="hidden">
-            <h3>Neu anmelden</h3>
-
-            <label for="reg-first-name">Vorname</label>
-            <input type="text" id="reg-first-name" placeholder="Vorname" autocomplete="given-name">
-
-            <label for="reg-last-name">Nachname</label>
-            <input type="text" id="reg-last-name" placeholder="Nachname" autocomplete="family-name">
-
-            <label for="reg-email">E-Mail</label>
-            <input type="email" id="reg-email" placeholder="E-Mail" autocomplete="email">
-
-            <label for="reg-password">Passwort</label>
-            <div class="password-input-wrapper">
-                <input type="password" id="reg-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
-                <button class="password-toggle" data-target="reg-password" type="button" aria-label="Passwort anzeigen">👁️</button>
-            </div>
-
-            <label for="reg-password2">Passwort wiederholen</label>
-            <div class="password-input-wrapper">
-                <input type="password" id="reg-password2" placeholder="Passwort bestätigen" autocomplete="new-password">
-                <button class="password-toggle" data-target="reg-password2" type="button" aria-label="Passwort anzeigen">👁️</button>
-            </div>
-
-            <button id="register-btn" class="btn-primary">Registrierung abschließen</button>
-            <button id="back-to-login-btn" class="btn-secondary">Zurück zum Login</button>
-
-            <p class="info">
-                Nach der Registrierung erhalten Sie eine E-Mail zur Bestätigung Ihrer Adresse.<br>
+<section id="auth-section">
+<h2 data-i18n="login_title">Anmeldung</h2>
+<div class="error hidden" id="auth-error"></div>
+<div class="success hidden" id="auth-success"></div>
+<div id="login-box">
+<h3>Einloggen</h3>
+<label for="email">E-Mail</label>
+<input autocomplete="username" id="email" placeholder="deine@email.de" type="email"/>
+<label for="password">Passwort</label>
+<div class="password-input-wrapper">
+<input autocomplete="current-password" id="password" placeholder="Passwort" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="password" type="button">👁️</button>
+</div>
+<button class="btn-primary" id="login-btn">Einloggen</button>
+<button class="btn-link" id="forgot-password-btn" type="button">Passwort vergessen?</button>
+<div class="separator-line"></div>
+<p class="info">Sie haben noch kein Konto?</p>
+<button class="btn-secondary" id="show-register-btn">Neu anmelden</button>
+</div>
+<div class="hidden" id="forgot-box">
+<h3>Passwort zurücksetzen</h3>
+<p class="info">Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen des Passworts.</p>
+<label for="forgot-email">E-Mail</label>
+<input autocomplete="username" id="forgot-email" placeholder="deine@email.de" type="email"/>
+<div class="button-row">
+<button class="btn-primary" id="forgot-send-btn" type="button">Senden</button>
+<button class="btn-secondary" id="forgot-back-btn" type="button">Zurück zum Login</button>
+</div>
+</div>
+<div class="hidden" id="register-box">
+<h3>Neu anmelden</h3>
+<label for="reg-first-name">Vorname</label>
+<input autocomplete="given-name" id="reg-first-name" placeholder="Vorname" type="text"/>
+<label for="reg-last-name">Nachname</label>
+<input autocomplete="family-name" id="reg-last-name" placeholder="Nachname" type="text"/>
+<label for="reg-email">E-Mail</label>
+<input autocomplete="email" id="reg-email" placeholder="E-Mail" type="email"/>
+<label for="reg-password">Passwort</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" id="reg-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="reg-password" type="button">👁️</button>
+</div>
+<label for="reg-password2">Passwort wiederholen</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" id="reg-password2" placeholder="Passwort bestätigen" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="reg-password2" type="button">👁️</button>
+</div>
+<button class="btn-primary" id="register-btn">Registrierung abschließen</button>
+<button class="btn-secondary" id="back-to-login-btn">Zurück zum Login</button>
+<p class="info">
+                Nach der Registrierung erhalten Sie eine E-Mail zur Bestätigung Ihrer Adresse.<br/>
                 Anschließend muss ein Administrator Ihren Zugang freigeben, bevor Sie das Portal nutzen können.
             </p>
-        </div>
-
-        <div id="reset-box" class="hidden">
-            <h3>Neues Passwort setzen</h3>
-            <p class="info">
+</div>
+<div class="hidden" id="reset-box">
+<h3>Neues Passwort setzen</h3>
+<p class="info">
                 Sie haben einen Link „Passwort zurücksetzen“ verwendet. Bitte wählen Sie jetzt ein neues Passwort.
             </p>
-
-            <label for="reset-password">Neues Passwort</label>
-            <div class="password-input-wrapper">
-                <input type="password" id="reset-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" autocomplete="new-password">
-                <button class="password-toggle" data-target="reset-password" type="button" aria-label="Passwort anzeigen">👁️</button>
-            </div>
-
-            <label for="reset-password2">Passwort wiederholen</label>
-            <div class="password-input-wrapper">
-                <input type="password" id="reset-password2" placeholder="Neues Passwort bestätigen" autocomplete="new-password">
-                <button class="password-toggle" data-target="reset-password2" type="button" aria-label="Passwort anzeigen">👁️</button>
-            </div>
-
-            <button id="reset-password-btn" class="btn-primary">Passwort speichern</button>
-        </div>
-    </section>
-
-    <section id="pending-section" class="hidden">
-        <h2>Registrierung ausstehend</h2>
-        <p id="pending-message" class="info"></p>
-        <p class="info">
-            Ihre Registrierung wurde erfolgreich gespeichert und Ihre E-Mail-Adresse ist bestätigt.<br>
+<label for="reset-password">Neues Passwort</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" id="reset-password" placeholder="Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl oder Sonderzeichen" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="reset-password" type="button">👁️</button>
+</div>
+<label for="reset-password2">Passwort wiederholen</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" data-i18n-placeholder="settings_new_password2_ph" id="reset-password2" placeholder="Neues Passwort bestätigen" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="reset-password2" type="button">👁️</button>
+</div>
+<button class="btn-primary" id="reset-password-btn">Passwort speichern</button>
+</div>
+</section>
+<section class="hidden" id="pending-section">
+<h2>Registrierung ausstehend</h2>
+<p class="info" id="pending-message"></p>
+<p class="info">
+            Ihre Registrierung wurde erfolgreich gespeichert und Ihre E-Mail-Adresse ist bestätigt.<br/>
             Ein Administrator wird Ihren Zugang prüfen und freigeben. Sobald dies erfolgt ist, können Sie sich normal einloggen.
         </p>
-        <button id="pending-logout-btn" class="btn-primary">Abmelden</button>
-    </section>
-
-    <section id="portal-section" class="hidden">
-        <div class="portal-layout">
-            <aside class="sidebar">
-                <div class="sidebar-title">Mitarbeiterportal</div>
-                <div class="sidebar-user" id="sidebar-user-role"></div>
-
-                <ul class="sidebar-list" id="sidebar-nav">
-                    <li data-target="section-dashboard" class="active">
-                        <span class="icon">🏠</span> <span data-i18n="nav_dashboard">Startseite</span>
-                    </li>
-                    <li data-target="section-training-records">
-                        <span class="icon">✅</span> <span data-i18n="nav_uploads">Dokumente & Uploads</span>
-                    </li>
-                    <li data-target="section-timesheet">
-                        <span class="icon">🕒</span> <span data-i18n="nav_timesheets">Stundenzettel</span>
-                    </li>
-                    <li data-target="section-sicknotes">
-                        <span class="icon">🏥</span> <span data-i18n="nav_sicknotes">Krankmeldungen</span>
-                    </li>
-                    <li data-target="section-settings">
-                        <span class="icon">⚙️</span> <span data-i18n="nav_settings">Einstellungen</span>
-                    </li>
-                    <li data-target="section-admin" id="sidebar-admin-link" class="hidden">
-                        <span class="icon">🛠</span> <span data-i18n="nav_admin">Admin · Mitarbeiter</span>
-                        <span id="sidebar-admin-badge" class="request-badge hidden"></span>
-                    </li>
-                    <li data-target="section-admin-uploads" id="sidebar-admin-uploads-link" class="hidden">
-                        <span class="icon">📥</span> <span data-i18n="nav_admin_uploads">Admin · Uploads</span>
-                        <span id="sidebar-admin-uploads-badge" class="request-badge hidden"></span>
-                    </li>
-                </ul>
-
-                <div id="sidebar-admin-label" class="sidebar-admin hidden">
+<button class="btn-primary" id="pending-logout-btn">Abmelden</button>
+</section>
+<section class="hidden" id="portal-section">
+<div class="portal-layout">
+<aside class="sidebar">
+<div class="sidebar-title" data-i18n="sidebar_title">Mitarbeiterportal</div>
+<div class="sidebar-user" id="sidebar-user-role"></div>
+<ul class="sidebar-list" id="sidebar-nav">
+<li class="active" data-target="section-dashboard">
+<span class="icon">🏠</span> <span data-i18n="nav_dashboard">Startseite</span>
+</li>
+<li data-target="section-training-records">
+<span class="icon">✅</span> <span data-i18n="nav_uploads">Dokumente &amp; Uploads</span>
+</li>
+<li data-target="section-timesheet">
+<span class="icon">🕒</span> <span data-i18n="nav_timesheets">Stundenzettel</span>
+</li>
+<li data-target="section-sicknotes">
+<span class="icon">🏥</span> <span data-i18n="nav_sicknotes">Krankmeldungen</span>
+</li>
+<li data-target="section-settings">
+<span class="icon">⚙️</span> <span data-i18n="nav_settings">Einstellungen</span>
+</li>
+<li class="hidden" data-target="section-admin" id="sidebar-admin-link">
+<span class="icon">🛠</span> <span data-i18n="nav_admin">Admin · Mitarbeiter</span>
+<span class="request-badge hidden" id="sidebar-admin-badge"></span>
+</li>
+<li class="hidden" data-target="section-admin-uploads" id="sidebar-admin-uploads-link">
+<span class="icon">📥</span> <span data-i18n="nav_admin_uploads">Admin · Uploads</span>
+<span class="request-badge hidden" id="sidebar-admin-uploads-badge"></span>
+</li>
+</ul>
+<div class="sidebar-admin hidden" id="sidebar-admin-label">
                     Sie sind <strong>Administrator</strong> und können Mitarbeiter &amp; Rollen verwalten.
                 </div>
-            </aside>
-
-            <div class="main-content">
-                <div class="portal-greeting">
-                    <h2>
-                        <span data-i18n="greeting_hello">Guten Tag,</span>
-                        <span id="user-name-text">Mitarbeiter</span>
-                        <span id="role-badge" class="role-badge hidden"></span>
-                    </h2>
-                    <p data-i18n="greeting_subtitle">Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
-                </div>
-
-                <div id="section-dashboard" class="portal-section-content">
-                    <div class="tile-grid">
-                        <div class="tile-card active" data-target="section-training-records">
-                            <div class="tile-icon">✅</div>
-                            <div class="tile-title">
-                                Dokumente & Uploads
-                                <span id="docs-new-badge" class="request-badge hidden"></span>
-                            </div>
-                            <div class="tile-sub">
-                                Nachweise, Stundenzettel, Krankmeldungen
-                                <span id="docs-new-sub" class="tile-sub-new hidden"></span>
-                            </div>
-                        </div>
-                        <div class="tile-card" data-target="section-timesheet">
-                            <div class="tile-icon">🕒</div>
-                            <div class="tile-title">Stundenzettel</div>
-                            <div class="tile-sub">Arbeitszeiten erfassen (Platzhalter)</div>
-                        </div>
-                        <div class="tile-card" data-target="section-sicknotes">
-                            <div class="tile-icon">🏥</div>
-                            <div class="tile-title">Krankmeldungen</div>
-                            <div class="tile-sub">AU-Bescheinigung hochladen</div>
-                        </div>
-                        <div class="tile-card" data-target="section-settings">
-                            <div class="tile-icon">⚙️</div>
-                            <div class="tile-title">Einstellungen</div>
-                            <div class="tile-sub">Profil & Passwort</div>
-                        </div>
-                        <div id="tile-admin" class="tile-card hidden" data-target="section-admin">
-                            <div class="tile-icon">👥</div>
-                            <div class="tile-title">
-                                Mitarbeiter (Admin)
-                                <span id="tile-admin-badge" class="request-badge hidden"></span>
-                            </div>
-                            <div class="tile-sub">Übersicht & Rollen</div>
-                        </div>
-                        <div id="tile-admin-uploads" class="tile-card hidden" data-target="section-admin-uploads">
-                            <div class="tile-icon">📥</div>
-                            <div class="tile-title">Admin Uploads</div>
-                            <div class="tile-sub">Dateien für Mitarbeiter hochladen</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="section-training-records" class="portal-section-content hidden">
-                    <h3 class="section-title">Dokumente, Nachweise & Uploads</h3>
-                    <p class="info">
+</aside>
+<div class="main-content">
+<div class="portal-greeting">
+<h2>
+<span data-i18n="greeting_hello">Guten Tag,</span>
+<span id="user-name-text">Mitarbeiter</span>
+<span class="role-badge hidden" id="role-badge"></span>
+</h2>
+<p data-i18n="greeting_subtitle">Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.</p>
+</div>
+<div class="portal-section-content" id="section-dashboard">
+<div class="tile-grid">
+<div class="tile-card active" data-target="section-training-records">
+<div class="tile-icon">✅</div>
+<div class="tile-title">
+<span data-i18n="tile_uploads_title">Dokumente &amp; Uploads</span>
+<span class="request-badge hidden" id="docs-new-badge"></span>
+</div>
+<div class="tile-sub">
+<span data-i18n="tile_uploads_sub">Nachweise, Stundenzettel, Krankmeldungen</span>
+<span class="tile-sub-new hidden" id="docs-new-sub"></span>
+</div>
+</div>
+<div class="tile-card" data-target="section-timesheet">
+<div class="tile-icon">🕒</div>
+<div class="tile-title" data-i18n="tile_timesheets_title">Stundenzettel</div>
+<div class="tile-sub" data-i18n="tile_timesheets_sub">Arbeitszeiten erfassen (Platzhalter)</div>
+</div>
+<div class="tile-card" data-target="section-sicknotes">
+<div class="tile-icon">🏥</div>
+<div class="tile-title" data-i18n="tile_sicknotes_title">Krankmeldungen</div>
+<div class="tile-sub" data-i18n="tile_sicknotes_sub">AU-Bescheinigung hochladen</div>
+</div>
+<div class="tile-card" data-target="section-settings">
+<div class="tile-icon">⚙️</div>
+<div class="tile-title" data-i18n="tile_settings_title">Einstellungen</div>
+<div class="tile-sub" data-i18n="tile_settings_sub">Profil &amp; Passwort</div>
+</div>
+<div class="tile-card hidden" data-target="section-admin" id="tile-admin">
+<div class="tile-icon">👥</div>
+<div class="tile-title">
+<span data-i18n="tile_admin_title">Mitarbeiter (Admin)</span>
+<span class="request-badge hidden" id="tile-admin-badge"></span>
+</div>
+<div class="tile-sub" data-i18n="tile_admin_sub">Übersicht &amp; Rollen</div>
+</div>
+<div class="tile-card hidden" data-target="section-admin-uploads" id="tile-admin-uploads">
+<div class="tile-icon">📥</div>
+<div class="tile-title" data-i18n="tile_admin_uploads_title">Admin Uploads</div>
+<div class="tile-sub" data-i18n="tile_admin_uploads_sub">Dateien für Mitarbeiter hochladen</div>
+</div>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-training-records">
+<h3 class="section-title" data-i18n="section_uploads_overview_title">Dokumente, Nachweise &amp; Uploads</h3>
+<p class="info" data-i18n-html="uploads_overview_info">
                         In diesem Bereich sehen Sie:
-                        <br>• Unterweisungsnachweise (vom Admin bereitgestellt)
-                        <br>• Ihre hochgeladenen Stundenzettel-Nachweise
-                        <br>• Ihre hochgeladenen Krankmeldungen-Nachweise
+                        <br/>• Unterweisungsnachweise (vom Admin bereitgestellt)
+                        <br/>• Ihre hochgeladenen Stundenzettel-Nachweise
+                        <br/>• Ihre hochgeladenen Krankmeldungen-Nachweise
                     </p>
-
-                    <div class="document-category">
-                        <h4>Unterweisungen (vom Admin bereitgestellt)</h4>
-                        <div id="docs-unterweisungen-message" class="info">Es sind keine Unterweisungen für Sie hinterlegt.</div>
-                        <ul id="docs-unterweisungen-list" class="document-list"></ul>
-                    </div>
-
-                    <div class="document-category">
-                        <h4>Dokumente (Ihr Upload)</h4>
-                        <p class="info">
+<div class="document-category">
+<h4 data-i18n="uploads_training_heading">Unterweisungen (vom Admin bereitgestellt)</h4>
+<div class="info" id="docs-unterweisungen-message">Es sind keine Unterweisungen für Sie hinterlegt.</div>
+<ul class="document-list" id="docs-unterweisungen-list"></ul>
+</div>
+<div class="document-category">
+<h4 data-i18n="uploads_documents_heading">Dokumente (Ihr Upload)</h4>
+<p class="info">
                             Laden Sie hier Ihre Dokumente (z. B. Stundenzettel, Rapporte oder andere Nachweise) als PDF oder Foto hoch.
                         </p>
-                        <button id="upload-timesheet-btn" class="btn-primary">Dokumente hochladen</button>
-                        <input type="file" id="upload-timesheet-input" accept="image/*,application/pdf" class="hidden">
-                        <div id="docs-timesheets-message" class="info">Es wurden noch keine Dokumente von Ihnen hochgeladen.</div>
-                        <ul id="docs-timesheets-list" class="document-list"></ul>
-                    </div>
-                </div>
-
-                <div id="section-sicknotes" class="portal-section-content hidden">
-                    <h3 class="section-title">Krankmeldungen (Ihr Upload)</h3>
-                    <div class="document-category" style="padding-top: 0; border-top: none;">
-                        <p class="info">
+<button class="btn-primary" data-i18n="uploads_documents_upload_btn" id="upload-timesheet-btn">Dokumente hochladen</button>
+<input accept="image/*,application/pdf" class="hidden" id="upload-timesheet-input" type="file"/>
+<div class="info" id="docs-timesheets-message"><span data-i18n="uploads_documents_empty">Es wurden noch keine Dokumente von Ihnen hochgeladen.</span></div>
+<ul class="document-list" id="docs-timesheets-list"></ul>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-sicknotes">
+<h3 class="section-title" data-i18n="section_sicknotes_overview_title">Krankmeldungen (Ihr Upload)</h3>
+<div class="document-category" style="padding-top: 0; border-top: none;">
+<p class="info" data-i18n="sicknotes_info">
                             Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen. Die Admins sehen diese in ihrer Übersicht.
                         </p>
-                        <button id="upload-sicknote-btn" class="btn-primary">Krankmeldung hochladen</button>
-                        <input type="file" id="upload-sicknote-input" accept="image/*,application/pdf" class="hidden">
-                        <div id="docs-sicknotes-message" class="info"></div>
-
-                        <div class="digital-sicknote-card">
-                            <h4>Digitale Krankmeldung</h4>
-                            <p class="info">
+<button class="btn-primary" data-i18n="sicknotes_upload_btn" id="upload-sicknote-btn">Krankmeldung hochladen</button>
+<input accept="image/*,application/pdf" class="hidden" id="upload-sicknote-input" type="file"/>
+<div class="info" id="docs-sicknotes-message"></div>
+<div class="digital-sicknote-card">
+<h4 data-i18n="digital_sicknote_heading">Digitale Krankmeldung</h4>
+<p class="info" data-i18n="digital_sicknote_info">
                                 Wenn Sie keine Krankmeldung in Papierform erhalten, können Sie hier digital eintragen, von wann bis wann Sie krankgeschrieben sind.
                             </p>
-                            <div class="digital-sicknote-grid">
-                                <div>
-                                    <label for="digital-sicknote-from">Von (Datum)</label>
-                                    <input type="date" id="digital-sicknote-from">
-                                </div>
-                                <div>
-                                    <label for="digital-sicknote-to">Bis (Datum)</label>
-                                    <input type="date" id="digital-sicknote-to">
-                                </div>
-                            </div>
-                            <button id="digital-sicknote-submit" class="btn-secondary">Digitale Krankmeldung senden</button>
-                            <div id="digital-sicknote-message" class="settings-message"></div>
-                        </div>
-
-                        <h4 style="margin-top:18px;">Ihre hochgeladenen Krankmeldungen</h4>
-                        <div id="sicknotes-user-message" class="info">Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.</div>
-                        <ul id="docs-sicknotes-list" class="document-list"></ul>
-                    </div>
-                </div>
-
-                <div id="section-timesheet" class="portal-section-content hidden">
-                    <h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
-                    <div class="document-category" style="padding-top: 0; border-top: none;">
-                        <p class="info">
+<div class="digital-sicknote-grid">
+<div>
+<label data-i18n="digital_sicknote_from_label" for="digital-sicknote-from">Von (Datum)</label>
+<input id="digital-sicknote-from" type="date"/>
+</div>
+<div>
+<label data-i18n="digital_sicknote_to_label" for="digital-sicknote-to">Bis (Datum)</label>
+<input id="digital-sicknote-to" type="date"/>
+</div>
+</div>
+<button class="btn-secondary" data-i18n="digital_sicknote_submit_btn" id="digital-sicknote-submit">Digitale Krankmeldung senden</button>
+<div class="settings-message" id="digital-sicknote-message"></div>
+</div>
+<h4 data-i18n="sicknotes_uploaded_heading" style="margin-top:18px;">Ihre hochgeladenen Krankmeldungen</h4>
+<div class="info" id="sicknotes-user-message"><span data-i18n="sicknotes_empty">Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.</span></div>
+<ul class="document-list" id="docs-sicknotes-list"></ul>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-timesheet">
+<h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
+<div class="document-category" style="padding-top: 0; border-top: none;">
+<p class="info" data-i18n-html="timesheets_info">
                             Hier können Sie Ihre <strong>Stundenzettel in Papierform</strong> als Foto oder PDF hochladen.
                             Die Admins sehen diese in ihrer Übersicht und können sie weiterverarbeiten.
                         </p>
-                        <button id="upload-timesheet-paper-btn" class="btn-primary">Stundenzettel Papierform einreichen</button>
-                        <input type="file" id="upload-timesheet-paper-input" accept="image/*,application/pdf" class="hidden">
-                        <div id="timesheet-paper-message" class="info"></div>
-                    </div>
-                </div>
-
-                <div id="section-settings" class="portal-section-content hidden">
-                    <h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
-                    <p class="info" data-i18n="settings_info">
+<button class="btn-primary" data-i18n="timesheets_upload_btn" id="upload-timesheet-paper-btn">Stundenzettel Papierform einreichen</button>
+<input accept="image/*,application/pdf" class="hidden" id="upload-timesheet-paper-input" type="file"/>
+<div class="info" id="timesheet-paper-message"></div>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-settings">
+<h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
+<p class="info" data-i18n="settings_info">
                         Hier können Sie Ihre Profildaten bearbeiten und Ihr Passwort ändern.
                     </p>
-
-                    <div class="settings-grid">
-                        <div class="settings-card">
-                            <h4 data-i18n="settings_profile_heading">Profildaten</h4>
-                            <p data-i18n="settings_profile_text">Aktualisieren Sie hier Ihren Namen.</p>
-
-                            <div class="settings-inline">
-                                <div>
-                                    <label for="settings-first-name" data-i18n="settings_first_name_label">Vorname</label>
-                                    <input type="text" id="settings-first-name" placeholder="Vorname">
-                                </div>
-                                <div>
-                                    <label for="settings-last-name" data-i18n="settings_last_name_label">Nachname</label>
-                                    <input type="text" id="settings-last-name" placeholder="Nachname">
-                                </div>
-                            </div>
-
-                            <label for="settings-email" data-i18n="settings_email_label">E-Mail</label>
-                            <input type="email" id="settings-email" disabled>
-                            
-                            <label for="settings-employment-type" id="settings-employment-label" data-i18n="settings_employment_label">Beschäftigungsart</label>
-                            <select id="settings-employment-type">
-                                <option value="fulltime">Vollzeit</option>
-                                <option value="minijob">Minijob</option>
-                            </select>
-
-                            <label for="settings-language" data-i18n="settings_language_label">Sprache / Language</label>
-                            <select id="settings-language">
-                                <option value="de">Deutsch</option>
-                                <option value="tr">Türkçe</option>
-                                <option value="ru">Русский</option>
-                                <option value="uk">Українська</option>
-                                <option value="fa">فارسی</option>
-                                <option value="prs">دری</option>
-                                <option value="ps">پښتو</option>
-                                <option value="ar">العربية</option>
-                                <option value="ro">Română</option>
-                                <option value="bg">Български</option>
-                                <option value="en">English</option>
-                            </select>
-
-                            <button id="settings-save-profile" class="btn-primary" data-i18n="settings_save_profile">Profil speichern</button>
-                            <div id="settings-profile-msg" class="settings-message"></div>
-                        </div>
-
-                        <div class="settings-card">
-                            <h4>Passwort ändern</h4>
-                            <p>Das neue Passwort muss mindestens 8 Zeichen, einen Großbuchstaben und eine Zahl oder ein Sonderzeichen enthalten.</p>
-
-                            <label for="settings-current-password">Aktuelles Passwort</label>
-                            <div class="password-input-wrapper">
-                                <input type="password" id="settings-current-password" placeholder="Aktuelles Passwort" autocomplete="current-password">
-                                <button class="password-toggle" data-target="settings-current-password" type="button" aria-label="Passwort anzeigen">👁️</button>
-                            </div>
-
-                            <label for="settings-new-password">Neues Passwort</label>
-                            <div class="password-input-wrapper">
-                                <input type="password" id="settings-new-password" placeholder="Neues Passwort" autocomplete="new-password">
-                                <button class="password-toggle" data-target="settings-new-password" type="button" aria-label="Passwort anzeigen">👁️</button>
-                            </div>
-
-                            <label for="settings-new-password2">Neues Passwort wiederholen</label>
-                            <div class="password-input-wrapper">
-                                <input type="password" id="settings-new-password2" placeholder="Neues Passwort bestätigen" autocomplete="new-password">
-                                <button class="password-toggle" data-target="settings-new-password2" type="button" aria-label="Passwort anzeigen">👁️</button>
-                            </div>
-
-                            <button id="settings-change-password" class="btn-primary">Passwort ändern</button>
-                            <div id="settings-password-msg" class="settings-message"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="section-admin" class="portal-section-content hidden">
-                    <h3 class="section-title">
+<div class="settings-grid">
+<div class="settings-card">
+<h4 data-i18n="settings_profile_heading">Profildaten</h4>
+<p data-i18n="settings_profile_text">Aktualisieren Sie hier Ihren Namen.</p>
+<div class="settings-inline">
+<div>
+<label data-i18n="settings_first_name_label" for="settings-first-name">Vorname</label>
+<input id="settings-first-name" placeholder="Vorname" type="text"/>
+</div>
+<div>
+<label data-i18n="settings_last_name_label" for="settings-last-name">Nachname</label>
+<input id="settings-last-name" placeholder="Nachname" type="text"/>
+</div>
+</div>
+<label data-i18n="settings_email_label" for="settings-email">E-Mail</label>
+<input disabled="" id="settings-email" type="email"/>
+<label data-i18n="settings_employment_label" for="settings-employment-type" id="settings-employment-label">Beschäftigungsart</label>
+<select id="settings-employment-type">
+<option data-i18n-option="employment_fulltime" value="fulltime">Vollzeit</option>
+<option data-i18n-option="employment_minijob" value="minijob">Minijob</option>
+</select>
+<label data-i18n="settings_language_label" for="settings-language">Sprache / Language</label>
+<select id="settings-language">
+<option value="de">Deutsch</option>
+<option value="tr">Türkçe</option>
+<option value="ru">Русский</option>
+<option value="uk">Українська</option>
+<option value="fa">فارسی</option>
+<option value="prs">دری</option>
+<option value="ps">پښتو</option>
+<option value="ar">العربية</option>
+<option value="ro">Română</option>
+<option value="bg">Български</option>
+<option value="en">English</option>
+</select>
+<button class="btn-primary" data-i18n="settings_save_profile" id="settings-save-profile">Profil speichern</button>
+<div class="settings-message" id="settings-profile-msg"></div>
+</div>
+<div class="settings-card">
+<h4 data-i18n="settings_password_heading">Passwort ändern</h4>
+<p data-i18n="settings_password_rules">Das neue Passwort muss mindestens 8 Zeichen, einen Großbuchstaben und eine Zahl oder ein Sonderzeichen enthalten.</p>
+<label data-i18n="settings_current_password_label" for="settings-current-password">Aktuelles Passwort</label>
+<div class="password-input-wrapper">
+<input autocomplete="current-password" data-i18n-placeholder="settings_current_password_ph" id="settings-current-password" placeholder="Aktuelles Passwort" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="settings-current-password" type="button">👁️</button>
+</div>
+<label data-i18n="settings_new_password_label" for="settings-new-password">Neues Passwort</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" data-i18n-placeholder="settings_new_password_ph" id="settings-new-password" placeholder="Neues Passwort" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="settings-new-password" type="button">👁️</button>
+</div>
+<label data-i18n="settings_new_password2_label" for="settings-new-password2">Neues Passwort wiederholen</label>
+<div class="password-input-wrapper">
+<input autocomplete="new-password" data-i18n-placeholder="settings_new_password2_ph" id="settings-new-password2" placeholder="Neues Passwort bestätigen" type="password"/>
+<button aria-label="Passwort anzeigen" class="password-toggle" data-i18n-aria="toggle_password_aria" data-target="settings-new-password2" type="button">👁️</button>
+</div>
+<button class="btn-primary" data-i18n="settings_change_password_btn" id="settings-change-password">Passwort ändern</button>
+<div class="settings-message" id="settings-password-msg"></div>
+</div>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-admin">
+<h3 class="section-title">
                         Admin · Mitarbeiterübersicht
-                        <span id="admin-requests-counter" class="request-badge hidden"></span>
-                    </h3>
-                    <p class="info">
+                        <span class="request-badge hidden" id="admin-requests-counter"></span>
+</h3>
+<p class="info">
                         Verwalten Sie hier alle registrierten Mitarbeiter, geben Sie neue Benutzer frei und ändern Sie Rollen (Admin/User).
                     </p>
-
-                    <div class="employee-category-wrapper">
-                        <div class="employee-category-heading">
+<div class="employee-category-wrapper">
+<div class="employee-category-heading">
                             Neue Registrierungen (Wartet auf Freigabe)
                         </div>
-                        <div id="pending-employees-content">
-                            <p class="info" id="no-pending-users">Keine Benutzer warten auf Freigabe.</p>
-                        </div>
-                    </div>
-
-                    <div class="employee-category-wrapper">
-                        <div class="employee-category-heading">
+<div id="pending-employees-content">
+<p class="info" id="no-pending-users">Keine Benutzer warten auf Freigabe.</p>
+</div>
+</div>
+<div class="employee-category-wrapper">
+<div class="employee-category-heading">
                             Alle freigegebenen Mitarbeiter
                         </div>
-                        <div id="approved-employees-content">
-                            <p class="info">Wird geladen...</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="section-admin-uploads" class="portal-section-content hidden">
-                    <h3 class="section-title" data-i18n="section_admin_uploads_title">Admin · Uploads und Dokumentenverwaltung</h3>
-                    
-                    <div class="settings-grid">
-                        <div class="settings-card">
-                            <h4>Unterweisungsnachweise hochladen</h4>
-                            <p>Stellen Sie hier ein Dokument für einen oder alle Mitarbeiter bereit.</p>
-
-                            <div class="settings-inline">
-                                <div>
-                                    <label for="admin-unterweisungen-scope">Geltungsbereich</label>
-                                    <select id="admin-unterweisungen-scope">
-                                        <option value="all">Alle freigegebenen Mitarbeiter</option>
-                                        <option value="single">Einzelner Mitarbeiter</option>
-                                        <option value="fulltime">Alle Vollzeit-Mitarbeiter</option>
-                                        <option value="minijob">Alle Minijob-Mitarbeiter</option>
-                                    </select>
-                                </div>
-                                <div id="admin-unterweisungen-user-select-wrapper" class="hidden">
-                                    <label for="admin-unterweisungen-user-select">Mitarbeiter auswählen</label>
-                                    <select id="admin-unterweisungen-user-select"></select>
-                                </div>
-                            </div>
-                            <label for="admin-unterweisungen-input" style="margin-top: 10px;">Datei auswählen (PDF/Bild)</label>
-                            <input type="file" id="admin-unterweisungen-input" accept="image/*,application/pdf">
-
-                            <button id="admin-unterweisungen-upload-btn" class="btn-primary" style="margin-top: 10px;">Dokument hochladen</button>
-                            <div id="admin-unterweisungen-message" class="settings-message"></div>
-                        </div>
-
-                        <div class="settings-card">
-                            <h4>Übersicht Stundenzettel-Uploads (Mitarbeiter)</h4>
-                            <p class="info" id="admin-timesheets-new-count">Wird geladen...</p>
-                            <div class="admin-overview-section" id="admin-timesheets-overview">
+<div id="approved-employees-content">
+<p class="info">Wird geladen...</p>
+</div>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-admin-uploads">
+<h3 class="section-title" data-i18n="section_admin_uploads_title">Admin · Uploads und Dokumentenverwaltung</h3>
+<div class="settings-grid">
+<div class="settings-card">
+<h4>Unterweisungsnachweise hochladen</h4>
+<p>Stellen Sie hier ein Dokument für einen oder alle Mitarbeiter bereit.</p>
+<div class="settings-inline">
+<div>
+<label for="admin-unterweisungen-scope">Geltungsbereich</label>
+<select id="admin-unterweisungen-scope">
+<option value="all">Alle freigegebenen Mitarbeiter</option>
+<option value="single">Einzelner Mitarbeiter</option>
+<option value="fulltime">Alle Vollzeit-Mitarbeiter</option>
+<option value="minijob">Alle Minijob-Mitarbeiter</option>
+</select>
+</div>
+<div class="hidden" id="admin-unterweisungen-user-select-wrapper">
+<label for="admin-unterweisungen-user-select">Mitarbeiter auswählen</label>
+<select id="admin-unterweisungen-user-select"></select>
+</div>
+</div>
+<label for="admin-unterweisungen-input" style="margin-top: 10px;">Datei auswählen (PDF/Bild)</label>
+<input accept="image/*,application/pdf" id="admin-unterweisungen-input" type="file"/>
+<button class="btn-primary" id="admin-unterweisungen-upload-btn" style="margin-top: 10px;">Dokument hochladen</button>
+<div class="settings-message" id="admin-unterweisungen-message"></div>
+</div>
+<div class="settings-card">
+<h4>Übersicht Stundenzettel-Uploads (Mitarbeiter)</h4>
+<p class="info" id="admin-timesheets-new-count">Wird geladen...</p>
+<div class="admin-overview-section" id="admin-timesheets-overview">
                                 Wird geladen...
                             </div>
-                        </div>
-
-                        <div class="settings-card">
-                            <h4>Übersicht Krankmeldungen-Uploads (Mitarbeiter)</h4>
-                            <p class="info" id="admin-sicknotes-new-count">Wird geladen...</p>
-                            <div class="admin-overview-section" id="admin-sicknotes-overview">
+</div>
+<div class="settings-card">
+<h4>Übersicht Krankmeldungen-Uploads (Mitarbeiter)</h4>
+<p class="info" id="admin-sicknotes-new-count">Wird geladen...</p>
+<div class="admin-overview-section" id="admin-sicknotes-overview">
                                 Wird geladen...
                             </div>
-                        </div>
-
-                        <div class="settings-card">
-                            <h4>Dokumente-Uploads (Mitarbeiter)</h4>
-                            <p class="info" id="admin-docs-new-count">Wird geladen...</p>
-                            <div class="admin-overview-section" id="admin-docs-overview">
+</div>
+<div class="settings-card">
+<h4>Dokumente-Uploads (Mitarbeiter)</h4>
+<p class="info" id="admin-docs-new-count">Wird geladen...</p>
+<div class="admin-overview-section" id="admin-docs-overview">
                                 Wird geladen...
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="section-employee-detail" class="portal-section-content hidden">
-                    <h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
-                    <div id="employee-detail-meta" class="info" style="margin-bottom:12px;"></div>
-                    <button id="employee-detail-back-btn" class="btn-secondary" style="margin-bottom: 15px;">Zurück zur Übersicht</button>
-
-                    <h4>Hochgeladene Dokumente</h4>
-                    <ul id="employee-detail-docs" class="document-list"></ul>
-                </div>
-            </div>
-        </div>
-    </section>
+</div>
+</div>
+</div>
+<div class="portal-section-content hidden" id="section-employee-detail">
+<h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
+<div class="info" id="employee-detail-meta" style="margin-bottom:12px;"></div>
+<button class="btn-secondary" id="employee-detail-back-btn" style="margin-bottom: 15px;">Zurück zur Übersicht</button>
+<h4>Hochgeladene Dokumente</h4>
+<ul class="document-list" id="employee-detail-docs"></ul>
+</div>
+</div>
+</div>
+</section>
 </main>
-
 <script type="module">
     // --- KONFIGURATION: BITTE HIER IHRE URL & KEY EINFÜGEN ---
     const SUPABASE_URL = 'https://tieypqqmdpzpxzxottik.supabase.co'; // <--- PRÜFEN SIE DIESE URL
@@ -1239,7 +1180,50 @@
             section_timesheets_title: "Stundenzettel",
             section_sicknotes_title: "Krankmeldungen",
             section_admin_title: "Admin · Mitarbeiterübersicht",
-            section_admin_uploads_title: "Admin · Uploads und Dokumentenverwaltung"
+            section_admin_uploads_title: "Admin · Uploads und Dokumentenverwaltung",
+            sidebar_title: "Mitarbeiterportal",
+            tile_uploads_title: "Dokumente & Uploads",
+            tile_uploads_sub: "Nachweise, Stundenzettel, Krankmeldungen",
+            tile_timesheets_title: "Stundenzettel",
+            tile_timesheets_sub: "Arbeitszeiten erfassen (Platzhalter)",
+            tile_sicknotes_title: "Krankmeldungen",
+            tile_sicknotes_sub: "AU-Bescheinigung hochladen",
+            tile_settings_title: "Einstellungen",
+            tile_settings_sub: "Profil & Passwort",
+            tile_admin_title: "Mitarbeiter (Admin)",
+            tile_admin_sub: "Übersicht & Rollen",
+            tile_admin_uploads_title: "Admin Uploads",
+            tile_admin_uploads_sub: "Dateien für Mitarbeiter hochladen",
+            section_uploads_overview_title: "Dokumente, Nachweise & Uploads",
+            uploads_overview_info: "In diesem Bereich sehen Sie:<br>• Unterweisungsnachweise (vom Admin bereitgestellt)<br>• Ihre hochgeladenen Stundenzettel-Nachweise<br>• Ihre hochgeladenen Krankmeldungen-Nachweise",
+            uploads_training_heading: "Unterweisungen (vom Admin bereitgestellt)",
+            uploads_documents_heading: "Dokumente (Ihr Upload)",
+            uploads_documents_upload_btn: "Dokumente hochladen",
+            uploads_documents_empty: "Es wurden noch keine Dokumente von Ihnen hochgeladen.",
+            section_sicknotes_overview_title: "Krankmeldungen (Ihr Upload)",
+            sicknotes_info: "Hier können Sie Ihre Krankmeldungen (AU-Bescheinigungen) als Foto oder PDF hochladen. Die Admins sehen diese in ihrer Übersicht.",
+            sicknotes_upload_btn: "Krankmeldung hochladen",
+            digital_sicknote_heading: "Digitale Krankmeldung",
+            digital_sicknote_info: "Wenn Sie keine Krankmeldung in Papierform erhalten, können Sie hier digital eintragen, von wann bis wann Sie krankgeschrieben sind.",
+            digital_sicknote_from_label: "Von (Datum)",
+            digital_sicknote_to_label: "Bis (Datum)",
+            digital_sicknote_submit_btn: "Digitale Krankmeldung senden",
+            sicknotes_uploaded_heading: "Ihre hochgeladenen Krankmeldungen",
+            sicknotes_empty: "Es wurden noch keine Krankmeldungen von Ihnen hochgeladen.",
+            timesheets_info: "Hier können Sie Ihre <strong>Stundenzettel in Papierform</strong> als Foto oder PDF hochladen. Die Admins sehen diese in ihrer Übersicht und können sie weiterverarbeiten.",
+            timesheets_upload_btn: "Stundenzettel Papierform einreichen",
+            settings_password_heading: "Passwort ändern",
+            settings_password_rules: "Das neue Passwort muss mindestens 8 Zeichen, einen Großbuchstaben und eine Zahl oder ein Sonderzeichen enthalten.",
+            settings_current_password_label: "Aktuelles Passwort",
+            settings_current_password_ph: "Aktuelles Passwort",
+            settings_new_password_label: "Neues Passwort",
+            settings_new_password_ph: "Neues Passwort",
+            settings_new_password2_label: "Neues Passwort wiederholen",
+            settings_new_password2_ph: "Neues Passwort bestätigen",
+            toggle_password_aria: "Passwort anzeigen",
+            settings_change_password_btn: "Passwort ändern",
+            employment_fulltime: "Vollzeit",
+            employment_minijob: "Minijob"
         },
         tr: {
             nav_dashboard: "Ana Sayfa",
@@ -1256,7 +1240,50 @@
             section_timesheets_title: "Çalışma Saatleri",
             section_sicknotes_title: "Raporlar",
             section_admin_title: "Admin · Çalışan Genel Bakış",
-            section_admin_uploads_title: "Admin · Yükleme ve Doküman Yönetimi"
+            section_admin_uploads_title: "Admin · Yükleme ve Doküman Yönetimi",
+            sidebar_title: "Çalışan Portalı",
+            tile_uploads_title: "Belgeler & Yüklemeler",
+            tile_uploads_sub: "Belgeler, Çalışma saatleri, Raporlar",
+            tile_timesheets_title: "Çalışma Saatleri",
+            tile_timesheets_sub: "Çalışma saatlerini gönder (Yer tutucu)",
+            tile_sicknotes_title: "Raporlar",
+            tile_sicknotes_sub: "Rapor (AU) yükle",
+            tile_settings_title: "Ayarlar",
+            tile_settings_sub: "Profil & Şifre",
+            tile_admin_title: "Çalışanlar (Admin)",
+            tile_admin_sub: "Genel bakış & Roller",
+            tile_admin_uploads_title: "Admin Yüklemeleri",
+            tile_admin_uploads_sub: "Çalışanlar için dosya yükle",
+            section_uploads_overview_title: "Belgeler, Kanıtlar & Yüklemeler",
+            uploads_overview_info: "Bu bölümde şunları görürsünüz:<br>• Eğitim/tebliğ belgeleri (Admin tarafından)<br>• Yüklediğiniz çalışma saati belgeleri<br>• Yüklediğiniz rapor belgeleri",
+            uploads_training_heading: "Eğitimler (Admin tarafından)",
+            uploads_documents_heading: "Belgeler (Sizin yüklemeniz)",
+            uploads_documents_upload_btn: "Belge yükle",
+            uploads_documents_empty: "Henüz belge yüklemediniz.",
+            section_sicknotes_overview_title: "Raporlar (Sizin yüklemeniz)",
+            sicknotes_info: "Buradan raporlarınızı (AU) fotoğraf veya PDF olarak yükleyebilirsiniz. Adminler bunu görebilir.",
+            sicknotes_upload_btn: "Rapor yükle",
+            digital_sicknote_heading: "Dijital Rapor",
+            digital_sicknote_info: "Kağıt raporunuz yoksa, buraya dijital olarak hangi tarihler arasında raporlu olduğunuzu girebilirsiniz.",
+            digital_sicknote_from_label: "Başlangıç (Tarih)",
+            digital_sicknote_to_label: "Bitiş (Tarih)",
+            digital_sicknote_submit_btn: "Dijital raporu gönder",
+            sicknotes_uploaded_heading: "Yüklediğiniz raporlar",
+            sicknotes_empty: "Henüz rapor yüklemediniz.",
+            timesheets_info: "Buradan <strong>kağıt çalışma saatinizi</strong> fotoğraf veya PDF olarak yükleyebilirsiniz. Adminler bunu görebilir.",
+            timesheets_upload_btn: "Çalışma saati belgesi yükle",
+            settings_password_heading: "Şifre değiştir",
+            settings_password_rules: "Yeni şifre en az 8 karakter, bir büyük harf ve bir sayı veya özel karakter içermelidir.",
+            settings_current_password_label: "Mevcut şifre",
+            settings_current_password_ph: "Mevcut şifre",
+            settings_new_password_label: "Yeni şifre",
+            settings_new_password_ph: "Yeni şifre",
+            settings_new_password2_label: "Yeni şifreyi tekrar",
+            settings_new_password2_ph: "Yeni şifreyi doğrula",
+            toggle_password_aria: "Şifreyi göster",
+            settings_change_password_btn: "Şifre değiştir",
+            employment_fulltime: "Tam zamanlı",
+            employment_minijob: "Minijob"
         },
         ru: {
             nav_dashboard: "Главная",
@@ -1273,7 +1300,50 @@
             section_timesheets_title: "Табели учета времени",
             section_sicknotes_title: "Больничные",
             section_admin_title: "Админ · Обзор сотрудников",
-            section_admin_uploads_title: "Админ · Загрузки и управление документами"
+            section_admin_uploads_title: "Админ · Загрузки и управление документами",
+            sidebar_title: "Портал сотрудников",
+            tile_uploads_title: "Документы и загрузки",
+            tile_uploads_sub: "Документы, табели, больничные",
+            tile_timesheets_title: "Табели",
+            tile_timesheets_sub: "Сдать рабочие часы (заглушка)",
+            tile_sicknotes_title: "Больничные",
+            tile_sicknotes_sub: "Загрузить больничный (AU)",
+            tile_settings_title: "Настройки",
+            tile_settings_sub: "Профиль и пароль",
+            tile_admin_title: "Сотрудники (Админ)",
+            tile_admin_sub: "Обзор и роли",
+            tile_admin_uploads_title: "Загрузки админа",
+            tile_admin_uploads_sub: "Загрузить файлы для сотрудников",
+            section_uploads_overview_title: "Документы, записи и загрузки",
+            uploads_overview_info: "В этом разделе вы увидите:<br>• Инструктажи/обучения (от админа)<br>• Ваши загруженные табели<br>• Ваши загруженные больничные",
+            uploads_training_heading: "Инструктажи (предоставлены админом)",
+            uploads_documents_heading: "Документы (ваша загрузка)",
+            uploads_documents_upload_btn: "Загрузить документ",
+            uploads_documents_empty: "Вы еще не загрузили документы.",
+            section_sicknotes_overview_title: "Больничные (ваша загрузка)",
+            sicknotes_info: "Загрузите больничные (справки AU) как фото или PDF. Админы видят их в своём обзоре.",
+            sicknotes_upload_btn: "Загрузить больничный",
+            digital_sicknote_heading: "Цифровой больничный",
+            digital_sicknote_info: "Если у вас нет бумажной справки, вы можете указать период здесь в цифровом виде.",
+            digital_sicknote_from_label: "С (дата)",
+            digital_sicknote_to_label: "По (дата)",
+            digital_sicknote_submit_btn: "Отправить цифровой больничный",
+            sicknotes_uploaded_heading: "Ваши загруженные больничные",
+            sicknotes_empty: "Вы еще не загрузили больничные.",
+            timesheets_info: "Загрузите ваш <strong>бумажный табель</strong> как фото или PDF. Админы могут увидеть его в своём обзоре.",
+            timesheets_upload_btn: "Отправить бумажный табель",
+            settings_password_heading: "Сменить пароль",
+            settings_password_rules: "Новый пароль должен быть не менее 8 символов и содержать заглавную букву и цифру или специальный символ.",
+            settings_current_password_label: "Текущий пароль",
+            settings_current_password_ph: "Текущий пароль",
+            settings_new_password_label: "Новый пароль",
+            settings_new_password_ph: "Новый пароль",
+            settings_new_password2_label: "Повторите новый пароль",
+            settings_new_password2_ph: "Подтвердите новый пароль",
+            toggle_password_aria: "Показать пароль",
+            settings_change_password_btn: "Изменить пароль",
+            employment_fulltime: "Полная занятость",
+            employment_minijob: "Minijob"
         },
         uk: {
             nav_dashboard: "Головна",
@@ -1290,7 +1360,50 @@
             section_timesheets_title: "Табелі робочого часу",
             section_sicknotes_title: "Лікарняні",
             section_admin_title: "Адмін · Огляд працівників",
-            section_admin_uploads_title: "Адмін · Завантаження та керування документами"
+            section_admin_uploads_title: "Адмін · Завантаження та керування документами",
+            sidebar_title: "Портал працівників",
+            tile_uploads_title: "Документи та завантаження",
+            tile_uploads_sub: "Документи, табелі, лікарняні",
+            tile_timesheets_title: "Табелі",
+            tile_timesheets_sub: "Подати робочі години (заглушка)",
+            tile_sicknotes_title: "Лікарняні",
+            tile_sicknotes_sub: "Завантажити лікарняний (AU)",
+            tile_settings_title: "Налаштування",
+            tile_settings_sub: "Профіль і пароль",
+            tile_admin_title: "Працівники (Адмін)",
+            tile_admin_sub: "Огляд і ролі",
+            tile_admin_uploads_title: "Завантаження адміна",
+            tile_admin_uploads_sub: "Завантажити файли для працівників",
+            section_uploads_overview_title: "Документи, записи та завантаження",
+            uploads_overview_info: "У цьому розділі ви бачите:<br>• Інструктажі/навчання (від адміна)<br>• Ваші завантажені табелі<br>• Ваші завантажені лікарняні",
+            uploads_training_heading: "Інструктажі (надані адміністратором)",
+            uploads_documents_heading: "Документи (ваше завантаження)",
+            uploads_documents_upload_btn: "Завантажити документ",
+            uploads_documents_empty: "Ви ще не завантажували документи.",
+            section_sicknotes_overview_title: "Лікарняні (ваше завантаження)",
+            sicknotes_info: "Завантажуйте лікарняні (довідки AU) як фото або PDF. Адміни бачать їх у своєму огляді.",
+            sicknotes_upload_btn: "Завантажити лікарняний",
+            digital_sicknote_heading: "Цифровий лікарняний",
+            digital_sicknote_info: "Якщо у вас немає паперової довідки, ви можете ввести період тут у цифровому вигляді.",
+            digital_sicknote_from_label: "Від (дата)",
+            digital_sicknote_to_label: "До (дата)",
+            digital_sicknote_submit_btn: "Надіслати цифровий лікарняний",
+            sicknotes_uploaded_heading: "Ваші завантажені лікарняні",
+            sicknotes_empty: "Ви ще не завантажували лікарняні.",
+            timesheets_info: "Завантажте ваш <strong>паперовий табель</strong> як фото або PDF. Адміни можуть бачити його у своєму огляді.",
+            timesheets_upload_btn: "Подати паперовий табель",
+            settings_password_heading: "Змінити пароль",
+            settings_password_rules: "Новий пароль має містити щонайменше 8 символів та включати велику літеру і цифру або спеціальний символ.",
+            settings_current_password_label: "Поточний пароль",
+            settings_current_password_ph: "Поточний пароль",
+            settings_new_password_label: "Новий пароль",
+            settings_new_password_ph: "Новий пароль",
+            settings_new_password2_label: "Повторіть новий пароль",
+            settings_new_password2_ph: "Підтвердіть новий пароль",
+            toggle_password_aria: "Показати пароль",
+            settings_change_password_btn: "Змінити пароль",
+            employment_fulltime: "Повна зайнятість",
+            employment_minijob: "Minijob"
         },
         fa: {
             nav_dashboard: "صفحه اصلی",
@@ -1307,7 +1420,50 @@
             section_timesheets_title: "برگه‌های ساعات کاری",
             section_sicknotes_title: "گواهی‌های بیمار",
             section_admin_title: "ادمین · نمای کلی کارمندان",
-            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت مدارک"
+            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت مدارک",
+            sidebar_title: "پرتال کارکنان",
+            tile_uploads_title: "مدارک و آپلودها",
+            tile_uploads_sub: "مدارک، برگه ساعات، مرخصی بیماری",
+            tile_timesheets_title: "برگه ساعات",
+            tile_timesheets_sub: "ارسال ساعات کاری (موقت)",
+            tile_sicknotes_title: "گواهی بیماری",
+            tile_sicknotes_sub: "آپلود گواهی بیماری (AU)",
+            tile_settings_title: "تنظیمات",
+            tile_settings_sub: "پروفایل و رمز عبور",
+            tile_admin_title: "کارمندان (ادمین)",
+            tile_admin_sub: "نمای کلی و نقش‌ها",
+            tile_admin_uploads_title: "آپلودهای ادمین",
+            tile_admin_uploads_sub: "آپلود فایل برای کارمندان",
+            section_uploads_overview_title: "مدارک، سوابق و آپلودها",
+            uploads_overview_info: "در این بخش می‌توانید ببینید:<br>• آموزش‌ها/ابلاغ‌ها (توسط ادمین)<br>• برگه‌های ساعات آپلود شده شما<br>• گواهی‌های بیماری آپلود شده شما",
+            uploads_training_heading: "آموزش‌ها (توسط ادمین ارائه شده)",
+            uploads_documents_heading: "مدارک (آپلود شما)",
+            uploads_documents_upload_btn: "آپلود مدرک",
+            uploads_documents_empty: "هنوز هیچ مدرکی آپلود نکرده‌اید.",
+            section_sicknotes_overview_title: "مرخصی‌های بیماری (آپلود شما)",
+            sicknotes_info: "گواهی‌های بیماری (برگه AU) را به صورت عکس یا PDF آپلود کنید. ادمین‌ها آن را در بخش خود می‌بینند.",
+            sicknotes_upload_btn: "آپلود گواهی بیماری",
+            digital_sicknote_heading: "گواهی بیماری دیجیتال",
+            digital_sicknote_info: "اگر گواهی کاغذی ندارید، می‌توانید بازه را اینجا به صورت دیجیتال وارد کنید.",
+            digital_sicknote_from_label: "از (تاریخ)",
+            digital_sicknote_to_label: "تا (تاریخ)",
+            digital_sicknote_submit_btn: "ارسال گواهی بیماری دیجیتال",
+            sicknotes_uploaded_heading: "گواهی‌های بیماری آپلود شده شما",
+            sicknotes_empty: "هنوز هیچ گواهی بیماری آپلود نکرده‌اید.",
+            timesheets_info: "برگه <strong>ساعات کاغذی</strong> خود را به صورت عکس یا PDF آپلود کنید. ادمین‌ها آن را در بخش خود مشاهده می‌کنند.",
+            timesheets_upload_btn: "ارسال برگه ساعات کاغذی",
+            settings_password_heading: "تغییر رمز عبور",
+            settings_password_rules: "رمز عبور جدید باید حداقل ۸ کاراکتر داشته باشد و شامل یک حرف بزرگ و یک عدد یا کاراکتر ویژه باشد.",
+            settings_current_password_label: "رمز عبور فعلی",
+            settings_current_password_ph: "رمز عبور فعلی",
+            settings_new_password_label: "رمز عبور جدید",
+            settings_new_password_ph: "رمز عبور جدید",
+            settings_new_password2_label: "تکرار رمز عبور جدید",
+            settings_new_password2_ph: "تأیید رمز عبور جدید",
+            toggle_password_aria: "نمایش رمز عبور",
+            settings_change_password_btn: "تغییر رمز عبور",
+            employment_fulltime: "تمام‌وقت",
+            employment_minijob: "Minijob"
         },
         prs: {
             nav_dashboard: "صفحه اصلی",
@@ -1324,7 +1480,50 @@
             section_timesheets_title: "ورق‌های وقت کاری",
             section_sicknotes_title: "گواهی‌های مریضی",
             section_admin_title: "ادمین · نمای کلی کارمندان",
-            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت اسناد"
+            section_admin_uploads_title: "ادمین · بارگذاری و مدیریت اسناد",
+            sidebar_title: "پرتال کارکنان",
+            tile_uploads_title: "اسناد و آپلودها",
+            tile_uploads_sub: "اسناد، برگه ساعات، رخصتی مریضی",
+            tile_timesheets_title: "برگه ساعات",
+            tile_timesheets_sub: "ارسال ساعات کاری (موقت)",
+            tile_sicknotes_title: "گواهی بیماری",
+            tile_sicknotes_sub: "آپلود مریضی (AU)",
+            tile_settings_title: "تنظیمات",
+            tile_settings_sub: "پروفایل و رمز عبور",
+            tile_admin_title: "کارمندان (ادمین)",
+            tile_admin_sub: "نمای کلی و نقش‌ها",
+            tile_admin_uploads_title: "آپلودهای ادمین",
+            tile_admin_uploads_sub: "آپلود فایل برای کارمندان",
+            section_uploads_overview_title: "اسناد، سوابق و آپلودها",
+            uploads_overview_info: "در این بخش می‌بینید:<br>• آموزش‌ها/ابلاغ‌ها (توسط ادمین)<br>• برگه‌های ساعات آپلودشده شما<br>• مریضی‌های آپلودشده شما",
+            uploads_training_heading: "آموزش‌ها (توسط ادمین ارائه شده)",
+            uploads_documents_heading: "اسناد (آپلود شما)",
+            uploads_documents_upload_btn: "آپلود سند",
+            uploads_documents_empty: "شما هنوز هیچ سندی آپلود نکرده‌اید.",
+            section_sicknotes_overview_title: "مریضی‌ها (آپلود شما)",
+            sicknotes_info: "برگه‌های مریضی (AU) را به صورت عکس یا PDF آپلود کنید. ادمین‌ها آن را در بخش خود می‌بینند.",
+            sicknotes_upload_btn: "آپلود برگه مریضی",
+            digital_sicknote_heading: "مریضی دیجیتال",
+            digital_sicknote_info: "اگر برگه کاغذی ندارید، می‌توانید دوره را اینجا به صورت دیجیتال وارد کنید.",
+            digital_sicknote_from_label: "از (تاریخ)",
+            digital_sicknote_to_label: "تا (تاریخ)",
+            digital_sicknote_submit_btn: "ارسال مریضی دیجیتال",
+            sicknotes_uploaded_heading: "مریضی‌های آپلودشده شما",
+            sicknotes_empty: "شما هنوز هیچ مریضی‌ای آپلود نکرده‌اید.",
+            timesheets_info: "برگه <strong>ساعات کاغذی</strong> خود را به صورت عکس یا PDF آپلود کنید. ادمین‌ها آن را در بخش خود می‌بینند.",
+            timesheets_upload_btn: "ارسال برگه ساعات کاغذی",
+            settings_password_heading: "تغییر رمز عبور",
+            settings_password_rules: "رمز جدید باید حداقل ۸ حرف داشته باشد و شامل یک حرف بزرگ و یک عدد یا علامت ویژه باشد.",
+            settings_current_password_label: "رمز فعلی",
+            settings_current_password_ph: "رمز فعلی",
+            settings_new_password_label: "رمز جدید",
+            settings_new_password_ph: "رمز جدید",
+            settings_new_password2_label: "تکرار رمز جدید",
+            settings_new_password2_ph: "تأیید رمز جدید",
+            toggle_password_aria: "نمایش رمز",
+            settings_change_password_btn: "تغییر رمز",
+            employment_fulltime: "تمام‌وقت",
+            employment_minijob: "Minijob"
         },
         ps: {
             nav_dashboard: "کور پاڼه",
@@ -1341,7 +1540,50 @@
             section_timesheets_title: "د کار وخت پاڼې",
             section_sicknotes_title: "مرض رپوټونه",
             section_admin_title: "ادمین · د کارکوونکو لنډیز",
-            section_admin_uploads_title: "ادمین · پورته کول او د اسنادو اداره"
+            section_admin_uploads_title: "ادمین · پورته کول او د اسنادو اداره",
+            sidebar_title: "د کارکوونکو پورټل",
+            tile_uploads_title: "اسناد او اپلوډونه",
+            tile_uploads_sub: "اسناد، د ساعتونو پاڼه، ناروغۍ رپوټ",
+            tile_timesheets_title: "د ساعتونو پاڼه",
+            tile_timesheets_sub: "کاري ساعتونه وسپارئ (موقتي)",
+            tile_sicknotes_title: "ناروغۍ سند",
+            tile_sicknotes_sub: "د ناروغۍ سند اپلوډ (AU)",
+            tile_settings_title: "امستنې",
+            tile_settings_sub: "پروفایل او پاسورډ",
+            tile_admin_title: "کارکوونکي (ادمین)",
+            tile_admin_sub: "لید او رولونه",
+            tile_admin_uploads_title: "د ادمین اپلوډونه",
+            tile_admin_uploads_sub: "د کارکوونکو لپاره فایل اپلوډ",
+            section_uploads_overview_title: "اسناد، ریکارډونه او اپلوډونه",
+            uploads_overview_info: "په دې برخه کې تاسو وینئ:<br>• روزنې/لارښوونې (د ادمین له خوا)<br>• ستاسو اپلوډ شوي ساعتپاڼې<br>• ستاسو اپلوډ شوي ناروغۍ اسناد",
+            uploads_training_heading: "روزنې (د ادمین له خوا برابره شوې)",
+            uploads_documents_heading: "اسناد (ستاسو اپلوډ)",
+            uploads_documents_upload_btn: "سند اپلوډ کړئ",
+            uploads_documents_empty: "تاسو تر اوسه کوم سند نه دی اپلوډ کړی.",
+            section_sicknotes_overview_title: "ناروغۍ اسناد (ستاسو اپلوډ)",
+            sicknotes_info: "د ناروغۍ اسناد (AU) د عکس یا PDF په توګه اپلوډ کړئ. ادمینان یې په خپل لید کې ویني.",
+            sicknotes_upload_btn: "د ناروغۍ سند اپلوډ",
+            digital_sicknote_heading: "ډیجیټل ناروغۍ سند",
+            digital_sicknote_info: "که کاغذي سند نه لرئ، تاسو دلته موده په ډیجیټل ډول داخلولی شئ.",
+            digital_sicknote_from_label: "له (نېټه)",
+            digital_sicknote_to_label: "تر (نېټه)",
+            digital_sicknote_submit_btn: "ډیجیټل ناروغۍ سند ولېږئ",
+            sicknotes_uploaded_heading: "ستاسو اپلوډ شوي ناروغۍ اسناد",
+            sicknotes_empty: "تاسو تر اوسه کوم ناروغۍ سند نه دی اپلوډ کړی.",
+            timesheets_info: "خپل <strong>کاغذي ساعتپاڼه</strong> د عکس یا PDF په توګه اپلوډ کړئ. ادمینان یې په خپل لید کې ویني.",
+            timesheets_upload_btn: "کاغذي ساعتپاڼه وسپارئ",
+            settings_password_heading: "پټنوم بدلول",
+            settings_password_rules: "نوی پاسورډ باید لږ تر لږه ۸ توري ولري او یو لوی توری او یو شمېر یا ځانګړی نښه ولري.",
+            settings_current_password_label: "اوسنی پاسورډ",
+            settings_current_password_ph: "اوسنی پاسورډ",
+            settings_new_password_label: "نوی پاسورډ",
+            settings_new_password_ph: "نوی پاسورډ",
+            settings_new_password2_label: "نوی پاسورډ بیا ولیکئ",
+            settings_new_password2_ph: "نوی پاسورډ تایید کړئ",
+            toggle_password_aria: "پاسورډ ښکاره کړئ",
+            settings_change_password_btn: "پاسورډ بدل کړئ",
+            employment_fulltime: "بشپړ وخت",
+            employment_minijob: "Minijob"
         },
         ar: {
             nav_dashboard: "الصفحة الرئيسية",
@@ -1358,7 +1600,50 @@
             section_timesheets_title: "سجلات الدوام",
             section_sicknotes_title: "تقارير المرض",
             section_admin_title: "المسؤول · نظرة عامة على الموظفين",
-            section_admin_uploads_title: "المسؤول · تحميل وإدارة الملفات"
+            section_admin_uploads_title: "المسؤول · تحميل وإدارة الملفات",
+            sidebar_title: "بوابة الموظفين",
+            tile_uploads_title: "المستندات والرفع",
+            tile_uploads_sub: "مستندات، جداول ساعات، إجازات مرضية",
+            tile_timesheets_title: "ساعات العمل",
+            tile_timesheets_sub: "تسليم ساعات العمل (مؤقت)",
+            tile_sicknotes_title: "إشعارات المرض",
+            tile_sicknotes_sub: "رفع شهادة مرضية (AU)",
+            tile_settings_title: "الإعدادات",
+            tile_settings_sub: "الملف الشخصي وكلمة المرور",
+            tile_admin_title: "الموظفون (مسؤول)",
+            tile_admin_sub: "نظرة عامة والأدوار",
+            tile_admin_uploads_title: "رفوعات المسؤول",
+            tile_admin_uploads_sub: "رفع ملفات للموظفين",
+            section_uploads_overview_title: "المستندات والسجلات والرفوعات",
+            uploads_overview_info: "في هذا القسم يمكنك رؤية:<br>• التعليمات/التدريبات (من المسؤول)<br>• جداول الساعات التي رفعتها<br>• الشهادات المرضية التي رفعتها",
+            uploads_training_heading: "التدريبات (مقدمة من المسؤول)",
+            uploads_documents_heading: "المستندات (رفعك)",
+            uploads_documents_upload_btn: "رفع مستند",
+            uploads_documents_empty: "لم تقم برفع أي مستندات بعد.",
+            section_sicknotes_overview_title: "الإجازات المرضية (رفعك)",
+            sicknotes_info: "ارفع الشهادات المرضية (AU) كصورة أو PDF. يمكن للمسؤولين رؤيتها في قسمهم.",
+            sicknotes_upload_btn: "رفع شهادة مرضية",
+            digital_sicknote_heading: "شهادة مرضية رقمية",
+            digital_sicknote_info: "إذا لم يكن لديك شهادة ورقية، يمكنك إدخال الفترة هنا بشكل رقمي.",
+            digital_sicknote_from_label: "من (تاريخ)",
+            digital_sicknote_to_label: "إلى (تاريخ)",
+            digital_sicknote_submit_btn: "إرسال شهادة مرضية رقمية",
+            sicknotes_uploaded_heading: "شهاداتك المرضية المرفوعة",
+            sicknotes_empty: "لم تقم برفع أي شهادة مرضية بعد.",
+            timesheets_info: "ارفع <strong>جدول الساعات الورقي</strong> كصورة أو PDF. يمكن للمسؤولين رؤيته في قسمهم.",
+            timesheets_upload_btn: "إرسال جدول ساعات ورقي",
+            settings_password_heading: "تغيير كلمة المرور",
+            settings_password_rules: "يجب أن تكون كلمة المرور الجديدة 8 أحرف على الأقل وأن تتضمن حرفًا كبيرًا ورقمًا أو رمزًا خاصًا.",
+            settings_current_password_label: "كلمة المرور الحالية",
+            settings_current_password_ph: "كلمة المرور الحالية",
+            settings_new_password_label: "كلمة مرور جديدة",
+            settings_new_password_ph: "كلمة مرور جديدة",
+            settings_new_password2_label: "إعادة كلمة المرور الجديدة",
+            settings_new_password2_ph: "تأكيد كلمة المرور الجديدة",
+            toggle_password_aria: "إظهار كلمة المرور",
+            settings_change_password_btn: "تغيير كلمة المرور",
+            employment_fulltime: "دوام كامل",
+            employment_minijob: "Minijob"
         },
         ro: {
             nav_dashboard: "Acasă",
@@ -1375,7 +1660,50 @@
             section_timesheets_title: "Foi de pontaj",
             section_sicknotes_title: "Concedii medicale",
             section_admin_title: "Admin · Vedere generală angajați",
-            section_admin_uploads_title: "Admin · Upload și gestiune documente"
+            section_admin_uploads_title: "Admin · Upload și gestiune documente",
+            sidebar_title: "Portal angajați",
+            tile_uploads_title: "Documente și încărcări",
+            tile_uploads_sub: "Documente, foi de pontaj, concedii medicale",
+            tile_timesheets_title: "Pontaje",
+            tile_timesheets_sub: "Depune orele de lucru (placeholder)",
+            tile_sicknotes_title: "Concedii medicale",
+            tile_sicknotes_sub: "Încarcă concediu medical (AU)",
+            tile_settings_title: "Setări",
+            tile_settings_sub: "Profil și parolă",
+            tile_admin_title: "Angajați (Admin)",
+            tile_admin_sub: "Prezentare & roluri",
+            tile_admin_uploads_title: "Încărcări admin",
+            tile_admin_uploads_sub: "Încarcă fișiere pentru angajați",
+            section_uploads_overview_title: "Documente, dovezi & încărcări",
+            uploads_overview_info: "În această secțiune poți vedea:<br>• Instruiri (oferite de admin)<br>• Pontajele încărcate de tine<br>• Concediile medicale încărcate de tine",
+            uploads_training_heading: "Instruiri (furnizate de admin)",
+            uploads_documents_heading: "Documente (încărcarea ta)",
+            uploads_documents_upload_btn: "Încarcă document",
+            uploads_documents_empty: "Nu ai încărcat încă niciun document.",
+            section_sicknotes_overview_title: "Concedii medicale (încărcarea ta)",
+            sicknotes_info: "Încarcă concediile medicale (certificate AU) ca poză sau PDF. Adminii le pot vedea în overview.",
+            sicknotes_upload_btn: "Încarcă concediu medical",
+            digital_sicknote_heading: "Concediu medical digital",
+            digital_sicknote_info: "Dacă nu ai un concediu medical pe hârtie, poți introduce perioada aici digital.",
+            digital_sicknote_from_label: "De la (data)",
+            digital_sicknote_to_label: "Până la (data)",
+            digital_sicknote_submit_btn: "Trimite concediu medical digital",
+            sicknotes_uploaded_heading: "Concediile tale medicale încărcate",
+            sicknotes_empty: "Nu ai încărcat încă niciun concediu medical.",
+            timesheets_info: "Încarcă <strong>foaia de pontaj pe hârtie</strong> ca poză sau PDF. Adminii o pot vedea în overview.",
+            timesheets_upload_btn: "Depune pontaj pe hârtie",
+            settings_password_heading: "Schimbă parola",
+            settings_password_rules: "Parola nouă trebuie să aibă cel puțin 8 caractere și să conțină o literă mare și un număr sau un caracter special.",
+            settings_current_password_label: "Parola curentă",
+            settings_current_password_ph: "Parola curentă",
+            settings_new_password_label: "Parolă nouă",
+            settings_new_password_ph: "Parolă nouă",
+            settings_new_password2_label: "Repetă parola nouă",
+            settings_new_password2_ph: "Confirmă parola nouă",
+            toggle_password_aria: "Afișează parola",
+            settings_change_password_btn: "Schimbă parola",
+            employment_fulltime: "Normă întreagă",
+            employment_minijob: "Minijob"
         },
         bg: {
             nav_dashboard: "Начало",
@@ -1392,7 +1720,50 @@
             section_timesheets_title: "Табели с работно време",
             section_sicknotes_title: "Болнични листове",
             section_admin_title: "Админ · Преглед на служителите",
-            section_admin_uploads_title: "Админ · Качвания и управление на документи"
+            section_admin_uploads_title: "Админ · Качвания и управление на документи",
+            sidebar_title: "Портал за служители",
+            tile_uploads_title: "Документи и качвания",
+            tile_uploads_sub: "Документи, табели, болнични",
+            tile_timesheets_title: "Таймшитове",
+            tile_timesheets_sub: "Подаване на работни часове (пример)",
+            tile_sicknotes_title: "Болнични",
+            tile_sicknotes_sub: "Качване на болничен (AU)",
+            tile_settings_title: "Настройки",
+            tile_settings_sub: "Профил и парола",
+            tile_admin_title: "Служители (Админ)",
+            tile_admin_sub: "Преглед и роли",
+            tile_admin_uploads_title: "Админ качвания",
+            tile_admin_uploads_sub: "Качване на файлове за служители",
+            section_uploads_overview_title: "Документи, записи и качвания",
+            uploads_overview_info: "В този раздел виждате:<br>• Инструктажи/обучения (от админ)<br>• Вашите качени табели<br>• Вашите качени болнични",
+            uploads_training_heading: "Инструктажи (предоставени от админ)",
+            uploads_documents_heading: "Документи (вашето качване)",
+            uploads_documents_upload_btn: "Качи документ",
+            uploads_documents_empty: "Все още не сте качили документи.",
+            section_sicknotes_overview_title: "Болнични (вашето качване)",
+            sicknotes_info: "Качете болничните (AU) като снимка или PDF. Админите ги виждат в своя преглед.",
+            sicknotes_upload_btn: "Качи болничен",
+            digital_sicknote_heading: "Дигитален болничен",
+            digital_sicknote_info: "Ако нямате болничен на хартия, можете да въведете периода тук дигитално.",
+            digital_sicknote_from_label: "От (дата)",
+            digital_sicknote_to_label: "До (дата)",
+            digital_sicknote_submit_btn: "Изпрати дигитален болничен",
+            sicknotes_uploaded_heading: "Вашите качени болнични",
+            sicknotes_empty: "Все още не сте качили болнични.",
+            timesheets_info: "Качете вашата <strong>хартиена табела</strong> като снимка или PDF. Админите могат да я видят в своя преглед.",
+            timesheets_upload_btn: "Подай хартиена табела",
+            settings_password_heading: "Смяна на парола",
+            settings_password_rules: "Новата парола трябва да е поне 8 символа и да съдържа главна буква и число или специален символ.",
+            settings_current_password_label: "Текуща парола",
+            settings_current_password_ph: "Текуща парола",
+            settings_new_password_label: "Нова парола",
+            settings_new_password_ph: "Нова парола",
+            settings_new_password2_label: "Повторете новата парола",
+            settings_new_password2_ph: "Потвърдете новата парола",
+            toggle_password_aria: "Покажи паролата",
+            settings_change_password_btn: "Смени паролата",
+            employment_fulltime: "Пълно работно време",
+            employment_minijob: "Minijob"
         },
         en: {
             nav_dashboard: "Home",
@@ -1409,20 +1780,98 @@
             section_timesheets_title: "Timesheets",
             section_sicknotes_title: "Sick notes",
             section_admin_title: "Admin · Employee overview",
-            section_admin_uploads_title: "Admin · Uploads and document management"
+            section_admin_uploads_title: "Admin · Uploads and document management",
+            sidebar_title: "Employee portal",
+            tile_uploads_title: "Documents & uploads",
+            tile_uploads_sub: "Documents, timesheets, sick notes",
+            tile_timesheets_title: "Timesheets",
+            tile_timesheets_sub: "Submit working hours (placeholder)",
+            tile_sicknotes_title: "Sick notes",
+            tile_sicknotes_sub: "Upload sick note (AU)",
+            tile_settings_title: "Settings",
+            tile_settings_sub: "Profile & password",
+            tile_admin_title: "Employees (Admin)",
+            tile_admin_sub: "Overview & roles",
+            tile_admin_uploads_title: "Admin uploads",
+            tile_admin_uploads_sub: "Upload files for employees",
+            section_uploads_overview_title: "Documents, records & uploads",
+            uploads_overview_info: "In this section you can see:<br>• Training records (provided by admin)<br>• Your uploaded timesheets<br>• Your uploaded sick notes",
+            uploads_training_heading: "Trainings (provided by admin)",
+            uploads_documents_heading: "Documents (your upload)",
+            uploads_documents_upload_btn: "Upload document",
+            uploads_documents_empty: "You have not uploaded any documents yet.",
+            section_sicknotes_overview_title: "Sick notes (your upload)",
+            sicknotes_info: "Upload your sick notes (AU certificates) as a photo or PDF. Admins can see them in their overview.",
+            sicknotes_upload_btn: "Upload sick note",
+            digital_sicknote_heading: "Digital sick note",
+            digital_sicknote_info: "If you do not have a paper sick note, you can enter the period here digitally.",
+            digital_sicknote_from_label: "From (date)",
+            digital_sicknote_to_label: "To (date)",
+            digital_sicknote_submit_btn: "Send digital sick note",
+            sicknotes_uploaded_heading: "Your uploaded sick notes",
+            sicknotes_empty: "You have not uploaded any sick notes yet.",
+            timesheets_info: "Upload your <strong>paper timesheet</strong> as a photo or PDF. Admins can see it in their overview.",
+            timesheets_upload_btn: "Submit paper timesheet",
+            settings_password_heading: "Change password",
+            settings_password_rules: "The new password must be at least 8 characters and include an uppercase letter and a number or special character.",
+            settings_current_password_label: "Current password",
+            settings_current_password_ph: "Current password",
+            settings_new_password_label: "New password",
+            settings_new_password_ph: "New password",
+            settings_new_password2_label: "Repeat new password",
+            settings_new_password2_ph: "Confirm new password",
+            toggle_password_aria: "Show password",
+            settings_change_password_btn: "Change password",
+            employment_fulltime: "Full-time",
+            employment_minijob: "Minijob"
         }
     };
 
     let currentLanguage = 'de';
 
+    function t(key) {
+        const dict = translations[currentLanguage] || translations.de || {};
+        if (dict && Object.prototype.hasOwnProperty.call(dict, key)) return dict[key];
+        const de = translations.de || {};
+        if (de && Object.prototype.hasOwnProperty.call(de, key)) return de[key];
+        return key;
+    }
+
     function applyLanguage(lang) {
-        currentLanguage = lang in translations ? lang : 'de';
-        const dict = translations[currentLanguage];
+        currentLanguage = (lang in translations) ? lang : 'de';
+
+        // RTL support
+        const rtlLangs = ['ar','fa','prs','ps'];
+        document.documentElement.dir = rtlLangs.includes(currentLanguage) ? 'rtl' : 'ltr';
+
+        // Text content
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.dataset.i18n;
-            if (dict[key]) {
-                el.textContent = dict[key];
-            }
+            el.textContent = t(key);
+        });
+
+        // HTML content
+        document.querySelectorAll('[data-i18n-html]').forEach(el => {
+            const key = el.dataset.i18nHtml;
+            el.innerHTML = t(key);
+        });
+
+        // Placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.dataset.i18nPlaceholder;
+            el.setAttribute('placeholder', t(key));
+        });
+
+        // ARIA labels
+        document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+            const key = el.dataset.i18nAria;
+            el.setAttribute('aria-label', t(key));
+        });
+
+        // Options
+        document.querySelectorAll('[data-i18n-option]').forEach(el => {
+            const key = el.dataset.i18nOption;
+            el.textContent = t(key);
         });
     }
 
@@ -2579,7 +3028,7 @@ async function loadPendingUserCount() {
             
             // Type Select (Initial default to fulltime)
             const typeSel = document.createElement('select');
-            typeSel.innerHTML = `<option value="fulltime">Vollzeit</option><option value="minijob">Minijob</option>`;
+            typeSel.innerHTML = `<option value="fulltime" data-i18n-option="employment_fulltime">Vollzeit</option><option value="minijob" data-i18n-option="employment_minijob">Minijob</option>`;
 
             // Hide Art if Admin role
             roleSel.addEventListener('change', () => {
@@ -3325,5 +3774,4 @@ settingsSaveProfile.addEventListener('click', async () => {
 
 </script>
 </body>
-
 </html>
