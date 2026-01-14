@@ -6,8 +6,6 @@
 <title>Bayrak Mitarbeiter-Portal</title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
         :root {
             --blue-dark: #004b7a;
@@ -752,191 +750,38 @@
             font-size: 0.9rem;
         }
     
+/* --- TIMESHEET (DIGITAL) --- */
+.tab-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px 0;}
+.tab-btn{border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.18);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+.tab-btn.active{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.22);}
+.ts-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:10px 0 10px 0}
+.ts-label{display:flex;flex-direction:column;gap:6px;font-size:13px;opacity:.95}
+.ts-controls .input{min-width:120px}
+.ts-controls-spacer{flex:1}
+.ts-table-wrap{overflow:auto;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.12)}
+.ts-table{border-collapse:separate;border-spacing:0;width:100%;min-width:980px}
+.ts-table th,.ts-table td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.10);vertical-align:middle;white-space:nowrap}
+.ts-table th{position:sticky;top:0;background:rgba(0,0,0,0.40);backdrop-filter:blur(8px);z-index:2;font-weight:700}
+.ts-table tbody tr:hover{background:rgba(255,255,255,0.04)}
+.ts-table input,.ts-table select{width:100%;max-width:160px}
+.ts-table .ts-note{min-width:220px;max-width:380px}
+.ts-pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.ts-status-urlaub{background:rgba(255,193,7,0.18);border:1px solid rgba(255,193,7,0.35)}
+.ts-status-krank{background:rgba(220,53,69,0.18);border:1px solid rgba(220,53,69,0.35)}
+.ts-status-feiertag{background:rgba(13,110,253,0.16);border:1px solid rgba(13,110,253,0.32)}
+.ts-status-frei{background:rgba(108,117,125,0.16);border:1px solid rgba(108,117,125,0.32)}
+.ts-hint{margin-top:10px;font-size:12px;opacity:.85}
 
-/* --- Digitaler Stundenzettel (eingebettet) --- */
-#timesheet-digital-container{
-  font-family: Arial, sans-serif;
-  margin-top: 10px;
-}
-#timesheet-digital-container h1{
-  font-size: 1.25rem;
-  margin: 6px 0 10px 0;
-}
-#timesheet-digital-container .top-info{
-  display:flex;
-  flex-wrap:wrap;
-  gap: 10px;
-  align-items:flex-end;
-  margin-bottom: 10px;
-}
-#timesheet-digital-container label{
-  font-size: 0.9rem;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-#timesheet-digital-container input,
-#timesheet-digital-container select{
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.18);
-  font-size: 0.95rem;
-}
-#timesheet-digital-container button{
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.14);
-  cursor: pointer;
-  font-weight: 700;
-}
-#timesheet-digital-container .small{
-  font-size: 0.85rem;
-  opacity: 0.85;
-}
-#timesheet-digital-container .table-wrap{
-  overflow-x:auto;
-  -webkit-overflow-scrolling: touch;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 12px;
-}
-#timesheet-digital-container table{
-  border-collapse: collapse;
-  width: 100%;
-  min-width: 980px;
-}
-#timesheet-digital-container th,
-#timesheet-digital-container td{
-  border: 1px solid rgba(0,0,0,0.12);
-  padding: 6px 6px;
-  text-align: center;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-#timesheet-digital-container thead th{
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 2;
-}
-#timesheet-digital-container tr.weekend{
-  background: rgba(0,0,0,0.04);
-}
-#timesheet-digital-container .urlaub-cell{
-  background-color: #c6efce;
-}
-#timesheet-digital-container .krank-cell{
-  background-color: #ffe699;
-}
-#timesheet-digital-container input[type="time"]{
-  width: 90px;
-}
-#timesheet-digital-container input[type="number"]{
-  width: 80px;
-}
-#timesheet-digital-container input[type="text"]{
-  width: 100%;
-  box-sizing: border-box;
-}
-@media print{
-  @page { size: A4 landscape; margin: 8mm; }
-  body * { visibility: hidden !important; }
-  #timesheet-digital-container, #timesheet-digital-container * { visibility: visible !important; }
-  #timesheet-digital-container { position: absolute; left: 0; top: 0; width: 100%; }
-  #timesheet-digital-container .table-wrap{ overflow: visible !important; border: none; }
-  #timesheet-digital-container table{ min-width: 0; width: 100%; }
-}
+/* Modal */
+#global-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+#global-modal{width:min(520px, 100%);background:rgba(20,20,24,0.96);border:1px solid rgba(255,255,255,0.14);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.45);padding:16px}
+#global-modal h4{margin:0 0 8px 0;font-size:18px}
+#global-modal p{margin:0 0 14px 0;opacity:.92;line-height:1.4}
+#global-modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
-/* Tabelle in Container, #timesheet-digital-container damit sie auf Handy notfalls horizontal scrollen kann */
-        .table-wrapper{#timesheet-digital-container width: 100%;
-            overflow-x: auto;
-        }
-
-        table{#timesheet-digital-container width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-            min-width: 700px; /* verhindert zu starkes Zusammenquetschen */
-        }
-
-        th, #timesheet-digital-container td{#timesheet-digital-container border: 1px solid #ccc;
-            padding: 4px;
-            text-align: left;
-        }
-
-        th{#timesheet-digital-container background-color: #f0f0f0;
-        }
-
-        tr.weekend td{#timesheet-digital-container background-color: #ffe6e6;
-        }
-
-        tr.footer-row td{#timesheet-digital-container font-weight: bold;
-            background-color: #f7f7f7;
-        }
-
-        tr.night-row td{#timesheet-digital-container background-color: #fffbe6;
-        }
-
-        .urlaub-cell{#timesheet-digital-container background-color: #c6efce;
-        }
-
-        .krank-cell{#timesheet-digital-container background-color: #ffe699;
-        }
-
-        input[type="time"]{#timesheet-digital-container width: 90px;
-        }
-
-        input[type="number"]{#timesheet-digital-container width: 80px;
-        }
-
-        input[type="text"]{#timesheet-digital-container width: 100%;
-            box-sizing: border-box;
-        }
-
-        .small{#timesheet-digital-container font-size: 0.75rem;
-            color: #555;
-        }
-
-        .night-btn, #timesheet-digital-container .status-btn{#timesheet-digital-container font-size: 0.7rem;
-            margin-top: 2px;
-            padding: 2px 4px;
-        }
-
-        .night-hours-display{#timesheet-digital-container font-weight: bold;
-        }
-
-        /* --------- Handy-Ansicht optimieren --------- */
-        @media (max-width: 600px){#timesheet-digital-container body{#timesheet-digital-container margin: 4px;
-            }
-
-            h1{#timesheet-digital-container font-size: 1.0rem;
-            }
-
-            .top-info, #timesheet-digital-container .controls{#timesheet-digital-container flex-direction: column;
-                align-items: stretch;
-                gap: 4px;
-            }
-
-            .top-info label, #timesheet-digital-container .controls label{#timesheet-digital-container width: 100%;
-            }
-
-            .top-info input, #timesheet-digital-container .controls input, #timesheet-digital-container .controls select, #timesheet-digital-container .controls button{#timesheet-digital-container width: 100%;
-                box-sizing: border-box;
-            }
-
-            .controls button{#timesheet-digital-container text-align: center;
-            }
-
-            table{#timesheet-digital-container font-size: 0.75rem;
-            }
-        }
-
-        @media print{#timesheet-digital-container .controls, #timesheet-digital-container .top-info, #timesheet-digital-container .night-btn, #timesheet-digital-container .status-btn{#timesheet-digital-container display: none;
-            }
-            body{#timesheet-digital-container margin: 0;
-            }
-            table{
-                font-size: 0.7rem;
-            }
-        }</style>
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
 <header>
@@ -1145,9 +990,6 @@
 <ul class="document-list" id="docs-timesheets-list"></ul>
 </div>
 </div>
-
-
-
 <div class="portal-section-content hidden" id="section-sicknotes">
 <h3 class="section-title" data-i18n="section_sicknotes_overview_title">Krankmeldungen (Ihr Upload)</h3>
 <div class="document-category" style="padding-top: 0; border-top: none;">
@@ -1181,98 +1023,77 @@
 </div>
 </div>
 <div class="portal-section-content hidden" id="section-timesheet">
-<h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
-<div class="document-category" style="padding-top: 0; border-top: none;">
-<p class="info" data-i18n-html="timesheets_info">
-                            Hier können Sie Ihre <strong>Stundenzettel in Papierform</strong> als Foto oder PDF hochladen.
-                            Die Admins sehen diese in ihrer Übersicht und können sie weiterverarbeiten.
-                        </p>
-<button class="btn-primary" data-i18n="timesheets_upload_btn" id="upload-timesheet-paper-btn">Stundenzettel Papierform einreichen</button>
-<input accept="image/*,application/pdf" class="hidden" id="upload-timesheet-paper-input" type="file"/>
-<div class="info" id="timesheet-paper-message"></div>
-</div>
+  <h3 class="section-title" data-i18n="ts_title">Stundenzettel</h3>
 
+  <div class="document-category" style="padding-top: 0;">
+    <div class="tab-row">
+      <button class="tab-btn active" id="ts-tab-paper" type="button" data-i18n="ts_tab_paper">Foto/PDF Upload</button>
+      <button class="tab-btn" id="ts-tab-digital" type="button" data-i18n="ts_tab_digital">Digitaler Stundenzettel</button>
+    </div>
 
-<div class="document-category" id="digital-timesheet-wrapper" style="margin-top:16px;">
-  <h4 data-i18n="timesheets_digital_title">Digitaler Stundenzettel</h4>
-  <p class="info" data-i18n="timesheets_digital_info">Füllen Sie den Stundenzettel digital aus und laden Sie ihn als PDF hoch.</p>
-  <div id="timesheet-digital-container">
-    <h1>Stundenzettel – Web-App (Testversion)</h1>
+    <!-- PAPER UPLOAD -->
+    <div id="ts-pane-paper">
+      <p class="info" data-i18n="ts_paper_info">Laden Sie hier Ihren ausgefüllten Stundenzettel als Foto oder PDF hoch.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn primary" id="upload-timesheet-paper-btn" type="button" data-i18n="ts_upload_paper_btn">Stundenzettel hochladen</button>
+        <input id="upload-timesheet-paper-input" accept="image/*,.pdf" style="display:none" type="file"/>
+      </div>
+      <div class="info" id="timesheet-paper-message"></div>
+    </div>
 
-<div class="top-info">
-    <label>
-        Mitarbeiter:
-        <input type="text" id="employeeName" placeholder="Name eingeben">
-    </label>
-</div>
+    <!-- DIGITAL TIMESHEET -->
+    <div id="ts-pane-digital" class="hidden">
+      <p class="info" data-i18n="ts_digital_info">Erstellen Sie Ihren digitalen Stundenzettel. Ihre Eingaben werden automatisch gespeichert.</p>
 
-<div class="controls">
-    <label>Monat:
-        <select id="month">
-            <option value="1">Januar</option>
-            <option value="2">Februar</option>
-            <option value="3">März</option>
-            <option value="4">April</option>
-            <option value="5">Mai</option>
-            <option value="6">Juni</option>
-            <option value="7">Juli</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">Oktober</option>
-            <option value="11">November</option>
-            <option value="12">Dezember</option>
-        </select>
-    </label>
+      <div class="ts-controls">
+        <label class="ts-label">
+          <span data-i18n="ts_month">Monat</span>
+          <select id="ts-month-select" class="input"></select>
+        </label>
+        <label class="ts-label">
+          <span data-i18n="ts_year">Jahr</span>
+          <select id="ts-year-select" class="input"></select>
+        </label>
+        <button class="btn" id="ts-create-btn" type="button" data-i18n="ts_create_month">Monat erstellen</button>
 
-    <label>Jahr:
-        <input type="number" id="year" value="2025" style="width:70px;">
-    </label>
+        <div class="ts-controls-spacer"></div>
 
-    <button type="button" onclick="generateMonth()">Monat erstellen</button>
-    <button type="button" onclick="resetMonth()">Monat zurücksetzen</button>
-    <button type="button" onclick="exportPdf()">Als PDF exportieren</button>
+        <button class="btn primary" id="ts-upload-btn" type="button" data-i18n="ts_upload_btn">Hochladen (PDF)</button>
+        <button class="btn danger" id="ts-reset-btn" type="button" data-i18n="ts_reset_btn">Zurücksetzen</button>
+      </div>
 
-    <span class="small">(Eingaben & Name werden automatisch im Browser gespeichert)</span>
-</div>
+      <div class="info" id="ts-digital-message"></div>
 
-<div class="table-wrapper">
-    <div class="table-wrap"><table id="hours-table">
-        <thead>
-        <tr>
-            <th>Datum</th>
-            <th>Wochentag</th>
-            <th>Einsatzort</th>
-            <th>Kommen</th>
-            <th>Gehen</th>
-            <th>Pause (Min)</th>
-            <th>Stunden</th>
-            <th>Akkord (Std)</th>
-            <th>Nacht (Std)</th>
-            <th>Notiz</th>
-        </tr>
-        </thead>
-        <tbody id="days-body">
-        </tbody>
-        <tfoot>
-        <tr class="footer-row">
-            <td colspan="6">Summe Monat</td>
-            <td id="sum-hours">0,00</td>
-            <td id="sum-akkord">0,00</td>
-            <td id="sum-night">0,00</td>
-            <td></td>
-        </tr>
-        </tfoot>
-    </table></div>
-</div>
+      <div class="ts-table-wrap">
+        <table class="ts-table" id="ts-table">
+          <thead>
+            <tr>
+              <th data-i18n="ts_th_date">Datum</th>
+              <th data-i18n="ts_th_day">Tag</th>
+              <th data-i18n="ts_th_start">Beginn</th>
+              <th data-i18n="ts_th_end">Ende</th>
+              <th data-i18n="ts_th_break">Pause</th>
+              <th data-i18n="ts_th_work">Arbeitszeit</th>
+              <th data-i18n="ts_th_night">Nacht</th>
+              <th data-i18n="ts_th_status">Status</th>
+              <th data-i18n="ts_th_note">Notiz</th>
+            </tr>
+          </thead>
+          <tbody id="ts-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" style="text-align:right; font-weight:700;" data-i18n="ts_total">Summe</td>
+              <td id="ts-total-hours" style="font-weight:700;">0.00</td>
+              <td id="ts-total-night" style="font-weight:700;">0.00</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
-<p class="small">
-    Pause-Regel: bis inkl. 6,00 Std → keine Pause, &gt;6,00–&lt;9,75 Std → 30 Min, ab 9,75 Std → 45 Min (automatisch, manuell änderbar).<br>
-    „Urlaub“ / „Krank“ setzt 8,00 Std ohne Zeiten (Zelle grün/orange). Wird der Text wieder geändert, verschwinden Farbe und 8 Std (falls keine Zeiten eingetragen sind).<br>
-    Nachtstunden (22:00–05:00) nur über Nachtzeile.
-</p>
+      <div class="ts-hint" data-i18n="ts_print_hint">Hinweis: Beim Hochladen wird die PDF automatisch auf eine Seite skaliert.</div>
+    </div>
   </div>
-</div>
-
 </div>
 <div class="portal-section-content hidden" id="section-settings">
 <h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
@@ -1496,7 +1317,43 @@
             settings_change_password_btn: "Passwort ändern",
             employment_fulltime: "Vollzeit",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Foto/PDF Upload",
+            ts_tab_digital: "Digitaler Stundenzettel",
+            ts_paper_info: "Laden Sie hier Ihren ausgefüllten Stundenzettel als Foto oder PDF hoch.",
+            ts_upload_paper_btn: "Stundenzettel hochladen",
+            ts_digital_info: "Erstellen Sie Ihren digitalen Stundenzettel. Ihre Eingaben werden automatisch gespeichert.",
+            ts_month: "Monat",
+            ts_year: "Jahr",
+            ts_create_month: "Monat erstellen",
+            ts_reset_btn: "Zurücksetzen",
+            ts_th_date: "Datum",
+            ts_th_day: "Tag",
+            ts_th_start: "Beginn",
+            ts_th_end: "Ende",
+            ts_th_break: "Pause",
+            ts_th_work: "Arbeitszeit",
+            ts_th_night: "Nacht",
+            ts_th_status: "Status",
+            ts_th_note: "Notiz",
+            ts_total: "Summe",
+            ts_print_hint: "Hinweis: Beim Hochladen wird die PDF automatisch auf eine Seite skaliert.",
+            ts_status_work: "Arbeit",
+            ts_status_vacation: "Urlaub",
+            ts_status_sick: "Krank",
+            ts_status_holiday: "Feiertag",
+            ts_status_off: "Frei",
+            ts_msg_saved: "Gespeichert.",
+            ts_msg_uploading: "PDF wird erstellt und hochgeladen…",
+            ts_msg_upload_success: "Erfolgreich hochgeladen.",
+            ts_msg_upload_fail: "Upload fehlgeschlagen.",
+            ts_confirm_title: "Bestätigung",
+            ts_confirm_reset_1: "Alle Inhalte werden gelöscht. Möchten Sie fortfahren?",
+            ts_confirm_reset_2: "Sind Sie sicher? Die Tabelle wird komplett gelöscht.",
+            ts_confirm_save_pdf: "Möchten Sie die Datei auf Ihrem Gerät speichern?",
+            ts_btn_yes: "Ja",
+            ts_btn_no: "Nein"
+},
         tr: {
             nav_dashboard: "Ana Sayfa",
             nav_uploads: "Belgeler & Yüklemeler",
@@ -1556,7 +1413,43 @@
             settings_change_password_btn: "Şifre değiştir",
             employment_fulltime: "Tam zamanlı",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Fotoğraf/PDF Yükleme",
+            ts_tab_digital: "Dijital Puantaj",
+            ts_paper_info: "Doldurduğunuz puantajı fotoğraf veya PDF olarak yükleyin.",
+            ts_upload_paper_btn: "Puantaj yükle",
+            ts_digital_info: "Dijital puantaj oluşturun. Girdileriniz otomatik kaydedilir.",
+            ts_month: "Ay",
+            ts_year: "Yıl",
+            ts_create_month: "Ay oluştur",
+            ts_reset_btn: "Sıfırla",
+            ts_th_date: "Tarih",
+            ts_th_day: "Gün",
+            ts_th_start: "Başlangıç",
+            ts_th_end: "Bitiş",
+            ts_th_break: "Mola",
+            ts_th_work: "Çalışma",
+            ts_th_night: "Gece",
+            ts_th_status: "Durum",
+            ts_th_note: "Not",
+            ts_total: "Toplam",
+            ts_print_hint: "Not: Yüklemede PDF otomatik olarak tek sayfaya sığdırılır.",
+            ts_status_work: "Çalışma",
+            ts_status_vacation: "İzin",
+            ts_status_sick: "Hastalık",
+            ts_status_holiday: "Resmî tatil",
+            ts_status_off: "Boş",
+            ts_msg_saved: "Kaydedildi.",
+            ts_msg_uploading: "PDF hazırlanıyor ve yükleniyor…",
+            ts_msg_upload_success: "Başarıyla yüklendi.",
+            ts_msg_upload_fail: "Yükleme başarısız.",
+            ts_confirm_title: "Onay",
+            ts_confirm_reset_1: "Tüm içerik silinecek. Devam edilsin mi?",
+            ts_confirm_reset_2: "Emin misiniz? Tablo tamamen silinecek.",
+            ts_confirm_save_pdf: "Dosyayı cihazınıza kaydetmek ister misiniz?",
+            ts_btn_yes: "Evet",
+            ts_btn_no: "Hayır"
+},
         ru: {
             nav_dashboard: "Главная",
             nav_uploads: "Документы и загрузки",
@@ -1616,7 +1509,43 @@
             settings_change_password_btn: "Изменить пароль",
             employment_fulltime: "Полная занятость",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Загрузка фото/PDF",
+            ts_tab_digital: "Цифровой табель",
+            ts_paper_info: "Загрузите заполненный табель как фото или PDF.",
+            ts_upload_paper_btn: "Загрузить табель",
+            ts_digital_info: "Создайте цифровой табель. Данные сохраняются автоматически.",
+            ts_month: "Месяц",
+            ts_year: "Год",
+            ts_create_month: "Создать месяц",
+            ts_reset_btn: "Сбросить",
+            ts_th_date: "Дата",
+            ts_th_day: "День",
+            ts_th_start: "Начало",
+            ts_th_end: "Конец",
+            ts_th_break: "Перерыв",
+            ts_th_work: "Часы",
+            ts_th_night: "Ночь",
+            ts_th_status: "Статус",
+            ts_th_note: "Примечание",
+            ts_total: "Итого",
+            ts_print_hint: "Примечание: при загрузке PDF автоматически масштабируется на одну страницу.",
+            ts_status_work: "Работа",
+            ts_status_vacation: "Отпуск",
+            ts_status_sick: "Больничный",
+            ts_status_holiday: "Праздник",
+            ts_status_off: "Выходной",
+            ts_msg_saved: "Сохранено.",
+            ts_msg_uploading: "Создание и загрузка PDF…",
+            ts_msg_upload_success: "Успешно загружено.",
+            ts_msg_upload_fail: "Ошибка загрузки.",
+            ts_confirm_title: "Подтверждение",
+            ts_confirm_reset_1: "Все данные будут удалены. Продолжить?",
+            ts_confirm_reset_2: "Вы уверены? Таблица будет полностью очищена.",
+            ts_confirm_save_pdf: "Сохранить файл на устройство?",
+            ts_btn_yes: "Да",
+            ts_btn_no: "Нет"
+},
         uk: {
             nav_dashboard: "Головна",
             nav_uploads: "Документи та завантаження",
@@ -1676,7 +1605,43 @@
             settings_change_password_btn: "Змінити пароль",
             employment_fulltime: "Повна зайнятість",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Завантажити фото/PDF",
+            ts_tab_digital: "Цифровий табель",
+            ts_paper_info: "Завантажте заповнений табель як фото або PDF.",
+            ts_upload_paper_btn: "Завантажити табель",
+            ts_digital_info: "Створіть цифровий табель. Дані зберігаються автоматично.",
+            ts_month: "Місяць",
+            ts_year: "Рік",
+            ts_create_month: "Створити місяць",
+            ts_reset_btn: "Скинути",
+            ts_th_date: "Дата",
+            ts_th_day: "День",
+            ts_th_start: "Початок",
+            ts_th_end: "Кінець",
+            ts_th_break: "Перерва",
+            ts_th_work: "Години",
+            ts_th_night: "Ніч",
+            ts_th_status: "Статус",
+            ts_th_note: "Нотатка",
+            ts_total: "Разом",
+            ts_print_hint: "Примітка: під час завантаження PDF автоматично вміщується на одну сторінку.",
+            ts_status_work: "Робота",
+            ts_status_vacation: "Відпустка",
+            ts_status_sick: "Лікарняний",
+            ts_status_holiday: "Свято",
+            ts_status_off: "Вихідний",
+            ts_msg_saved: "Збережено.",
+            ts_msg_uploading: "Створення та завантаження PDF…",
+            ts_msg_upload_success: "Успішно завантажено.",
+            ts_msg_upload_fail: "Помилка завантаження.",
+            ts_confirm_title: "Підтвердження",
+            ts_confirm_reset_1: "Усі дані буде видалено. Продовжити?",
+            ts_confirm_reset_2: "Ви впевнені? Таблицю буде повністю очищено.",
+            ts_confirm_save_pdf: "Зберегти файл на пристрої?",
+            ts_btn_yes: "Так",
+            ts_btn_no: "Ні"
+},
         fa: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "مدارک و بارگذاری‌ها",
@@ -1736,7 +1701,43 @@
             settings_change_password_btn: "تغییر رمز عبور",
             employment_fulltime: "تمام‌وقت",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "آپلود عکس/PDF",
+            ts_tab_digital: "برگه دیجیتال",
+            ts_paper_info: "برگه تکمیل‌شده را به صورت عکس یا PDF آپلود کنید.",
+            ts_upload_paper_btn: "آپلود برگه",
+            ts_digital_info: "برگه دیجیتال را تکمیل کنید. اطلاعات به‌صورت خودکار ذخیره می‌شود.",
+            ts_month: "ماه",
+            ts_year: "سال",
+            ts_create_month: "ایجاد ماه",
+            ts_reset_btn: "بازنشانی",
+            ts_th_date: "تاریخ",
+            ts_th_day: "روز",
+            ts_th_start: "شروع",
+            ts_th_end: "پایان",
+            ts_th_break: "استراحت",
+            ts_th_work: "ساعت کار",
+            ts_th_night: "شب",
+            ts_th_status: "وضعیت",
+            ts_th_note: "یادداشت",
+            ts_total: "جمع",
+            ts_print_hint: "نکته: هنگام آپلود، PDF به‌طور خودکار در یک صفحه تنظیم می‌شود.",
+            ts_status_work: "کار",
+            ts_status_vacation: "مرخصی",
+            ts_status_sick: "بیماری",
+            ts_status_holiday: "تعطیل",
+            ts_status_off: "آزاد",
+            ts_msg_saved: "ذخیره شد.",
+            ts_msg_uploading: "در حال ساخت و آپلود PDF…",
+            ts_msg_upload_success: "با موفقیت آپلود شد.",
+            ts_msg_upload_fail: "آپلود ناموفق بود.",
+            ts_confirm_title: "تأیید",
+            ts_confirm_reset_1: "تمام اطلاعات حذف می‌شود. ادامه می‌دهید؟",
+            ts_confirm_reset_2: "مطمئن هستید؟ جدول کاملاً پاک می‌شود.",
+            ts_confirm_save_pdf: "می‌خواهید فایل را روی دستگاه ذخیره کنید؟",
+            ts_btn_yes: "بله",
+            ts_btn_no: "خیر"
+},
         prs: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "اسناد و بارگذاری‌ها",
@@ -1796,7 +1797,43 @@
             settings_change_password_btn: "تغییر رمز",
             employment_fulltime: "تمام‌وقت",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "آپلود عکس/PDF",
+            ts_tab_digital: "برگه دیجیتال",
+            ts_paper_info: "برگه تکمیل‌شده را به صورت عکس یا PDF آپلود کنید.",
+            ts_upload_paper_btn: "آپلود برگه",
+            ts_digital_info: "برگه دیجیتال را تکمیل کنید. معلومات به طور خودکار ذخیره می‌شود.",
+            ts_month: "ماه",
+            ts_year: "سال",
+            ts_create_month: "ایجاد ماه",
+            ts_reset_btn: "ریست",
+            ts_th_date: "تاریخ",
+            ts_th_day: "روز",
+            ts_th_start: "شروع",
+            ts_th_end: "پایان",
+            ts_th_break: "وقفه",
+            ts_th_work: "ساعت کار",
+            ts_th_night: "شب",
+            ts_th_status: "حالت",
+            ts_th_note: "یادداشت",
+            ts_total: "جمع",
+            ts_print_hint: "نکته: هنگام آپلود، PDF به طور خودکار در یک صفحه تنظیم می‌شود.",
+            ts_status_work: "کار",
+            ts_status_vacation: "رخصتی",
+            ts_status_sick: "مریضی",
+            ts_status_holiday: "تعطیل",
+            ts_status_off: "آزاد",
+            ts_msg_saved: "ذخیره شد.",
+            ts_msg_uploading: "ساخت و آپلود PDF…",
+            ts_msg_upload_success: "موفقانه آپلود شد.",
+            ts_msg_upload_fail: "آپلود ناکام شد.",
+            ts_confirm_title: "تأیید",
+            ts_confirm_reset_1: "تمام معلومات حذف می‌شود. ادامه؟",
+            ts_confirm_reset_2: "مطمئن هستید؟ جدول کامل پاک می‌شود.",
+            ts_confirm_save_pdf: "می‌خواهید فایل را در دستگاه ذخیره کنید؟",
+            ts_btn_yes: "بلی",
+            ts_btn_no: "نخیر"
+},
         ps: {
             nav_dashboard: "کور پاڼه",
             nav_uploads: "لاسوندونه او پورته کول",
@@ -1856,7 +1893,43 @@
             settings_change_password_btn: "پاسورډ بدل کړئ",
             employment_fulltime: "بشپړ وخت",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "عکس/PDF پورته کول",
+            ts_tab_digital: "ډیجیټل پاڼه",
+            ts_paper_info: "ډکه شوې پاڼه د عکس یا PDF په توګه پورته کړئ.",
+            ts_upload_paper_btn: "پاڼه پورته کړئ",
+            ts_digital_info: "ډیجیټل پاڼه ډکه کړئ. معلومات په اوتومات ډول خوندي کېږي.",
+            ts_month: "میاشت",
+            ts_year: "کال",
+            ts_create_month: "میاشت جوړول",
+            ts_reset_btn: "بیا تنظیم",
+            ts_th_date: "نېټه",
+            ts_th_day: "ورځ",
+            ts_th_start: "پیل",
+            ts_th_end: "پای",
+            ts_th_break: "وقفه",
+            ts_th_work: "کاري ساعتونه",
+            ts_th_night: "شپه",
+            ts_th_status: "حالت",
+            ts_th_note: "یادښت",
+            ts_total: "ټول",
+            ts_print_hint: "یادونه: د پورته کولو پر مهال PDF په اوتومات ډول په یوې پاڼې کې ځای پر ځای کېږي.",
+            ts_status_work: "کار",
+            ts_status_vacation: "رخصتي",
+            ts_status_sick: "ناروغي",
+            ts_status_holiday: "رخصتي ورځ",
+            ts_status_off: "ازاد",
+            ts_msg_saved: "خوندي شو.",
+            ts_msg_uploading: "PDF جوړېږي او پورته کېږي…",
+            ts_msg_upload_success: "بریالۍ پورته شو.",
+            ts_msg_upload_fail: "پورته کول ناکام شول.",
+            ts_confirm_title: "تایید",
+            ts_confirm_reset_1: "ټول معلومات به پاک شي. دوام ورکړو؟",
+            ts_confirm_reset_2: "ډاډه یاست؟ جدول به بشپړ پاک شي.",
+            ts_confirm_save_pdf: "ایا فایل په وسیله کې خوندي کړئ؟",
+            ts_btn_yes: "هو",
+            ts_btn_no: "نه"
+},
         ar: {
             nav_dashboard: "الصفحة الرئيسية",
             nav_uploads: "الملفات والتحميلات",
@@ -1916,7 +1989,43 @@
             settings_change_password_btn: "تغيير كلمة المرور",
             employment_fulltime: "دوام كامل",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "رفع صورة/PDF",
+            ts_tab_digital: "سجل رقمي",
+            ts_paper_info: "ارفع السجل المُعبأ كصورة أو PDF.",
+            ts_upload_paper_btn: "رفع السجل",
+            ts_digital_info: "أنشئ السجل الرقمي. يتم حفظ البيانات تلقائياً.",
+            ts_month: "الشهر",
+            ts_year: "السنة",
+            ts_create_month: "إنشاء شهر",
+            ts_reset_btn: "إعادة ضبط",
+            ts_th_date: "التاريخ",
+            ts_th_day: "اليوم",
+            ts_th_start: "البداية",
+            ts_th_end: "النهاية",
+            ts_th_break: "استراحة",
+            ts_th_work: "ساعات العمل",
+            ts_th_night: "ليل",
+            ts_th_status: "الحالة",
+            ts_th_note: "ملاحظة",
+            ts_total: "الإجمالي",
+            ts_print_hint: "ملاحظة: عند الرفع، يتم ضبط PDF تلقائياً في صفحة واحدة.",
+            ts_status_work: "عمل",
+            ts_status_vacation: "إجازة",
+            ts_status_sick: "مرض",
+            ts_status_holiday: "عطلة",
+            ts_status_off: "راحة",
+            ts_msg_saved: "تم الحفظ.",
+            ts_msg_uploading: "جارٍ إنشاء ورفع PDF…",
+            ts_msg_upload_success: "تم الرفع بنجاح.",
+            ts_msg_upload_fail: "فشل الرفع.",
+            ts_confirm_title: "تأكيد",
+            ts_confirm_reset_1: "سيتم حذف جميع البيانات. المتابعة؟",
+            ts_confirm_reset_2: "هل أنت متأكد؟ سيتم مسح الجدول بالكامل.",
+            ts_confirm_save_pdf: "هل تريد حفظ الملف على جهازك؟",
+            ts_btn_yes: "نعم",
+            ts_btn_no: "لا"
+},
         ro: {
             nav_dashboard: "Acasă",
             nav_uploads: "Documente & Upload-uri",
@@ -1976,7 +2085,43 @@
             settings_change_password_btn: "Schimbă parola",
             employment_fulltime: "Normă întreagă",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Încărcare Foto/PDF",
+            ts_tab_digital: "Pontaj digital",
+            ts_paper_info: "Încărcați pontajul completat ca poză sau PDF.",
+            ts_upload_paper_btn: "Încărcați pontajul",
+            ts_digital_info: "Creați pontajul digital. Datele se salvează automat.",
+            ts_month: "Luna",
+            ts_year: "Anul",
+            ts_create_month: "Creează luna",
+            ts_reset_btn: "Resetare",
+            ts_th_date: "Data",
+            ts_th_day: "Ziua",
+            ts_th_start: "Start",
+            ts_th_end: "Sfârșit",
+            ts_th_break: "Pauză",
+            ts_th_work: "Ore",
+            ts_th_night: "Noapte",
+            ts_th_status: "Stare",
+            ts_th_note: "Notă",
+            ts_total: "Total",
+            ts_print_hint: "Notă: la încărcare, PDF-ul este scalat automat pe o singură pagină.",
+            ts_status_work: "Lucru",
+            ts_status_vacation: "Concediu",
+            ts_status_sick: "Boală",
+            ts_status_holiday: "Sărbătoare",
+            ts_status_off: "Liber",
+            ts_msg_saved: "Salvat.",
+            ts_msg_uploading: "Se creează și se încarcă PDF…",
+            ts_msg_upload_success: "Încărcat cu succes.",
+            ts_msg_upload_fail: "Încărcarea a eșuat.",
+            ts_confirm_title: "Confirmare",
+            ts_confirm_reset_1: "Toate datele vor fi șterse. Continuați?",
+            ts_confirm_reset_2: "Sunteți sigur? Tabelul va fi golit complet.",
+            ts_confirm_save_pdf: "Doriți să salvați fișierul pe dispozitiv?",
+            ts_btn_yes: "Da",
+            ts_btn_no: "Nu"
+},
         bg: {
             nav_dashboard: "Начало",
             nav_uploads: "Документи и качвания",
@@ -2036,7 +2181,43 @@
             settings_change_password_btn: "Смени паролата",
             employment_fulltime: "Пълно работно време",
             employment_minijob: "Minijob"
-        },
+        ,
+            ts_tab_paper: "Качване Фото/PDF",
+            ts_tab_digital: "Дигитален таймшит",
+            ts_paper_info: "Качете попълнения таймшит като снимка или PDF.",
+            ts_upload_paper_btn: "Качи таймшит",
+            ts_digital_info: "Създайте дигитален таймшит. Данните се запазват автоматично.",
+            ts_month: "Месец",
+            ts_year: "Година",
+            ts_create_month: "Създай месец",
+            ts_reset_btn: "Нулиране",
+            ts_th_date: "Дата",
+            ts_th_day: "Ден",
+            ts_th_start: "Начало",
+            ts_th_end: "Край",
+            ts_th_break: "Почивка",
+            ts_th_work: "Часове",
+            ts_th_night: "Нощ",
+            ts_th_status: "Статус",
+            ts_th_note: "Бележка",
+            ts_total: "Общо",
+            ts_print_hint: "Бележка: При качване PDF се мащабира автоматично на една страница.",
+            ts_status_work: "Работа",
+            ts_status_vacation: "Отпуск",
+            ts_status_sick: "Болничен",
+            ts_status_holiday: "Празник",
+            ts_status_off: "Почивен",
+            ts_msg_saved: "Запазено.",
+            ts_msg_uploading: "Създаване и качване на PDF…",
+            ts_msg_upload_success: "Качено успешно.",
+            ts_msg_upload_fail: "Неуспешно качване.",
+            ts_confirm_title: "Потвърждение",
+            ts_confirm_reset_1: "Всички данни ще бъдат изтрити. Продължавате ли?",
+            ts_confirm_reset_2: "Сигурни ли сте? Таблицата ще бъде напълно изчистена.",
+            ts_confirm_save_pdf: "Искате ли да запазите файла на устройството?",
+            ts_btn_yes: "Да",
+            ts_btn_no: "Не"
+},
         en: {
             nav_dashboard: "Home",
             nav_uploads: "Documents & Uploads",
@@ -2096,7 +2277,43 @@
             settings_change_password_btn: "Change password",
             employment_fulltime: "Full-time",
             employment_minijob: "Minijob"
-        }
+        ,
+            ts_tab_paper: "Photo/PDF Upload",
+            ts_tab_digital: "Digital timesheet",
+            ts_paper_info: "Upload your completed timesheet as a photo or PDF.",
+            ts_upload_paper_btn: "Upload timesheet",
+            ts_digital_info: "Create your digital timesheet. Your entries are saved automatically.",
+            ts_month: "Month",
+            ts_year: "Year",
+            ts_create_month: "Create month",
+            ts_reset_btn: "Reset",
+            ts_th_date: "Date",
+            ts_th_day: "Day",
+            ts_th_start: "Start",
+            ts_th_end: "End",
+            ts_th_break: "Break",
+            ts_th_work: "Work hours",
+            ts_th_night: "Night",
+            ts_th_status: "Status",
+            ts_th_note: "Note",
+            ts_total: "Total",
+            ts_print_hint: "Note: When uploading, the PDF is automatically scaled to one page.",
+            ts_status_work: "Work",
+            ts_status_vacation: "Vacation",
+            ts_status_sick: "Sick",
+            ts_status_holiday: "Holiday",
+            ts_status_off: "Off",
+            ts_msg_saved: "Saved.",
+            ts_msg_uploading: "Creating and uploading PDF…",
+            ts_msg_upload_success: "Uploaded successfully.",
+            ts_msg_upload_fail: "Upload failed.",
+            ts_confirm_title: "Confirmation",
+            ts_confirm_reset_1: "All contents will be deleted. Continue?",
+            ts_confirm_reset_2: "Are you sure? The table will be cleared completely.",
+            ts_confirm_save_pdf: "Do you want to save the file to your device?",
+            ts_btn_yes: "Yes",
+            ts_btn_no: "No"
+}
     };
 
     let currentLanguage = 'de';
@@ -2151,9 +2368,7 @@
     if (window.supabase && window.supabase.createClient) {
         // Erfolgreiche Initialisierung
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-        window.supabaseClient = supabaseClient;
-} else {
+    } else {
         // Fehler beim Laden der CDN-Bibliothek (häufigste Ursache für nicht funktionierende Buttons)
         console.error("FATAL ERROR: Supabase-Bibliothek (CDN) wurde nicht geladen. Das Skript kann nicht ausgeführt werden.");
         // Eine Fehler-Variable, die später von init() erkannt wird, wird automatisch gesetzt, da supabaseClient null ist.
@@ -2161,7 +2376,6 @@
     
     // Globale Variablen
     let currentUser = null;
-        window.currentUser = currentUser;
     let currentProfile = null;
     let allProfilesCache = []; // Für Admin-Auswahl
 
@@ -2456,7 +2670,6 @@
 
     function showLogin() {
         currentUser = null;
-        window.currentUser = currentUser;
         currentProfile = null;
         clearTimeout(inactivityTimeout);
         clearInterval(timerInterval);
@@ -2483,7 +2696,6 @@
 
     function showPending(user) {
         currentUser = user;
-        window.currentUser = currentUser;
 
         authSection.classList.add('hidden');
         portalSection.classList.add('hidden');
@@ -2498,7 +2710,6 @@
         
     async function showPortal(user) {
         currentUser = user;
-        window.currentUser = currentUser;
 
         // Profil laden
         let { data: profile, error } = await supabaseClient
@@ -4047,717 +4258,686 @@ settingsSaveProfile.addEventListener('click', async () => {
     });
 
 
-
-/* --- Digitaler Stundenzettel (eingebettet) --- */
-(function() {
-  const TS = {
-    initialized: false,
-    lastYM: null
-  };
-  function safeQuery(sel) { return document.querySelector(sel); }
-  function isVisible(el) { return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length)); }
-
-  // Try to bind when section-timesheet is shown
-  function tryInit() {
-    if (TS.initialized) return;
-    const container = safeQuery('#timesheet-digital-container');
-    if (!container) return;
-
-    // Patch IDs inside embedded HTML to avoid collisions
-    // (Only once) - prefix all ids in container
-    if (!container.dataset.idsPrefixed) {
-      const all = container.querySelectorAll('[id]');
-      all.forEach(el => {
-        el.id = 'ts_' + el.id;
-      });
-      // Also patch label[for]
-      container.querySelectorAll('label[for]').forEach(l=>{
-        l.setAttribute('for','ts_'+l.getAttribute('for'));
-      });
-      container.dataset.idsPrefixed = '1';
-    }
-
-    // Re-run the original timesheet JS but with prefixed IDs by shadowing query selectors.
-    // We inject helper functions used by original script by mapping document.getElementById calls.
-    const _getEl = (id)=>document.getElementById('ts_'+id);
-    const _qs = (sel)=>container.querySelector(sel.replace('#','#ts_'));
-    const _qsa = (sel)=>container.querySelectorAll(sel.replace('#','#ts_'));
-
-    // Provide minimal globals expected by the embedded script
-    const windowRef = window;
-    try {
-      (function(document, window) {
-        const document_getElementById = document.getElementById.bind(document);
-        document.getElementById = function(id) {
-          // if already prefixed, use as-is
-          if (id && id.startsWith('ts_')) return document_getElementById(id);
-          return document_getElementById('ts_'+id) || document_getElementById(id);
-        };
-        // Run original script
-        let isLoading = false;
-
-    (function initDefaults() {
-        const now = new Date();
-        document.getElementById('month').value = now.getMonth() + 1;
-        document.getElementById('year').value = now.getFullYear();
-
-        const storedName = localStorage.getItem('stundenapp_employeeName') || "";
-        document.getElementById('employeeName').value = storedName;
-        document.getElementById('employeeName').addEventListener('change', saveEmployeeName);
-
-        generateMonth();
-    })();
-
-    function saveEmployeeName() {
-        const name = document.getElementById('employeeName').value || "";
-        localStorage.setItem('stundenapp_employeeName', name);
-    }
-
-    function getStorageKey() {
-        const month = document.getElementById('month').value;
-        const year = document.getElementById('year').value;
-        return `stundenapp_${year}_${month}`;
-    }
-
-    function exportPdf() {
-        window.print();
-    }
-
-    function resetMonth() {
-        const sicher1 = confirm("Sind Sie sicher, dass Sie den Monat zurücksetzen möchten?\nAlle Einträge werden gelöscht.");
-        if (!sicher1) return;
-
-        const sicher2 = confirm("Sind Sie WIRKLICH sicher?\nDieser Schritt kann nicht rückgängig gemacht werden.");
-        if (!sicher2) return;
-
-        const key = getStorageKey();
-        localStorage.removeItem(key);
-        generateMonth();
-    }
-
-    function generateMonth() {
-        const month = parseInt(document.getElementById('month').value, 10);
-        const year = parseInt(document.getElementById('year').value, 10);
-
-        const daysBody = document.getElementById('days-body');
-        daysBody.innerHTML = "";
-
-        const daysInMonth = new Date(year, month, 0).getDate();
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateObj = new Date(year, month - 1, day);
-            const weekday = dateObj.getDay();
-            const isWeekend = (weekday === 0 || weekday === 6);
-
-            const tr = document.createElement('tr');
-            if (isWeekend) {
-                tr.classList.add('weekend');
-            }
-
-            const dateCell = document.createElement('td');
-            const dayStr = ("0" + day).slice(-2);
-            const monthStr = ("0" + month).slice(-2);
-            dateCell.textContent = `${dayStr}.${monthStr}.${year}`;
-            tr.appendChild(dateCell);
-
-            const weekdayCell = document.createElement('td');
-            weekdayCell.textContent = weekdayName(weekday);
-            tr.appendChild(weekdayCell);
-
-            const ortCell = document.createElement('td');
-            const ortInput = document.createElement('input');
-            ortInput.type = "text";
-            ortInput.addEventListener('change', () => {
-                updateStatusColor(ortInput);
-                saveToStorage();
-            });
-            ortCell.appendChild(ortInput);
-
-            const br1 = document.createElement('br');
-            ortCell.appendChild(br1);
-
-            const urlaubBtn = document.createElement('button');
-            urlaubBtn.type = 'button';
-            urlaubBtn.textContent = 'Urlaub';
-            urlaubBtn.className = 'status-btn';
-            urlaubBtn.addEventListener('click', () => setStatusDay(tr, 'Urlaub'));
-            ortCell.appendChild(urlaubBtn);
-
-            const krankBtn = document.createElement('button');
-            krankBtn.type = 'button';
-            krankBtn.textContent = 'Krank';
-            krankBtn.className = 'status-btn';
-            krankBtn.style.marginLeft = '4px';
-            krankBtn.addEventListener('click', () => setStatusDay(tr, 'Krank'));
-            ortCell.appendChild(krankBtn);
-
-            tr.appendChild(ortCell);
-
-            const kommenCell = document.createElement('td');
-            const kommenInput = document.createElement('input');
-            kommenInput.type = "time";
-            kommenInput.addEventListener('change', () => {
-                recalcRow(tr);
-            });
-            kommenCell.appendChild(kommenInput);
-            tr.appendChild(kommenCell);
-
-            const gehenCell = document.createElement('td');
-            const gehenInput = document.createElement('input');
-            gehenInput.type = "time";
-            gehenInput.addEventListener('change', () => {
-                recalcRow(tr);
-            });
-            gehenCell.appendChild(gehenInput);
-            tr.appendChild(gehenCell);
-
-            const pauseCell = document.createElement('td');
-            const pauseInput = document.createElement('input');
-            pauseInput.type = "number";
-            pauseInput.step = "15";
-            pauseInput.min = "0";
-            pauseInput.addEventListener('change', () => {
-                recalcRow(tr, true);
-            });
-            pauseCell.appendChild(pauseInput);
-            tr.appendChild(pauseCell);
-
-            const hoursCell = document.createElement('td');
-            hoursCell.textContent = "0,00";
-            tr.appendChild(hoursCell);
-
-            const akkordCell = document.createElement('td');
-            const akkordInput = document.createElement('input');
-            akkordInput.type = "number";
-            akkordInput.step = "0.25";
-            akkordInput.min = "0";
-            akkordInput.addEventListener('change', () => {
-                recalcTotals();
-                saveToStorage();
-            });
-            akkordCell.appendChild(akkordInput);
-            tr.appendChild(akkordCell);
-
-            const nightCell = document.createElement('td');
-            const nightSpan = document.createElement('span');
-            nightSpan.className = 'night-hours-display';
-            nightSpan.textContent = "0,00";
-            const br = document.createElement('br');
-            const nightBtn = document.createElement('button');
-            nightBtn.type = 'button';
-            nightBtn.textContent = 'Nacht';
-            nightBtn.className = 'night-btn';
-            nightBtn.addEventListener('click', () => toggleNightRow(tr));
-            nightCell.appendChild(nightSpan);
-            nightCell.appendChild(br);
-            nightCell.appendChild(nightBtn);
-            tr.appendChild(nightCell);
-
-            const noteCell = document.createElement('td');
-            const noteInput = document.createElement('input');
-            noteInput.type = "text";
-            noteInput.addEventListener('change', saveToStorage);
-            noteCell.appendChild(noteInput);
-            tr.appendChild(noteCell);
-
-            daysBody.appendChild(tr);
-        }
-
-        recalcTotals();
-        loadFromStorage();
-    }
-    // Expose digital timesheet controls for inline buttons (module scope -> window)
-    window.generateMonth = generateMonth;
-    window.resetMonth = resetMonth;
-    window.exportPdf = exportPdf;
-    window.saveEmployeeName = saveEmployeeName;
-
-
-    function weekdayName(d) {
-        switch (d) {
-            case 0: return "So";
-            case 1: return "Mo";
-            case 2: return "Di";
-            case 3: return "Mi";
-            case 4: return "Do";
-            case 5: return "Fr";
-            case 6: return "Sa";
-            default: return "";
-        }
-    }
-
-    function parseTimeToMinutes(str) {
-        if (!str) return NaN;
-        const parts = str.split(":");
-        if (parts.length !== 2) return NaN;
-        const h = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10);
-        if (isNaN(h) || isNaN(m)) return NaN;
-        return h * 60 + m;
-    }
-
-    function updateStatusColor(ortInput) {
-        const cell = ortInput.parentElement;
-        const val = (ortInput.value || "").trim().toLowerCase();
-        const tr = ortInput.closest('tr');
-
-        cell.classList.remove('urlaub-cell', 'krank-cell');
-
-        if (val === 'urlaub') {
-            cell.classList.add('urlaub-cell');
-        } else if (val === 'krank') {
-            cell.classList.add('krank-cell');
-        } else {
-            const inputs = tr.getElementsByTagName('input');
-            const kommenInput = inputs[1];
-            const gehenInput = inputs[2];
-            const pauseInput = inputs[3];
-            const hoursCell = tr.children[6];
-
-            if (!kommenInput.value && !gehenInput.value && !pauseInput.value) {
-                hoursCell.textContent = "0,00";
-            }
-        }
-    }
-
-    function setStatusDay(tr, statusText) {
-        const inputs = tr.getElementsByTagName('input');
-        const ortInput = inputs[0];
-        const kommenInput = inputs[1];
-        const gehenInput = inputs[2];
-        const pauseInput = inputs[3];
-        const hoursCell = tr.children[6];
-
-        ortInput.value = statusText;
-        updateStatusColor(ortInput);
-
-        kommenInput.value = "";
-        gehenInput.value = "";
-        pauseInput.value = "";
-        hoursCell.textContent = "8,00";
-
-        const next = tr.nextElementSibling;
-        if (next && next.classList.contains('night-row')) {
-            next.remove();
-        }
-        updateNightDisplay(tr, 0);
-
-        recalcTotals();
-        saveToStorage();
-    }
-
-    function recalcRow(tr, pauseChanged = false) {
-        const inputs = tr.getElementsByTagName('input');
-
-        const kommenInput = inputs[1];
-        const gehenInput = inputs[2];
-        const pauseInput = inputs[3];
-
-        const kommenMin = parseTimeToMinutes(kommenInput.value);
-        const gehenMin = parseTimeToMinutes(gehenInput.value);
-
-        const hoursCell = tr.children[6];
-
-        if (isNaN(kommenMin) || isNaN(gehenMin)) {
-            hoursCell.textContent = "0,00";
-            recalcTotals();
-            saveToStorage();
-            return;
-        }
-
-        let rawMinutes = gehenMin - kommenMin;
-        if (rawMinutes <= 0) {
-            rawMinutes += 24 * 60;
-        }
-
-        const rawHours = rawMinutes / 60;
-
-        let pauseMinutes = parseFloat((pauseInput.value || "").toString().replace(",", "."));
-        if (!pauseChanged || isNaN(pauseMinutes)) {
-            if (rawHours <= 6) {
-                pauseMinutes = 0;
-                pauseInput.value = "";
-            } else if (rawHours >= 9.75) {
-                pauseMinutes = 45;
-                pauseInput.value = "45";
-            } else {
-                pauseMinutes = 30;
-                pauseInput.value = "30";
-            }
-        }
-
-        if (pauseMinutes < 0) pauseMinutes = 0;
-        let paidMinutes = rawMinutes - pauseMinutes;
-        if (paidMinutes < 0) paidMinutes = 0;
-
-        const paidHours = paidMinutes / 60;
-        hoursCell.textContent = paidHours.toFixed(2).replace(".", ",");
-
-        recalcTotals();
-        saveToStorage();
-    }
-
-    function toggleNightRow(mainRow) {
-        const next = mainRow.nextElementSibling;
-        if (next && next.classList.contains('night-row')) {
-            next.remove();
-            updateNightDisplay(mainRow, 0);
-            recalcTotals();
-            saveToStorage();
-        } else {
-            createNightRow(mainRow);
-            saveToStorage();
-        }
-    }
-
-    function createNightRow(mainRow) {
-        const nightRow = document.createElement('tr');
-        nightRow.className = 'night-row';
-
-        let td = document.createElement('td');
-        td.textContent = "";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.textContent = "";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.textContent = "Nacht:";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        const nKommen = document.createElement('input');
-        nKommen.type = "time";
-        nKommen.addEventListener('change', () => recalcNightRow(mainRow, nightRow));
-        td.appendChild(nKommen);
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        const nGehen = document.createElement('input');
-        nGehen.type = "time";
-        nGehen.addEventListener('change', () => recalcNightRow(mainRow, nightRow));
-        td.appendChild(nGehen);
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        const nPause = document.createElement('input');
-        nPause.type = "number";
-        nPause.step = "15";
-        nPause.min = "0";
-        nPause.addEventListener('change', () => recalcNightRow(mainRow, nightRow, true));
-        td.appendChild(nPause);
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.className = 'night-hours-cell';
-        td.textContent = "0,00";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.textContent = "";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.textContent = "";
-        nightRow.appendChild(td);
-
-        td = document.createElement('td');
-        td.textContent = "";
-        nightRow.appendChild(td);
-
-        const tbody = document.getElementById('days-body');
-        if (mainRow.nextSibling) {
-            tbody.insertBefore(nightRow, mainRow.nextSibling);
-        } else {
-            tbody.appendChild(nightRow);
-        }
-    }
-
-    function recalcNightRow(mainRow, nightRow, pauseChanged = false) {
-        const inputs = nightRow.getElementsByTagName('input');
-        const kommenInput = inputs[0];
-        const gehenInput = inputs[1];
-        const pauseInput = inputs[2];
-
-        const startMin = parseTimeToMinutes(kommenInput.value);
-        const endMin = parseTimeToMinutes(gehenInput.value);
-
-        const nightHoursCell = nightRow.querySelector('.night-hours-cell');
-
-        if (isNaN(startMin) || isNaN(endMin)) {
-            nightHoursCell.textContent = "0,00";
-            updateNightDisplay(mainRow, 0);
-            recalcTotals();
-            saveToStorage();
-            return;
-        }
-
-        let rawMinutes = endMin - startMin;
-        if (rawMinutes <= 0) {
-            rawMinutes += 24 * 60;
-        }
-        const rawHours = rawMinutes / 60;
-
-        let pauseMinutes = parseFloat((pauseInput.value || "").toString().replace(",", "."));
-        if (!pauseChanged || isNaN(pauseMinutes)) {
-            if (rawHours <= 6) {
-                pauseMinutes = 0;
-                pauseInput.value = "";
-            } else if (rawHours >= 9.75) {
-                pauseMinutes = 45;
-                pauseInput.value = "45";
-            } else {
-                pauseMinutes = 30;
-                pauseInput.value = "30";
-            }
-        }
-
-        if (pauseMinutes < 0) pauseMinutes = 0;
-
-        const nightMinutesWindow = calcNightMinutes(startMin, endMin);
-
-        let nightPaidMinutes = nightMinutesWindow - pauseMinutes;
-        if (nightPaidMinutes < 0) nightPaidMinutes = 0;
-
-        const nightHours = nightPaidMinutes / 60;
-        nightHoursCell.textContent = nightHours.toFixed(2).replace(".", ",");
-
-        updateNightDisplay(mainRow, nightHours);
-        recalcTotals();
-        saveToStorage();
-    }
-
-    function updateNightDisplay(mainRow, nightHours) {
-        const span = mainRow.children[8].querySelector('.night-hours-display');
-        if (span) {
-            span.textContent = nightHours.toFixed(2).replace(".", ",");
-        }
-    }
-
-    function calcNightMinutes(startMin, endMin) {
-        if (isNaN(startMin) || isNaN(endMin)) return 0;
-
-        let s = startMin;
-        let e = endMin;
-        if (e <= s) {
-            e += 24 * 60;
-        }
-
-        const NIGHT_START = 22 * 60;
-        const NIGHT_END = 5 * 60;
-        const DAY_MINUTES = 24 * 60;
-
-        let night = 0;
-        for (let m = s; m < e; m++) {
-            const tod = m % DAY_MINUTES;
-            if (tod >= NIGHT_START || tod < NIGHT_END) {
-                night++;
-            }
-        }
-        return night;
-    }
-
-    function recalcTotals() {
-        const tbody = document.getElementById('days-body');
-        let sumHours = 0;
-        let sumAkkord = 0;
-        let sumNight = 0;
-
-        for (const tr of tbody.rows) {
-            if (tr.classList.contains('night-row')) continue;
-
-            const hoursText = tr.children[6].textContent.replace(".", "").replace(",", ".");
-            const hVal = parseFloat(hoursText);
-            if (!isNaN(hVal)) {
-                sumHours += hVal;
-            }
-
-            const akkordInput = tr.children[7].getElementsByTagName('input')[0];
-            let aVal = parseFloat((akkordInput.value || "").replace(",", "."));
-            if (!isNaN(aVal)) {
-                sumAkkord += aVal;
-            }
-
-            const nightSpan = tr.children[8].querySelector('.night-hours-display');
-            const nightText = nightSpan ? nightSpan.textContent.replace(".", "").replace(",", ".") : "0";
-            const nVal = parseFloat(nightText);
-            if (!isNaN(nVal)) {
-                sumNight += nVal;
-            }
-        }
-
-        document.getElementById('sum-hours').textContent = sumHours.toFixed(2).replace(".", ",");
-        document.getElementById('sum-akkord').textContent = sumAkkord.toFixed(2).replace(".", ",");
-        document.getElementById('sum-night').textContent = sumNight.toFixed(2).replace(".", ",");
-    }
-
-    function saveToStorage() {
-        if (isLoading) return;
-
-        const tbody = document.getElementById('days-body');
-        const data = [];
-        let rows = Array.from(tbody.rows);
-
-        for (let i = 0; i < rows.length; i++) {
-            const tr = rows[i];
-            if (tr.classList.contains('night-row')) continue;
-
-            const inputs = tr.getElementsByTagName('input');
-            const ort = inputs[0].value || "";
-            const kommen = inputs[1].value || "";
-            const gehen = inputs[2].value || "";
-            const pause = inputs[3].value || "";
-            const akkord = inputs[4].value || "";
-            const note = inputs[5].value || "";
-
-            const hoursText = tr.children[6].textContent || "0,00";
-            const nightSpan = tr.children[8].querySelector('.night-hours-display');
-            const nightTextMain = nightSpan ? nightSpan.textContent : "0,00";
-
-            let nightRow = null;
-            const next = tr.nextElementSibling;
-            if (next && next.classList.contains('night-row')) {
-                nightRow = next;
-            }
-
-            let nKommen = "";
-            let nGehen = "";
-            let nPause = "";
-            let nHours = "0,00";
-
-            if (nightRow) {
-                const nInputs = nightRow.getElementsByTagName('input');
-                nKommen = nInputs[0].value || "";
-                nGehen = nInputs[1].value || "";
-                nPause = nInputs[2].value || "";
-                const nHoursCell = nightRow.querySelector('.night-hours-cell');
-                nHours = nHoursCell ? (nHoursCell.textContent || "0,00") : "0,00";
-            }
-
-            data.push({
-                ort,
-                kommen,
-                gehen,
-                pause,
-                hours: hoursText,
-                akkord,
-                nightDisplay: nightTextMain,
-                note,
-                nKommen,
-                nGehen,
-                nPause,
-                nHours
-            });
-        }
-
-        const key = getStorageKey();
-        localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function loadFromStorage() {
-        const key = getStorageKey();
-        const json = localStorage.getItem(key);
-        if (!json) return;
-
-        let data;
-        try {
-            data = JSON.parse(json);
-        } catch (e) {
-            console.error("Fehler beim Laden aus localStorage:", e);
-            return;
-        }
-
-        const tbody = document.getElementById('days-body');
-        const rows = tbody.rows;
-
-        isLoading = true;
-        for (let i = 0; i < rows.length && i < data.length; i++) {
-            const tr = rows[i];
-            if (tr.classList.contains('night-row')) continue;
-
-            const rowData = data[i];
-            const inputs = tr.getElementsByTagName('input');
-
-            inputs[0].value = rowData.ort || "";
-            inputs[1].value = rowData.kommen || "";
-            inputs[2].value = rowData.gehen || "";
-            inputs[3].value = rowData.pause || "";
-            inputs[4].value = rowData.akkord || "";
-            inputs[5].value = rowData.note || "";
-
-            updateStatusColor(inputs[0]);
-
-            recalcRow(tr, true);
-
-            if (rowData.nKommen || rowData.nGehen || rowData.nPause || rowData.nHours) {
-                createNightRow(tr);
-                const nightRow = tr.nextElementSibling;
-                const nInputs = nightRow.getElementsByTagName('input');
-                nInputs[0].value = rowData.nKommen || "";
-                nInputs[1].value = rowData.nGehen || "";
-                nInputs[2].value = rowData.nPause || "";
-                recalcNightRow(tr, nightRow, true);
-            }
-
-            if (rowData.nightDisplay) {
-                updateNightDisplay(tr, parseFloat(rowData.nightDisplay.replace(",", ".")) || 0);
-            }
-        }
-        isLoading = false;
-        recalcTotals();
-    }
-      })(document, windowRef);
-    } catch(e) {
-      console.error('Digitaler Stundenzettel JS Fehler:', e);
-    }
-
-    // Add Supabase JSON autosave hooks (best effort, won't break if table missing)
-    try {
-      const monthSel = container.querySelector('#ts_month');
-      const yearSel = container.querySelector('#ts_year');
-      const table = container.querySelector('#ts_timesheetTable');
-      function ymKey() {
-        const m = monthSel ? monthSel.value : '';
-        const y = yearSel ? yearSel.value : '';
-        return y && m ? `${y}-${String(m).padStart(2,'0')}` : null;
-      }
-      async function saveRemote() {
-        if (!window.supabaseClient) return;
-        const key = ymKey(); if (!key) return;
-        // Collect localStorage snapshot if present
-        const local = localStorage.getItem('timesheet_' + key) || null;
-        if (!local) return;
-        const payload = {
-          user_id: (window.currentUser && window.currentUser.id) ? window.currentUser.id : null,
-          year_month: key,
-          data_json: local,
-          updated_at: new Date().toISOString()
-        };
-        if (!payload.user_id) return;
-        // upsert to a dedicated table if exists
-        await window.supabaseClient.from('timesheets_json').upsert(payload, { onConflict: 'user_id,year_month' });
-      }
-      // periodic save
-      setInterval(()=>{ saveRemote().catch(()=>{}); }, 8000);
-    } catch(e) {}
-    TS.initialized = true;
-  }
-
-  // Hook into your existing navigation click handling: observe section visibility
-  const obs = new MutationObserver(()=>{
-    const sec = document.getElementById('section-timesheet');
-    if (sec && !sec.classList.contains('hidden')) {
-      tryInit();
-    }
-  });
-  obs.observe(document.body, { attributes: true, childList: true, subtree: true });
-
-})();
-
     // Start App
     init();
 
+/* =========================
+   DIGITAL TIMESHEET MODULE
+   ========================= */
+(function(){
+    const TS = {
+        initialized: false,
+        bound: false,
+        state: null,
+        saveTimer: null,
+        lastSavedAt: 0
+    };
+
+    const monthNames = {
+        de:["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
+        en:["January","February","March","April","May","June","July","August","September","October","November","December"]
+    };
+    const weekdayShort = {
+        de:["So","Mo","Di","Mi","Do","Fr","Sa"],
+        en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+    };
+
+    function getMonthName(lang, m){
+        const arr = monthNames[lang] || monthNames.en;
+        return arr[m-1] || String(m);
+    }
+    function getWeekday(lang, dateObj){
+        const arr = weekdayShort[lang] || weekdayShort.en;
+        return arr[dateObj.getDay()] || "";
+    }
+
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function timeToMinutes(t){
+        if(!t || typeof t !== "string" || !t.includes(":")) return null;
+        const [h,m]=t.split(":").map(x=>parseInt(x,10));
+        if(Number.isNaN(h)||Number.isNaN(m)) return null;
+        return h*60+m;
+    }
+    function minutesToHours(min){ return Math.round((min/60)*100)/100; }
+    function fmtHours(h){ 
+        if(h==null || Number.isNaN(h)) return "0.00";
+        return (Math.round(h*100)/100).toFixed(2);
+    }
+
+    function calcDurationMinutes(start, end){
+        const s = timeToMinutes(start);
+        const e = timeToMinutes(end);
+        if(s==null || e==null) return null;
+        if(e < s){ // overnight
+            return (24*60 - s) + e;
+        }
+        return e - s;
+    }
+
+    // Break rules (based on user's earlier logic)
+    function calcAutoBreakMinutes(workMinutes){
+        if(workMinutes==null) return 0;
+        const hours = workMinutes/60;
+        if(hours < 6) return 0;
+        // >= 9.75h -> 45 min (as requested in prior build)
+        if(hours >= 9.75) return 45;
+        return 30;
+    }
+
+    function getDraftPath(userId, year, month){
+        return `timesheets/${userId}/drafts/${year}-${pad2(month)}.json`;
+    }
+    function getPdfPath(userId, year, month, fullName){
+        const safeName = (fullName || "Mitarbeiter").replace(/[^\w\-äöüÄÖÜß ]+/g,'').trim().replace(/\s+/g,'_');
+        return `timesheets/${userId}/Stundenzettel_${year}-${pad2(month)}_${safeName}.pdf`;
+    }
+
+    function ensureElements(){
+        return {
+            tabPaper: document.getElementById("ts-tab-paper"),
+            tabDigital: document.getElementById("ts-tab-digital"),
+            panePaper: document.getElementById("ts-pane-paper"),
+            paneDigital: document.getElementById("ts-pane-digital"),
+            monthSel: document.getElementById("ts-month-select"),
+            yearSel: document.getElementById("ts-year-select"),
+            createBtn: document.getElementById("ts-create-btn"),
+            uploadBtn: document.getElementById("ts-upload-btn"),
+            resetBtn: document.getElementById("ts-reset-btn"),
+            tbody: document.getElementById("ts-tbody"),
+            msg: document.getElementById("ts-digital-message"),
+            totalHours: document.getElementById("ts-total-hours"),
+            totalNight: document.getElementById("ts-total-night"),
+            modalOverlay: document.getElementById("global-modal-overlay"),
+            modalTitle: document.getElementById("global-modal-title"),
+            modalMsg: document.getElementById("global-modal-message"),
+            modalYes: document.getElementById("global-modal-yes"),
+            modalNo: document.getElementById("global-modal-no"),
+        };
+    }
+
+    function setInfo(el, text, kind){
+        if(!el) return;
+        el.textContent = text || "";
+        el.style.opacity = text ? "1" : "0";
+        el.style.color = kind === "error" ? "#ffb4b4" : (kind === "ok" ? "#b8ffcf" : "");
+    }
+
+    function showModal(titleKey, msgKey){
+        const els = ensureElements();
+        return new Promise((resolve)=>{
+            const title = (typeof t === "function") ? t(titleKey) : titleKey;
+            const message = (typeof t === "function") ? t(msgKey) : msgKey;
+            els.modalTitle.textContent = title;
+            els.modalMsg.textContent = message;
+            els.modalYes.textContent = (typeof t === "function") ? t("ts_btn_yes") : "Ja";
+            els.modalNo.textContent  = (typeof t === "function") ? t("ts_btn_no") : "Nein";
+            els.modalOverlay.style.display = "flex";
+
+            const cleanup = ()=>{
+                els.modalOverlay.style.display = "none";
+                els.modalYes.removeEventListener("click", onYes);
+                els.modalNo.removeEventListener("click", onNo);
+                els.modalOverlay.removeEventListener("click", onBg);
+                window.removeEventListener("keydown", onEsc);
+            };
+            const onYes = ()=>{ cleanup(); resolve(true); };
+            const onNo  = ()=>{ cleanup(); resolve(false); };
+            const onBg = (e)=>{ if(e.target === els.modalOverlay){ cleanup(); resolve(false);} };
+            const onEsc = (e)=>{ if(e.key === "Escape"){ cleanup(); resolve(false);} };
+
+            els.modalYes.addEventListener("click", onYes);
+            els.modalNo.addEventListener("click", onNo);
+            els.modalOverlay.addEventListener("click", onBg);
+            window.addEventListener("keydown", onEsc);
+        });
+    }
+
+    function buildInitialState(year, month){
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const rows = [];
+        for(let d=1; d<=daysInMonth; d++){
+            rows.push({
+                day: d,
+                start: "",
+                end: "",
+                breakMin: 0,
+                status: "work",
+                note: "",
+                nightMin: 0
+            });
+        }
+        return { year, month, rows };
+    }
+
+    function recalcRow(row){
+        // Status shortcuts
+        if(row.status === "vacation" || row.status === "sick" || row.status === "holiday"){
+            row.start = "";
+            row.end = "";
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 8*60, nightMin: 0 };
+        }
+        if(row.status === "off"){
+            row.start = "";
+            row.end = "";
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        const dur = calcDurationMinutes(row.start, row.end);
+        if(dur==null || dur<=0){
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        const autoBreak = calcAutoBreakMinutes(dur);
+        // keep user's manual override if set and >0, otherwise auto
+        if(!row.breakManual){ row.breakMin = autoBreak; }
+        const workMin = Math.max(0, dur - (row.breakMin||0));
+        // night minutes not auto in this simplified version unless user enters overnight; keep 0
+        return { workMin, nightMin: row.nightMin||0 };
+    }
+
+    function calcTotals(state){
+        let totalWorkMin = 0;
+        let totalNightMin = 0;
+        for(const row of state.rows){
+            const {workMin, nightMin} = recalcRow(row);
+            totalWorkMin += workMin;
+            totalNightMin += nightMin;
+        }
+        return { totalWorkMin, totalNightMin };
+    }
+
+    function statusLabelKey(status){
+        switch(status){
+            case "work": return "ts_status_work";
+            case "vacation": return "ts_status_vacation";
+            case "sick": return "ts_status_sick";
+            case "holiday": return "ts_status_holiday";
+            case "off": return "ts_status_off";
+            default: return "ts_status_work";
+        }
+    }
+
+    function applyStatusPill(tr, status){
+        tr.classList.remove("ts-status-urlaub","ts-status-krank","ts-status-feiertag","ts-status-frei");
+        if(status==="vacation") tr.classList.add("ts-status-urlaub");
+        if(status==="sick") tr.classList.add("ts-status-krank");
+        if(status==="holiday") tr.classList.add("ts-status-feiertag");
+        if(status==="off") tr.classList.add("ts-status-frei");
+    }
+
+    function renderTable(){
+        const els = ensureElements();
+        if(!TS.state){ els.tbody.innerHTML=""; return; }
+        const {year, month, rows} = TS.state;
+        const lang = (typeof currentLanguage !== "undefined" ? currentLanguage : "de");
+        els.tbody.innerHTML = "";
+
+        for(const row of rows){
+            const dateObj = new Date(year, month-1, row.day);
+            const tr = document.createElement("tr");
+            applyStatusPill(tr, row.status);
+
+            const dateTd = document.createElement("td");
+            dateTd.textContent = `${pad2(row.day)}.${pad2(month)}.${year}`;
+            tr.appendChild(dateTd);
+
+            const dayTd = document.createElement("td");
+            dayTd.textContent = getWeekday(lang, dateObj);
+            tr.appendChild(dayTd);
+
+            const startTd = document.createElement("td");
+            const startIn = document.createElement("input");
+            startIn.type = "time"; startIn.value = row.start || "";
+            startIn.disabled = row.status!=="work";
+            startIn.addEventListener("change", ()=>{ row.start = startIn.value; onStateChanged(); });
+            startTd.appendChild(startIn);
+            tr.appendChild(startTd);
+
+            const endTd = document.createElement("td");
+            const endIn = document.createElement("input");
+            endIn.type="time"; endIn.value = row.end || "";
+            endIn.disabled = row.status!=="work";
+            endIn.addEventListener("change", ()=>{ row.end = endIn.value; onStateChanged(); });
+            endTd.appendChild(endIn);
+            tr.appendChild(endTd);
+
+            const breakTd = document.createElement("td");
+            const breakIn = document.createElement("input");
+            breakIn.type="number"; breakIn.min="0"; breakIn.step="5";
+            breakIn.value = String(row.breakMin||0);
+            breakIn.disabled = row.status!=="work";
+            breakIn.addEventListener("input", ()=>{
+                row.breakMin = parseInt(breakIn.value||"0",10)||0;
+                row.breakManual = true;
+                onStateChanged();
+            });
+            breakTd.appendChild(breakIn);
+            tr.appendChild(breakTd);
+
+            const workTd = document.createElement("td");
+            const w = recalcRow(row).workMin;
+            workTd.textContent = fmtHours(minutesToHours(w));
+            tr.appendChild(workTd);
+
+            const nightTd = document.createElement("td");
+            nightTd.textContent = fmtHours(minutesToHours(row.nightMin||0));
+            tr.appendChild(nightTd);
+
+            const statusTd = document.createElement("td");
+            const sel = document.createElement("select");
+            const opts = ["work","vacation","sick","holiday","off"];
+            for(const o of opts){
+                const op = document.createElement("option");
+                op.value = o;
+                op.textContent = (typeof t === "function") ? t(statusLabelKey(o)) : o;
+                sel.appendChild(op);
+            }
+            sel.value = row.status || "work";
+            sel.addEventListener("change", ()=>{
+                row.status = sel.value;
+                row.breakManual = false;
+                onStateChanged();
+                renderTable();
+            });
+            statusTd.appendChild(sel);
+            tr.appendChild(statusTd);
+
+            const noteTd = document.createElement("td");
+            const noteIn = document.createElement("input");
+            noteIn.type="text";
+            noteIn.className="ts-note";
+            noteIn.value = row.note || "";
+            noteIn.addEventListener("input", ()=>{ row.note = noteIn.value; onStateChanged(true); });
+            noteTd.appendChild(noteIn);
+            tr.appendChild(noteTd);
+
+            els.tbody.appendChild(tr);
+        }
+
+        const totals = calcTotals(TS.state);
+        els.totalHours.textContent = fmtHours(minutesToHours(totals.totalWorkMin));
+        els.totalNight.textContent = fmtHours(minutesToHours(totals.totalNightMin));
+    }
+
+    function debounceSave(){
+        clearTimeout(TS.saveTimer);
+        TS.saveTimer = setTimeout(async ()=>{
+            try{
+                await saveDraftToSupabase();
+                TS.lastSavedAt = Date.now();
+                const els = ensureElements();
+                setInfo(els.msg, (typeof t==="function") ? t("ts_msg_saved") : "Gespeichert.", "ok");
+                setTimeout(()=>{ if(els.msg && (Date.now()-TS.lastSavedAt)>2500) setInfo(els.msg,""); }, 2600);
+            }catch(e){
+                // ignore noisy autosave failures; user can still upload later
+            }
+        }, 800);
+    }
+
+    function onStateChanged(isSilent){
+        if(!TS.state) return;
+        renderTable();
+        if(!isSilent) debounceSave();
+        else debounceSave();
+    }
+
+    async function saveDraftToSupabase(){
+        if(!supabaseClient || !currentUser || !TS.state) return;
+        const path = getDraftPath(currentUser.id, TS.state.year, TS.state.month);
+        const blob = new Blob([JSON.stringify(TS.state)], {type:"application/json"});
+        const { error } = await supabaseClient
+            .storage
+            .from(STORAGE_BUCKET)
+            .upload(path, blob, { upsert: true, contentType: "application/json" });
+        if(error) throw error;
+    }
+
+    async function loadDraftFromSupabase(year, month){
+        if(!supabaseClient || !currentUser) return null;
+        const path = getDraftPath(currentUser.id, year, month);
+        const { data, error } = await supabaseClient
+            .storage
+            .from(STORAGE_BUCKET)
+            .download(path);
+        if(error) return null;
+        const txt = await data.text();
+        try{
+            return JSON.parse(txt);
+        }catch(e){
+            return null;
+        }
+    }
+
+    async function deleteDraftFromSupabase(year, month){
+        if(!supabaseClient || !currentUser) return;
+        const path = getDraftPath(currentUser.id, year, month);
+        await supabaseClient.storage.from(STORAGE_BUCKET).remove([path]);
+    }
+
+    function buildPrintContainer(){
+        const container = document.createElement("div");
+        container.style.position="fixed";
+        container.style.left="-99999px";
+        container.style.top="0";
+        container.style.width="1123px"; // approx A4 landscape at 96dpi
+        container.style.background="#ffffff";
+        container.style.color="#000";
+        container.style.padding="12px";
+        container.style.fontFamily="Arial, sans-serif";
+        container.style.fontSize="10px";
+        container.style.boxSizing="border-box";
+
+        const title = document.createElement("div");
+        title.style.fontSize="14px";
+        title.style.fontWeight="700";
+        title.style.marginBottom="8px";
+        const lang = (typeof currentLanguage !== "undefined" ? currentLanguage : "de");
+        const monthName = getMonthName(lang, TS.state.month);
+        const fullName = (currentProfile && currentProfile.full_name) ? currentProfile.full_name : "";
+        title.textContent = `${(typeof t==="function") ? t("ts_title") : "Stundenzettel"} – ${monthName} ${TS.state.year} – ${fullName}`;
+        container.appendChild(title);
+
+        const table = document.getElementById("ts-table").cloneNode(true);
+        table.style.width="100%";
+        table.style.borderCollapse="collapse";
+        table.querySelectorAll("th,td").forEach(td=>{
+            td.style.border="1px solid #000";
+            td.style.padding="4px 6px";
+            td.style.whiteSpace="nowrap";
+        });
+        table.querySelectorAll("thead th").forEach(th=>{
+            th.style.background="#f0f0f0";
+        });
+
+        // replace inputs/selects with plain text
+        table.querySelectorAll("input,select").forEach(el=>{
+            const td = el.closest("td");
+            if(!td) return;
+            let val = "";
+            if(el.tagName.toLowerCase()==="select"){
+                const opt = el.options[el.selectedIndex];
+                val = opt ? opt.textContent : "";
+            }else{
+                val = el.value || "";
+            }
+            td.textContent = val;
+        });
+
+        container.appendChild(table);
+        const totals = document.createElement("div");
+        totals.style.marginTop="8px";
+        totals.style.fontWeight="700";
+        totals.textContent = `${(typeof t==="function") ? t("ts_total") : "Summe"}: ${document.getElementById("ts-total-hours").textContent} h`;
+        container.appendChild(totals);
+
+        document.body.appendChild(container);
+        return container;
+    }
+
+    async function ensurePdfLibs(){
+        // if libs failed to load, throw
+        if(typeof html2canvas !== "function") throw new Error("html2canvas missing");
+        if(!window.jspdf || !window.jspdf.jsPDF) throw new Error("jsPDF missing");
+    }
+
+    async function generatePdfBlobOnePage(){
+        await ensurePdfLibs();
+        const printNode = buildPrintContainer();
+        try{
+            const canvas = await html2canvas(printNode, {scale: 2, useCORS: true, backgroundColor: "#ffffff"});
+            const imgData = canvas.toDataURL("image/png");
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({orientation:"landscape", unit:"mm", format:"a4"});
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+
+            // image dimensions in mm keeping aspect ratio
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgW = pageW - 10; // margins
+            const imgH = (imgProps.height * imgW) / imgProps.width;
+            let renderW = imgW;
+            let renderH = imgH;
+            if(renderH > pageH - 10){
+                renderH = pageH - 10;
+                renderW = (imgProps.width * renderH) / imgProps.height;
+            }
+            const x = (pageW - renderW) / 2;
+            const y = (pageH - renderH) / 2;
+            pdf.addImage(imgData, "PNG", x, y, renderW, renderH, undefined, "FAST");
+
+            return pdf.output("blob");
+        } finally {
+            printNode.remove();
+        }
+    }
+
+    async function uploadDigitalPdf(){
+        const els = ensureElements();
+        if(!TS.state){ setInfo(els.msg, "", ""); return; }
+        if(!supabaseClient || !currentUser){ setInfo(els.msg, (typeof t==="function")?t("ts_msg_upload_fail"):"Upload fehlgeschlagen.", "error"); return; }
+
+        setInfo(els.msg, (typeof t==="function")?t("ts_msg_uploading"):"PDF wird erstellt und hochgeladen…", "");
+        try{
+            const blob = await generatePdfBlobOnePage();
+            const fullName = (currentProfile && (currentProfile.full_name || (currentProfile.first_name||"")+" "+(currentProfile.last_name||""))) || "Mitarbeiter";
+            const path = getPdfPath(currentUser.id, TS.state.year, TS.state.month, fullName);
+
+            const { error: upErr } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, blob, { upsert: true, contentType: "application/pdf" });
+            if(upErr) throw upErr;
+
+            const { data: pub } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+            const fileUrl = pub?.publicUrl || "";
+
+            // insert document row
+            const title = `Stundenzettel ${pad2(TS.state.month)}-${TS.state.year}`;
+            const { error: docErr } = await supabaseClient.from("documents").insert([{
+                user_id: currentUser.id,
+                title: title,
+                file_url: fileUrl,
+                doc_type: "stundenzettel"
+            }]);
+            // if insert fails, still keep the file uploaded
+            if(docErr){
+                console.warn("documents insert failed", docErr);
+            }
+
+            setInfo(els.msg, (typeof t==="function")?t("ts_msg_upload_success"):"Erfolgreich hochgeladen.", "ok");
+
+            // ask to save locally
+            const save = await showModal("ts_confirm_title","ts_confirm_save_pdf");
+            if(save){
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = `Stundenzettel_${TS.state.year}-${pad2(TS.state.month)}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+            }
+
+            // clear draft + reset
+            await deleteDraftFromSupabase(TS.state.year, TS.state.month);
+            TS.state = buildInitialState(TS.state.year, TS.state.month);
+            renderTable();
+
+            // refresh admin counters/list if functions exist
+            if(typeof loadUserDocuments === "function"){
+                try{ await loadUserDocuments(); }catch(e){}
+            }
+        }catch(e){
+            console.error(e);
+            setInfo(els.msg, (typeof t==="function")?t("ts_msg_upload_fail"):"Upload fehlgeschlagen.", "error");
+        }
+    }
+
+    async function resetTimesheet(){
+        if(!TS.state) return;
+        const ok1 = await showModal("ts_confirm_title","ts_confirm_reset_1");
+        if(!ok1) return;
+        const ok2 = await showModal("ts_confirm_title","ts_confirm_reset_2");
+        if(!ok2) return;
+        await deleteDraftFromSupabase(TS.state.year, TS.state.month);
+        TS.state = buildInitialState(TS.state.year, TS.state.month);
+        renderTable();
+    }
+
+    async function createOrLoadMonth(){
+        const els = ensureElements();
+        const year = parseInt(els.yearSel.value,10);
+        const month = parseInt(els.monthSel.value,10);
+        const draft = await loadDraftFromSupabase(year, month);
+        TS.state = draft || buildInitialState(year, month);
+        renderTable();
+        debounceSave();
+    }
+
+    function fillMonthYear(){
+        const els = ensureElements();
+        if(!els.monthSel || !els.yearSel) return;
+        els.monthSel.innerHTML="";
+        els.yearSel.innerHTML="";
+
+        const now = new Date();
+        const lang = (typeof currentLanguage !== "undefined" ? currentLanguage : "de");
+
+        for(let m=1;m<=12;m++){
+            const op = document.createElement("option");
+            op.value = String(m);
+            op.textContent = `${pad2(m)} - ${getMonthName(lang, m)}`;
+            els.monthSel.appendChild(op);
+        }
+        const thisY = now.getFullYear();
+        for(let y=thisY-1; y<=thisY+1; y++){
+            const op = document.createElement("option");
+            op.value = String(y);
+            op.textContent = String(y);
+            els.yearSel.appendChild(op);
+        }
+        els.monthSel.value = String(now.getMonth()+1);
+        els.yearSel.value = String(thisY);
+    }
+
+    function bindTabs(){
+        const els = ensureElements();
+        if(!els.tabPaper || !els.tabDigital) return;
+        els.tabPaper.addEventListener("click", ()=>{
+            els.tabPaper.classList.add("active");
+            els.tabDigital.classList.remove("active");
+            els.panePaper.classList.remove("hidden");
+            els.paneDigital.classList.add("hidden");
+        });
+        els.tabDigital.addEventListener("click", ()=>{
+            els.tabDigital.classList.add("active");
+            els.tabPaper.classList.remove("active");
+            els.paneDigital.classList.remove("hidden");
+            els.panePaper.classList.add("hidden");
+            // ensure table exists
+            if(!TS.state){
+                createOrLoadMonth();
+            }
+        });
+    }
+
+    async function runTimesheetCleanup(){
+        // best-effort cleanup on portal start/login
+        if(!supabaseClient || !currentUser || !currentProfile) return;
+        const cutoff = new Date(Date.now() - (35*24*60*60*1000)).toISOString();
+        // Admin: cleanup all; User: cleanup own
+        const q = supabaseClient.from("documents").select("id,file_url,doc_type,user_id,created_at").eq("doc_type","stundenzettel").lt("created_at", cutoff);
+        const { data, error } = (currentProfile.role === "admin") ? await q : await q.eq("user_id", currentUser.id);
+        if(error || !data || data.length===0) return;
+
+        const paths = [];
+        const ids = [];
+        for(const d of data){
+            if(d.file_url && typeof d.file_url === "string"){
+                const marker = `/${STORAGE_BUCKET}/`;
+                const idx = d.file_url.indexOf(marker);
+                if(idx !== -1){
+                    const p = d.file_url.substring(idx + marker.length);
+                    paths.push(p);
+                } else {
+                    // try split on '/documents/'
+                    const idx2 = d.file_url.indexOf(`/${STORAGE_BUCKET}/`);
+                    if(idx2 !== -1) paths.push(d.file_url.substring(idx2 + (`/${STORAGE_BUCKET}/`).length));
+                }
+            }
+            ids.push(d.id);
+        }
+        if(paths.length){
+            await supabaseClient.storage.from(STORAGE_BUCKET).remove(paths);
+        }
+        if(ids.length){
+            await supabaseClient.from("documents").delete().in("id", ids);
+        }
+    }
+
+    function bindActions(){
+        const els = ensureElements();
+        if(!els.createBtn || !els.uploadBtn || !els.resetBtn) return;
+
+        els.createBtn.addEventListener("click", async ()=>{
+            await createOrLoadMonth();
+        });
+        els.uploadBtn.addEventListener("click", async ()=>{
+            await uploadDigitalPdf();
+        });
+        els.resetBtn.addEventListener("click", async ()=>{
+            await resetTimesheet();
+        });
+    }
+
+    function onLanguageChanged(){
+        // rebuild month names and status labels
+        fillMonthYear();
+        if(TS.state) renderTable();
+    }
+
+    function initOnce(){
+        if(TS.initialized) return;
+        TS.initialized = true;
+        bindTabs();
+        fillMonthYear();
+        bindActions();
+
+        // hook applyLanguage to refresh our dynamic labels
+        if(typeof applyLanguage === "function" && !applyLanguage.__tsWrapped){
+            const original = applyLanguage;
+            window.applyLanguage = function(lang){
+                original(lang);
+                try{ onLanguageChanged(); }catch(e){}
+            };
+            window.applyLanguage.__tsWrapped = true;
+        }
+    }
+
+    // poll until portal variables exist after login
+    const poll = setInterval(async ()=>{
+        try{
+            initOnce();
+            if(currentUser && currentProfile && !TS.bound){
+                TS.bound = true;
+                await runTimesheetCleanup();
+            }
+        }catch(e){}
+    }, 800);
+
+})();
+
 </script>
+<div id="global-modal-overlay" role="dialog" aria-modal="true">
+  <div id="global-modal">
+    <h4 id="global-modal-title"> </h4>
+    <p id="global-modal-message"> </p>
+    <div class="modal-actions">
+      <button class="btn" id="global-modal-no" type="button">Nein</button>
+      <button class="btn primary" id="global-modal-yes" type="button">Ja</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
