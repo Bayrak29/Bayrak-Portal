@@ -6,6 +6,8 @@
 <title>Bayrak Mitarbeiter-Portal</title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
         :root {
             --blue-dark: #004b7a;
@@ -749,7 +751,192 @@
             border: 1px solid rgba(0,0,0,0.12);
             font-size: 0.9rem;
         }
-    </style>
+    
+
+/* --- Digitaler Stundenzettel (eingebettet) --- */
+#timesheet-digital-container{
+  font-family: Arial, sans-serif;
+  margin-top: 10px;
+}
+#timesheet-digital-container h1{
+  font-size: 1.25rem;
+  margin: 6px 0 10px 0;
+}
+#timesheet-digital-container .top-info{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+  align-items:flex-end;
+  margin-bottom: 10px;
+}
+#timesheet-digital-container label{
+  font-size: 0.9rem;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#timesheet-digital-container input,
+#timesheet-digital-container select{
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.18);
+  font-size: 0.95rem;
+}
+#timesheet-digital-container button{
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  cursor: pointer;
+  font-weight: 700;
+}
+#timesheet-digital-container .small{
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+#timesheet-digital-container .table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+}
+#timesheet-digital-container table{
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 980px;
+}
+#timesheet-digital-container th,
+#timesheet-digital-container td{
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 6px 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+#timesheet-digital-container thead th{
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}
+#timesheet-digital-container tr.weekend{
+  background: rgba(0,0,0,0.04);
+}
+#timesheet-digital-container .urlaub-cell{
+  background-color: #c6efce;
+}
+#timesheet-digital-container .krank-cell{
+  background-color: #ffe699;
+}
+#timesheet-digital-container input[type="time"]{
+  width: 90px;
+}
+#timesheet-digital-container input[type="number"]{
+  width: 80px;
+}
+#timesheet-digital-container input[type="text"]{
+  width: 100%;
+  box-sizing: border-box;
+}
+@media print{
+  @page { size: A4 landscape; margin: 8mm; }
+  body * { visibility: hidden !important; }
+  #timesheet-digital-container, #timesheet-digital-container * { visibility: visible !important; }
+  #timesheet-digital-container { position: absolute; left: 0; top: 0; width: 100%; }
+  #timesheet-digital-container .table-wrap{ overflow: visible !important; border: none; }
+  #timesheet-digital-container table{ min-width: 0; width: 100%; }
+}
+
+/* Tabelle in Container, #timesheet-digital-container damit sie auf Handy notfalls horizontal scrollen kann */
+        .table-wrapper{#timesheet-digital-container width: 100%;
+            overflow-x: auto;
+        }
+
+        table{#timesheet-digital-container width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 700px; /* verhindert zu starkes Zusammenquetschen */
+        }
+
+        th, #timesheet-digital-container td{#timesheet-digital-container border: 1px solid #ccc;
+            padding: 4px;
+            text-align: left;
+        }
+
+        th{#timesheet-digital-container background-color: #f0f0f0;
+        }
+
+        tr.weekend td{#timesheet-digital-container background-color: #ffe6e6;
+        }
+
+        tr.footer-row td{#timesheet-digital-container font-weight: bold;
+            background-color: #f7f7f7;
+        }
+
+        tr.night-row td{#timesheet-digital-container background-color: #fffbe6;
+        }
+
+        .urlaub-cell{#timesheet-digital-container background-color: #c6efce;
+        }
+
+        .krank-cell{#timesheet-digital-container background-color: #ffe699;
+        }
+
+        input[type="time"]{#timesheet-digital-container width: 90px;
+        }
+
+        input[type="number"]{#timesheet-digital-container width: 80px;
+        }
+
+        input[type="text"]{#timesheet-digital-container width: 100%;
+            box-sizing: border-box;
+        }
+
+        .small{#timesheet-digital-container font-size: 0.75rem;
+            color: #555;
+        }
+
+        .night-btn, #timesheet-digital-container .status-btn{#timesheet-digital-container font-size: 0.7rem;
+            margin-top: 2px;
+            padding: 2px 4px;
+        }
+
+        .night-hours-display{#timesheet-digital-container font-weight: bold;
+        }
+
+        /* --------- Handy-Ansicht optimieren --------- */
+        @media (max-width: 600px){#timesheet-digital-container body{#timesheet-digital-container margin: 4px;
+            }
+
+            h1{#timesheet-digital-container font-size: 1.0rem;
+            }
+
+            .top-info, #timesheet-digital-container .controls{#timesheet-digital-container flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+            }
+
+            .top-info label, #timesheet-digital-container .controls label{#timesheet-digital-container width: 100%;
+            }
+
+            .top-info input, #timesheet-digital-container .controls input, #timesheet-digital-container .controls select, #timesheet-digital-container .controls button{#timesheet-digital-container width: 100%;
+                box-sizing: border-box;
+            }
+
+            .controls button{#timesheet-digital-container text-align: center;
+            }
+
+            table{#timesheet-digital-container font-size: 0.75rem;
+            }
+        }
+
+        @media print{#timesheet-digital-container .controls, #timesheet-digital-container .top-info, #timesheet-digital-container .night-btn, #timesheet-digital-container .status-btn{#timesheet-digital-container display: none;
+            }
+            body{#timesheet-digital-container margin: 0;
+            }
+            table{
+                font-size: 0.7rem;
+            }
+        }</style>
 </head>
 <body>
 <header>
@@ -958,6 +1145,9 @@
 <ul class="document-list" id="docs-timesheets-list"></ul>
 </div>
 </div>
+
+
+
 <div class="portal-section-content hidden" id="section-sicknotes">
 <h3 class="section-title" data-i18n="section_sicknotes_overview_title">Krankmeldungen (Ihr Upload)</h3>
 <div class="document-category" style="padding-top: 0; border-top: none;">
@@ -1001,6 +1191,88 @@
 <input accept="image/*,application/pdf" class="hidden" id="upload-timesheet-paper-input" type="file"/>
 <div class="info" id="timesheet-paper-message"></div>
 </div>
+
+
+<div class="document-category" id="digital-timesheet-wrapper" style="margin-top:16px;">
+  <h4 data-i18n="timesheets_digital_title">Digitaler Stundenzettel</h4>
+  <p class="info" data-i18n="timesheets_digital_info">Füllen Sie den Stundenzettel digital aus und laden Sie ihn als PDF hoch.</p>
+  <div id="timesheet-digital-container">
+    <h1>Stundenzettel – Web-App (Testversion)</h1>
+
+<div class="top-info">
+    <label>
+        Mitarbeiter:
+        <input type="text" id="employeeName" placeholder="Name eingeben">
+    </label>
+</div>
+
+<div class="controls">
+    <label>Monat:
+        <select id="month">
+            <option value="1">Januar</option>
+            <option value="2">Februar</option>
+            <option value="3">März</option>
+            <option value="4">April</option>
+            <option value="5">Mai</option>
+            <option value="6">Juni</option>
+            <option value="7">Juli</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Dezember</option>
+        </select>
+    </label>
+
+    <label>Jahr:
+        <input type="number" id="year" value="2025" style="width:70px;">
+    </label>
+
+    <button type="button" onclick="generateMonth()">Monat erstellen</button>
+    <button type="button" onclick="resetMonth()">Monat zurücksetzen</button>
+    <button type="button" onclick="exportPdf()">Als PDF exportieren</button>
+
+    <span class="small">(Eingaben & Name werden automatisch im Browser gespeichert)</span>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-wrap"><table id="hours-table">
+        <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Wochentag</th>
+            <th>Einsatzort</th>
+            <th>Kommen</th>
+            <th>Gehen</th>
+            <th>Pause (Min)</th>
+            <th>Stunden</th>
+            <th>Akkord (Std)</th>
+            <th>Nacht (Std)</th>
+            <th>Notiz</th>
+        </tr>
+        </thead>
+        <tbody id="days-body">
+        </tbody>
+        <tfoot>
+        <tr class="footer-row">
+            <td colspan="6">Summe Monat</td>
+            <td id="sum-hours">0,00</td>
+            <td id="sum-akkord">0,00</td>
+            <td id="sum-night">0,00</td>
+            <td></td>
+        </tr>
+        </tfoot>
+    </table></div>
+</div>
+
+<p class="small">
+    Pause-Regel: bis inkl. 6,00 Std → keine Pause, &gt;6,00–&lt;9,75 Std → 30 Min, ab 9,75 Std → 45 Min (automatisch, manuell änderbar).<br>
+    „Urlaub“ / „Krank“ setzt 8,00 Std ohne Zeiten (Zelle grün/orange). Wird der Text wieder geändert, verschwinden Farbe und 8 Std (falls keine Zeiten eingetragen sind).<br>
+    Nachtstunden (22:00–05:00) nur über Nachtzeile.
+</p>
+  </div>
+</div>
+
 </div>
 <div class="portal-section-content hidden" id="section-settings">
 <h3 class="section-title" data-i18n="section_settings_title">Einstellungen</h3>
@@ -1879,7 +2151,9 @@
     if (window.supabase && window.supabase.createClient) {
         // Erfolgreiche Initialisierung
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
+    
+        window.supabaseClient = supabaseClient;
+} else {
         // Fehler beim Laden der CDN-Bibliothek (häufigste Ursache für nicht funktionierende Buttons)
         console.error("FATAL ERROR: Supabase-Bibliothek (CDN) wurde nicht geladen. Das Skript kann nicht ausgeführt werden.");
         // Eine Fehler-Variable, die später von init() erkannt wird, wird automatisch gesetzt, da supabaseClient null ist.
@@ -1887,6 +2161,7 @@
     
     // Globale Variablen
     let currentUser = null;
+        window.currentUser = currentUser;
     let currentProfile = null;
     let allProfilesCache = []; // Für Admin-Auswahl
 
@@ -2181,6 +2456,7 @@
 
     function showLogin() {
         currentUser = null;
+        window.currentUser = currentUser;
         currentProfile = null;
         clearTimeout(inactivityTimeout);
         clearInterval(timerInterval);
@@ -2207,6 +2483,7 @@
 
     function showPending(user) {
         currentUser = user;
+        window.currentUser = currentUser;
 
         authSection.classList.add('hidden');
         portalSection.classList.add('hidden');
@@ -2221,6 +2498,7 @@
         
     async function showPortal(user) {
         currentUser = user;
+        window.currentUser = currentUser;
 
         // Profil laden
         let { data: profile, error } = await supabaseClient
@@ -3768,6 +4046,714 @@ settingsSaveProfile.addEventListener('click', async () => {
         }
     });
 
+
+
+/* --- Digitaler Stundenzettel (eingebettet) --- */
+(function() {
+  const TS = {
+    initialized: false,
+    lastYM: null
+  };
+  function safeQuery(sel) { return document.querySelector(sel); }
+  function isVisible(el) { return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length)); }
+
+  // Try to bind when section-timesheet is shown
+  function tryInit() {
+    if (TS.initialized) return;
+    const container = safeQuery('#timesheet-digital-container');
+    if (!container) return;
+
+    // Patch IDs inside embedded HTML to avoid collisions
+    // (Only once) - prefix all ids in container
+    if (!container.dataset.idsPrefixed) {
+      const all = container.querySelectorAll('[id]');
+      all.forEach(el => {
+        el.id = 'ts_' + el.id;
+      });
+      // Also patch label[for]
+      container.querySelectorAll('label[for]').forEach(l=>{
+        l.setAttribute('for','ts_'+l.getAttribute('for'));
+      });
+      container.dataset.idsPrefixed = '1';
+    }
+
+    // Re-run the original timesheet JS but with prefixed IDs by shadowing query selectors.
+    // We inject helper functions used by original script by mapping document.getElementById calls.
+    const _getEl = (id)=>document.getElementById('ts_'+id);
+    const _qs = (sel)=>container.querySelector(sel.replace('#','#ts_'));
+    const _qsa = (sel)=>container.querySelectorAll(sel.replace('#','#ts_'));
+
+    // Provide minimal globals expected by the embedded script
+    const windowRef = window;
+    try {
+      (function(document, window) {
+        const document_getElementById = document.getElementById.bind(document);
+        document.getElementById = function(id) {
+          // if already prefixed, use as-is
+          if (id && id.startsWith('ts_')) return document_getElementById(id);
+          return document_getElementById('ts_'+id) || document_getElementById(id);
+        };
+        // Run original script
+        let isLoading = false;
+
+    (function initDefaults() {
+        const now = new Date();
+        document.getElementById('month').value = now.getMonth() + 1;
+        document.getElementById('year').value = now.getFullYear();
+
+        const storedName = localStorage.getItem('stundenapp_employeeName') || "";
+        document.getElementById('employeeName').value = storedName;
+        document.getElementById('employeeName').addEventListener('change', saveEmployeeName);
+
+        generateMonth();
+    })();
+
+    function saveEmployeeName() {
+        const name = document.getElementById('employeeName').value || "";
+        localStorage.setItem('stundenapp_employeeName', name);
+    }
+
+    function getStorageKey() {
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        return `stundenapp_${year}_${month}`;
+    }
+
+    function exportPdf() {
+        window.print();
+    }
+
+    function resetMonth() {
+        const sicher1 = confirm("Sind Sie sicher, dass Sie den Monat zurücksetzen möchten?\nAlle Einträge werden gelöscht.");
+        if (!sicher1) return;
+
+        const sicher2 = confirm("Sind Sie WIRKLICH sicher?\nDieser Schritt kann nicht rückgängig gemacht werden.");
+        if (!sicher2) return;
+
+        const key = getStorageKey();
+        localStorage.removeItem(key);
+        generateMonth();
+    }
+
+    function generateMonth() {
+        const month = parseInt(document.getElementById('month').value, 10);
+        const year = parseInt(document.getElementById('year').value, 10);
+
+        const daysBody = document.getElementById('days-body');
+        daysBody.innerHTML = "";
+
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month - 1, day);
+            const weekday = dateObj.getDay();
+            const isWeekend = (weekday === 0 || weekday === 6);
+
+            const tr = document.createElement('tr');
+            if (isWeekend) {
+                tr.classList.add('weekend');
+            }
+
+            const dateCell = document.createElement('td');
+            const dayStr = ("0" + day).slice(-2);
+            const monthStr = ("0" + month).slice(-2);
+            dateCell.textContent = `${dayStr}.${monthStr}.${year}`;
+            tr.appendChild(dateCell);
+
+            const weekdayCell = document.createElement('td');
+            weekdayCell.textContent = weekdayName(weekday);
+            tr.appendChild(weekdayCell);
+
+            const ortCell = document.createElement('td');
+            const ortInput = document.createElement('input');
+            ortInput.type = "text";
+            ortInput.addEventListener('change', () => {
+                updateStatusColor(ortInput);
+                saveToStorage();
+            });
+            ortCell.appendChild(ortInput);
+
+            const br1 = document.createElement('br');
+            ortCell.appendChild(br1);
+
+            const urlaubBtn = document.createElement('button');
+            urlaubBtn.type = 'button';
+            urlaubBtn.textContent = 'Urlaub';
+            urlaubBtn.className = 'status-btn';
+            urlaubBtn.addEventListener('click', () => setStatusDay(tr, 'Urlaub'));
+            ortCell.appendChild(urlaubBtn);
+
+            const krankBtn = document.createElement('button');
+            krankBtn.type = 'button';
+            krankBtn.textContent = 'Krank';
+            krankBtn.className = 'status-btn';
+            krankBtn.style.marginLeft = '4px';
+            krankBtn.addEventListener('click', () => setStatusDay(tr, 'Krank'));
+            ortCell.appendChild(krankBtn);
+
+            tr.appendChild(ortCell);
+
+            const kommenCell = document.createElement('td');
+            const kommenInput = document.createElement('input');
+            kommenInput.type = "time";
+            kommenInput.addEventListener('change', () => {
+                recalcRow(tr);
+            });
+            kommenCell.appendChild(kommenInput);
+            tr.appendChild(kommenCell);
+
+            const gehenCell = document.createElement('td');
+            const gehenInput = document.createElement('input');
+            gehenInput.type = "time";
+            gehenInput.addEventListener('change', () => {
+                recalcRow(tr);
+            });
+            gehenCell.appendChild(gehenInput);
+            tr.appendChild(gehenCell);
+
+            const pauseCell = document.createElement('td');
+            const pauseInput = document.createElement('input');
+            pauseInput.type = "number";
+            pauseInput.step = "15";
+            pauseInput.min = "0";
+            pauseInput.addEventListener('change', () => {
+                recalcRow(tr, true);
+            });
+            pauseCell.appendChild(pauseInput);
+            tr.appendChild(pauseCell);
+
+            const hoursCell = document.createElement('td');
+            hoursCell.textContent = "0,00";
+            tr.appendChild(hoursCell);
+
+            const akkordCell = document.createElement('td');
+            const akkordInput = document.createElement('input');
+            akkordInput.type = "number";
+            akkordInput.step = "0.25";
+            akkordInput.min = "0";
+            akkordInput.addEventListener('change', () => {
+                recalcTotals();
+                saveToStorage();
+            });
+            akkordCell.appendChild(akkordInput);
+            tr.appendChild(akkordCell);
+
+            const nightCell = document.createElement('td');
+            const nightSpan = document.createElement('span');
+            nightSpan.className = 'night-hours-display';
+            nightSpan.textContent = "0,00";
+            const br = document.createElement('br');
+            const nightBtn = document.createElement('button');
+            nightBtn.type = 'button';
+            nightBtn.textContent = 'Nacht';
+            nightBtn.className = 'night-btn';
+            nightBtn.addEventListener('click', () => toggleNightRow(tr));
+            nightCell.appendChild(nightSpan);
+            nightCell.appendChild(br);
+            nightCell.appendChild(nightBtn);
+            tr.appendChild(nightCell);
+
+            const noteCell = document.createElement('td');
+            const noteInput = document.createElement('input');
+            noteInput.type = "text";
+            noteInput.addEventListener('change', saveToStorage);
+            noteCell.appendChild(noteInput);
+            tr.appendChild(noteCell);
+
+            daysBody.appendChild(tr);
+        }
+
+        recalcTotals();
+        loadFromStorage();
+    }
+    // Expose digital timesheet controls for inline buttons (module scope -> window)
+    window.generateMonth = generateMonth;
+    window.resetMonth = resetMonth;
+    window.exportPdf = exportPdf;
+    window.saveEmployeeName = saveEmployeeName;
+
+
+    function weekdayName(d) {
+        switch (d) {
+            case 0: return "So";
+            case 1: return "Mo";
+            case 2: return "Di";
+            case 3: return "Mi";
+            case 4: return "Do";
+            case 5: return "Fr";
+            case 6: return "Sa";
+            default: return "";
+        }
+    }
+
+    function parseTimeToMinutes(str) {
+        if (!str) return NaN;
+        const parts = str.split(":");
+        if (parts.length !== 2) return NaN;
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (isNaN(h) || isNaN(m)) return NaN;
+        return h * 60 + m;
+    }
+
+    function updateStatusColor(ortInput) {
+        const cell = ortInput.parentElement;
+        const val = (ortInput.value || "").trim().toLowerCase();
+        const tr = ortInput.closest('tr');
+
+        cell.classList.remove('urlaub-cell', 'krank-cell');
+
+        if (val === 'urlaub') {
+            cell.classList.add('urlaub-cell');
+        } else if (val === 'krank') {
+            cell.classList.add('krank-cell');
+        } else {
+            const inputs = tr.getElementsByTagName('input');
+            const kommenInput = inputs[1];
+            const gehenInput = inputs[2];
+            const pauseInput = inputs[3];
+            const hoursCell = tr.children[6];
+
+            if (!kommenInput.value && !gehenInput.value && !pauseInput.value) {
+                hoursCell.textContent = "0,00";
+            }
+        }
+    }
+
+    function setStatusDay(tr, statusText) {
+        const inputs = tr.getElementsByTagName('input');
+        const ortInput = inputs[0];
+        const kommenInput = inputs[1];
+        const gehenInput = inputs[2];
+        const pauseInput = inputs[3];
+        const hoursCell = tr.children[6];
+
+        ortInput.value = statusText;
+        updateStatusColor(ortInput);
+
+        kommenInput.value = "";
+        gehenInput.value = "";
+        pauseInput.value = "";
+        hoursCell.textContent = "8,00";
+
+        const next = tr.nextElementSibling;
+        if (next && next.classList.contains('night-row')) {
+            next.remove();
+        }
+        updateNightDisplay(tr, 0);
+
+        recalcTotals();
+        saveToStorage();
+    }
+
+    function recalcRow(tr, pauseChanged = false) {
+        const inputs = tr.getElementsByTagName('input');
+
+        const kommenInput = inputs[1];
+        const gehenInput = inputs[2];
+        const pauseInput = inputs[3];
+
+        const kommenMin = parseTimeToMinutes(kommenInput.value);
+        const gehenMin = parseTimeToMinutes(gehenInput.value);
+
+        const hoursCell = tr.children[6];
+
+        if (isNaN(kommenMin) || isNaN(gehenMin)) {
+            hoursCell.textContent = "0,00";
+            recalcTotals();
+            saveToStorage();
+            return;
+        }
+
+        let rawMinutes = gehenMin - kommenMin;
+        if (rawMinutes <= 0) {
+            rawMinutes += 24 * 60;
+        }
+
+        const rawHours = rawMinutes / 60;
+
+        let pauseMinutes = parseFloat((pauseInput.value || "").toString().replace(",", "."));
+        if (!pauseChanged || isNaN(pauseMinutes)) {
+            if (rawHours <= 6) {
+                pauseMinutes = 0;
+                pauseInput.value = "";
+            } else if (rawHours >= 9.75) {
+                pauseMinutes = 45;
+                pauseInput.value = "45";
+            } else {
+                pauseMinutes = 30;
+                pauseInput.value = "30";
+            }
+        }
+
+        if (pauseMinutes < 0) pauseMinutes = 0;
+        let paidMinutes = rawMinutes - pauseMinutes;
+        if (paidMinutes < 0) paidMinutes = 0;
+
+        const paidHours = paidMinutes / 60;
+        hoursCell.textContent = paidHours.toFixed(2).replace(".", ",");
+
+        recalcTotals();
+        saveToStorage();
+    }
+
+    function toggleNightRow(mainRow) {
+        const next = mainRow.nextElementSibling;
+        if (next && next.classList.contains('night-row')) {
+            next.remove();
+            updateNightDisplay(mainRow, 0);
+            recalcTotals();
+            saveToStorage();
+        } else {
+            createNightRow(mainRow);
+            saveToStorage();
+        }
+    }
+
+    function createNightRow(mainRow) {
+        const nightRow = document.createElement('tr');
+        nightRow.className = 'night-row';
+
+        let td = document.createElement('td');
+        td.textContent = "";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = "";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = "Nacht:";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        const nKommen = document.createElement('input');
+        nKommen.type = "time";
+        nKommen.addEventListener('change', () => recalcNightRow(mainRow, nightRow));
+        td.appendChild(nKommen);
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        const nGehen = document.createElement('input');
+        nGehen.type = "time";
+        nGehen.addEventListener('change', () => recalcNightRow(mainRow, nightRow));
+        td.appendChild(nGehen);
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        const nPause = document.createElement('input');
+        nPause.type = "number";
+        nPause.step = "15";
+        nPause.min = "0";
+        nPause.addEventListener('change', () => recalcNightRow(mainRow, nightRow, true));
+        td.appendChild(nPause);
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.className = 'night-hours-cell';
+        td.textContent = "0,00";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = "";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = "";
+        nightRow.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = "";
+        nightRow.appendChild(td);
+
+        const tbody = document.getElementById('days-body');
+        if (mainRow.nextSibling) {
+            tbody.insertBefore(nightRow, mainRow.nextSibling);
+        } else {
+            tbody.appendChild(nightRow);
+        }
+    }
+
+    function recalcNightRow(mainRow, nightRow, pauseChanged = false) {
+        const inputs = nightRow.getElementsByTagName('input');
+        const kommenInput = inputs[0];
+        const gehenInput = inputs[1];
+        const pauseInput = inputs[2];
+
+        const startMin = parseTimeToMinutes(kommenInput.value);
+        const endMin = parseTimeToMinutes(gehenInput.value);
+
+        const nightHoursCell = nightRow.querySelector('.night-hours-cell');
+
+        if (isNaN(startMin) || isNaN(endMin)) {
+            nightHoursCell.textContent = "0,00";
+            updateNightDisplay(mainRow, 0);
+            recalcTotals();
+            saveToStorage();
+            return;
+        }
+
+        let rawMinutes = endMin - startMin;
+        if (rawMinutes <= 0) {
+            rawMinutes += 24 * 60;
+        }
+        const rawHours = rawMinutes / 60;
+
+        let pauseMinutes = parseFloat((pauseInput.value || "").toString().replace(",", "."));
+        if (!pauseChanged || isNaN(pauseMinutes)) {
+            if (rawHours <= 6) {
+                pauseMinutes = 0;
+                pauseInput.value = "";
+            } else if (rawHours >= 9.75) {
+                pauseMinutes = 45;
+                pauseInput.value = "45";
+            } else {
+                pauseMinutes = 30;
+                pauseInput.value = "30";
+            }
+        }
+
+        if (pauseMinutes < 0) pauseMinutes = 0;
+
+        const nightMinutesWindow = calcNightMinutes(startMin, endMin);
+
+        let nightPaidMinutes = nightMinutesWindow - pauseMinutes;
+        if (nightPaidMinutes < 0) nightPaidMinutes = 0;
+
+        const nightHours = nightPaidMinutes / 60;
+        nightHoursCell.textContent = nightHours.toFixed(2).replace(".", ",");
+
+        updateNightDisplay(mainRow, nightHours);
+        recalcTotals();
+        saveToStorage();
+    }
+
+    function updateNightDisplay(mainRow, nightHours) {
+        const span = mainRow.children[8].querySelector('.night-hours-display');
+        if (span) {
+            span.textContent = nightHours.toFixed(2).replace(".", ",");
+        }
+    }
+
+    function calcNightMinutes(startMin, endMin) {
+        if (isNaN(startMin) || isNaN(endMin)) return 0;
+
+        let s = startMin;
+        let e = endMin;
+        if (e <= s) {
+            e += 24 * 60;
+        }
+
+        const NIGHT_START = 22 * 60;
+        const NIGHT_END = 5 * 60;
+        const DAY_MINUTES = 24 * 60;
+
+        let night = 0;
+        for (let m = s; m < e; m++) {
+            const tod = m % DAY_MINUTES;
+            if (tod >= NIGHT_START || tod < NIGHT_END) {
+                night++;
+            }
+        }
+        return night;
+    }
+
+    function recalcTotals() {
+        const tbody = document.getElementById('days-body');
+        let sumHours = 0;
+        let sumAkkord = 0;
+        let sumNight = 0;
+
+        for (const tr of tbody.rows) {
+            if (tr.classList.contains('night-row')) continue;
+
+            const hoursText = tr.children[6].textContent.replace(".", "").replace(",", ".");
+            const hVal = parseFloat(hoursText);
+            if (!isNaN(hVal)) {
+                sumHours += hVal;
+            }
+
+            const akkordInput = tr.children[7].getElementsByTagName('input')[0];
+            let aVal = parseFloat((akkordInput.value || "").replace(",", "."));
+            if (!isNaN(aVal)) {
+                sumAkkord += aVal;
+            }
+
+            const nightSpan = tr.children[8].querySelector('.night-hours-display');
+            const nightText = nightSpan ? nightSpan.textContent.replace(".", "").replace(",", ".") : "0";
+            const nVal = parseFloat(nightText);
+            if (!isNaN(nVal)) {
+                sumNight += nVal;
+            }
+        }
+
+        document.getElementById('sum-hours').textContent = sumHours.toFixed(2).replace(".", ",");
+        document.getElementById('sum-akkord').textContent = sumAkkord.toFixed(2).replace(".", ",");
+        document.getElementById('sum-night').textContent = sumNight.toFixed(2).replace(".", ",");
+    }
+
+    function saveToStorage() {
+        if (isLoading) return;
+
+        const tbody = document.getElementById('days-body');
+        const data = [];
+        let rows = Array.from(tbody.rows);
+
+        for (let i = 0; i < rows.length; i++) {
+            const tr = rows[i];
+            if (tr.classList.contains('night-row')) continue;
+
+            const inputs = tr.getElementsByTagName('input');
+            const ort = inputs[0].value || "";
+            const kommen = inputs[1].value || "";
+            const gehen = inputs[2].value || "";
+            const pause = inputs[3].value || "";
+            const akkord = inputs[4].value || "";
+            const note = inputs[5].value || "";
+
+            const hoursText = tr.children[6].textContent || "0,00";
+            const nightSpan = tr.children[8].querySelector('.night-hours-display');
+            const nightTextMain = nightSpan ? nightSpan.textContent : "0,00";
+
+            let nightRow = null;
+            const next = tr.nextElementSibling;
+            if (next && next.classList.contains('night-row')) {
+                nightRow = next;
+            }
+
+            let nKommen = "";
+            let nGehen = "";
+            let nPause = "";
+            let nHours = "0,00";
+
+            if (nightRow) {
+                const nInputs = nightRow.getElementsByTagName('input');
+                nKommen = nInputs[0].value || "";
+                nGehen = nInputs[1].value || "";
+                nPause = nInputs[2].value || "";
+                const nHoursCell = nightRow.querySelector('.night-hours-cell');
+                nHours = nHoursCell ? (nHoursCell.textContent || "0,00") : "0,00";
+            }
+
+            data.push({
+                ort,
+                kommen,
+                gehen,
+                pause,
+                hours: hoursText,
+                akkord,
+                nightDisplay: nightTextMain,
+                note,
+                nKommen,
+                nGehen,
+                nPause,
+                nHours
+            });
+        }
+
+        const key = getStorageKey();
+        localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+        const key = getStorageKey();
+        const json = localStorage.getItem(key);
+        if (!json) return;
+
+        let data;
+        try {
+            data = JSON.parse(json);
+        } catch (e) {
+            console.error("Fehler beim Laden aus localStorage:", e);
+            return;
+        }
+
+        const tbody = document.getElementById('days-body');
+        const rows = tbody.rows;
+
+        isLoading = true;
+        for (let i = 0; i < rows.length && i < data.length; i++) {
+            const tr = rows[i];
+            if (tr.classList.contains('night-row')) continue;
+
+            const rowData = data[i];
+            const inputs = tr.getElementsByTagName('input');
+
+            inputs[0].value = rowData.ort || "";
+            inputs[1].value = rowData.kommen || "";
+            inputs[2].value = rowData.gehen || "";
+            inputs[3].value = rowData.pause || "";
+            inputs[4].value = rowData.akkord || "";
+            inputs[5].value = rowData.note || "";
+
+            updateStatusColor(inputs[0]);
+
+            recalcRow(tr, true);
+
+            if (rowData.nKommen || rowData.nGehen || rowData.nPause || rowData.nHours) {
+                createNightRow(tr);
+                const nightRow = tr.nextElementSibling;
+                const nInputs = nightRow.getElementsByTagName('input');
+                nInputs[0].value = rowData.nKommen || "";
+                nInputs[1].value = rowData.nGehen || "";
+                nInputs[2].value = rowData.nPause || "";
+                recalcNightRow(tr, nightRow, true);
+            }
+
+            if (rowData.nightDisplay) {
+                updateNightDisplay(tr, parseFloat(rowData.nightDisplay.replace(",", ".")) || 0);
+            }
+        }
+        isLoading = false;
+        recalcTotals();
+    }
+      })(document, windowRef);
+    } catch(e) {
+      console.error('Digitaler Stundenzettel JS Fehler:', e);
+    }
+
+    // Add Supabase JSON autosave hooks (best effort, won't break if table missing)
+    try {
+      const monthSel = container.querySelector('#ts_month');
+      const yearSel = container.querySelector('#ts_year');
+      const table = container.querySelector('#ts_timesheetTable');
+      function ymKey() {
+        const m = monthSel ? monthSel.value : '';
+        const y = yearSel ? yearSel.value : '';
+        return y && m ? `${y}-${String(m).padStart(2,'0')}` : null;
+      }
+      async function saveRemote() {
+        if (!window.supabaseClient) return;
+        const key = ymKey(); if (!key) return;
+        // Collect localStorage snapshot if present
+        const local = localStorage.getItem('timesheet_' + key) || null;
+        if (!local) return;
+        const payload = {
+          user_id: (window.currentUser && window.currentUser.id) ? window.currentUser.id : null,
+          year_month: key,
+          data_json: local,
+          updated_at: new Date().toISOString()
+        };
+        if (!payload.user_id) return;
+        // upsert to a dedicated table if exists
+        await window.supabaseClient.from('timesheets_json').upsert(payload, { onConflict: 'user_id,year_month' });
+      }
+      // periodic save
+      setInterval(()=>{ saveRemote().catch(()=>{}); }, 8000);
+    } catch(e) {}
+    TS.initialized = true;
+  }
+
+  // Hook into your existing navigation click handling: observe section visibility
+  const obs = new MutationObserver(()=>{
+    const sec = document.getElementById('section-timesheet');
+    if (sec && !sec.classList.contains('hidden')) {
+      tryInit();
+    }
+  });
+  obs.observe(document.body, { attributes: true, childList: true, subtree: true });
+
+})();
 
     // Start App
     init();
