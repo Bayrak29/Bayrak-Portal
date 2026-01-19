@@ -772,6 +772,10 @@
 .ts-status-frei{background:rgba(108,117,125,0.16);border:1px solid rgba(108,117,125,0.32)}
 .ts-hint{margin-top:10px;font-size:12px;opacity:.85}
 
+/* kompakt-spalten-std-akkord */
+.ts-table th:nth-child(6), .ts-table td:nth-child(6){padding-left:6px;padding-right:6px;}
+.ts-table th:nth-child(8), .ts-table td:nth-child(8){padding-left:6px;padding-right:6px;}
+
 
 .ts-daycell{display:flex;flex-direction:column;gap:6px;line-height:1}
 .ts-daycell-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -1082,7 +1086,7 @@
               <th data-i18n="ts_th_start">Beginn</th>
               <th data-i18n="ts_th_end">Ende</th>
               <th data-i18n="ts_th_break">Pause</th>
-              <th data-i18n="ts_th_work">Arbeitszeit</th>
+              <th data-i18n="ts_th_work">Std.</th>
               <th data-i18n="ts_th_night">Nacht</th>
               <th data-i18n="ts_th_akkord">Akkord</th>
               <th data-i18n="ts_th_status">Status</th>
@@ -1344,7 +1348,7 @@
             ts_th_start: "Beginn",
             ts_th_end: "Ende",
             ts_th_break: "Pause",
-            ts_th_work: "Arbeitszeit",
+            ts_th_work: "Std.",
             ts_th_night: "Nacht",
             ts_th_akkord: "Akkord",
             ts_th_status: "Status",
@@ -4346,8 +4350,13 @@ settingsSaveProfile.addEventListener('click', async () => {
     function calcAutoBreakMinutes(workMinutes){
         if(workMinutes==null) return 0;
         const hours = workMinutes/60;
-        if(hours < 6) return 0;
-        // >= 9.75h -> 45 min (as requested in prior build)
+        // Bayrak Pausenregeln:
+        // - bis 6,00 Std. -> 0 Min
+        // - 6,25 Std. bis < 9,75 Std. -> 30 Min
+        // - ab 9,75 Std. -> 45 Min
+        // (6,01 - 6,24 Std. bleiben 0 Min)
+        if(hours <= 6) return 0;
+        if(hours < 6.25) return 0;
         if(hours >= 9.75) return 45;
         return 30;
     }
@@ -4786,12 +4795,12 @@ settingsSaveProfile.addEventListener('click', async () => {
                 updateTotalsOnly();
             };
 
-            startIn.addEventListener("change", ()=>{
+            startIn.addEventListener("input", ()=>{
                 row.start = startIn.value;
                 updateWorkAndTotals();
                 markDirty(true);
             });
-            endIn.addEventListener("change", ()=>{
+            endIn.addEventListener("input", ()=>{
                 row.end = endIn.value;
                 updateWorkAndTotals();
                 markDirty(true);
