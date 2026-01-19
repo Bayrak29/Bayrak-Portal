@@ -772,6 +772,14 @@
 .ts-status-frei{background:rgba(108,117,125,0.16);border:1px solid rgba(108,117,125,0.32)}
 .ts-hint{margin-top:10px;font-size:12px;opacity:.85}
 
+
+.ts-daycell{display:flex;flex-direction:column;gap:6px;line-height:1}
+.ts-daycell-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ts-rowhint{font-size:11px;opacity:.75}
+.ts-plus-btn{width:22px;height:22px;border-radius:8px;border:1px solid rgba(255,255,255,0.20);background:rgba(0,0,0,0.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;user-select:none}
+.ts-plus-btn:hover{background:rgba(255,255,255,0.08)}
+.ts-remove-btn{width:26px;height:26px;border-radius:10px;border:1px solid rgba(255,120,120,0.35);background:rgba(220,53,69,0.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;user-select:none}
+.ts-remove-btn:hover{background:rgba(220,53,69,0.28)}
 /* Modal */
 #global-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
 #global-modal{width:min(520px, 100%);background:rgba(20,20,24,0.96);border:1px solid rgba(255,255,255,0.14);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.45);padding:16px}
@@ -1043,7 +1051,7 @@
 
     <!-- DIGITAL TIMESHEET -->
     <div id="ts-pane-digital" class="hidden">
-      <p class="info" data-i18n="ts_digital_info">Erstellen Sie Ihren digitalen Stundenzettel. Ihre Eingaben werden automatisch gespeichert.</p>
+      <p class="info" data-i18n="ts_digital_info">Erstellen Sie Ihren digitalen Stundenzettel. Füllen Sie alles aus und klicken Sie anschließend auf „Speichern“.</p>
 
       <div class="ts-controls">
         <label class="ts-label">
@@ -1055,6 +1063,7 @@
           <select id="ts-year-select" class="input"></select>
         </label>
         <button class="btn" id="ts-create-btn" type="button" data-i18n="ts_create_month">Monat erstellen</button>
+        <button class="btn" id="ts-save-btn" type="button" data-i18n="ts_save_btn">Speichern</button>
 
         <div class="ts-controls-spacer"></div>
 
@@ -1075,6 +1084,7 @@
               <th data-i18n="ts_th_break">Pause</th>
               <th data-i18n="ts_th_work">Arbeitszeit</th>
               <th data-i18n="ts_th_night">Nacht</th>
+              <th data-i18n="ts_th_akkord">Akkord</th>
               <th data-i18n="ts_th_status">Status</th>
               <th data-i18n="ts_th_note">Notiz</th>
             </tr>
@@ -1085,6 +1095,7 @@
               <td colspan="5" style="text-align:right; font-weight:700;" data-i18n="ts_total">Summe</td>
               <td id="ts-total-hours" style="font-weight:700;">0.00</td>
               <td id="ts-total-night" style="font-weight:700;">0.00</td>
+              <td id="ts-total-akkord" style="font-weight:700;">0.00</td>
               <td colspan="2"></td>
             </tr>
           </tfoot>
@@ -1322,10 +1333,11 @@
             ts_tab_digital: "Digitaler Stundenzettel",
             ts_paper_info: "Laden Sie hier Ihren ausgefüllten Stundenzettel als Foto oder PDF hoch.",
             ts_upload_paper_btn: "Stundenzettel hochladen",
-            ts_digital_info: "Erstellen Sie Ihren digitalen Stundenzettel. Ihre Eingaben werden automatisch gespeichert.",
+            ts_digital_info: "Erstellen Sie Ihren digitalen Stundenzettel. Füllen Sie alles aus und klicken Sie anschließend auf „Speichern“." ,
             ts_month: "Monat",
             ts_year: "Jahr",
             ts_create_month: "Monat erstellen",
+            ts_save_btn: "Speichern",
             ts_reset_btn: "Zurücksetzen",
             ts_th_date: "Datum",
             ts_th_day: "Tag",
@@ -1334,6 +1346,7 @@
             ts_th_break: "Pause",
             ts_th_work: "Arbeitszeit",
             ts_th_night: "Nacht",
+            ts_th_akkord: "Akkord",
             ts_th_status: "Status",
             ts_th_note: "Notiz",
             ts_total: "Summe",
@@ -1344,6 +1357,9 @@
             ts_status_holiday: "Feiertag",
             ts_status_off: "Frei",
             ts_msg_saved: "Gespeichert.",
+            ts_msg_unsaved: "Änderungen nicht gespeichert.",
+            ts_msg_saving: "Speichere…",
+            ts_msg_save_fail: "Speichern fehlgeschlagen.",
             ts_msg_uploading: "PDF wird erstellt und hochgeladen…",
             ts_msg_upload_success: "Erfolgreich hochgeladen.",
             ts_msg_upload_fail: "Upload fehlgeschlagen.",
@@ -1418,10 +1434,11 @@
             ts_tab_digital: "Dijital Puantaj",
             ts_paper_info: "Doldurduğunuz puantajı fotoğraf veya PDF olarak yükleyin.",
             ts_upload_paper_btn: "Puantaj yükle",
-            ts_digital_info: "Dijital puantaj oluşturun. Girdileriniz otomatik kaydedilir.",
+            ts_digital_info: "Dijital çalışma çizelgenizi oluşturun. Tüm alanları doldurun ve ardından “Kaydet”e tıklayın.",
             ts_month: "Ay",
             ts_year: "Yıl",
             ts_create_month: "Ay oluştur",
+            ts_save_btn: "Kaydet",
             ts_reset_btn: "Sıfırla",
             ts_th_date: "Tarih",
             ts_th_day: "Gün",
@@ -1430,6 +1447,7 @@
             ts_th_break: "Mola",
             ts_th_work: "Çalışma",
             ts_th_night: "Gece",
+            ts_th_akkord: "Akkord",
             ts_th_status: "Durum",
             ts_th_note: "Not",
             ts_total: "Toplam",
@@ -1440,6 +1458,9 @@
             ts_status_holiday: "Resmî tatil",
             ts_status_off: "Boş",
             ts_msg_saved: "Kaydedildi.",
+            ts_msg_unsaved: "Değişiklikler kaydedilmedi.",
+            ts_msg_saving: "Kaydediliyor…",
+            ts_msg_save_fail: "Kaydetme başarısız.",
             ts_msg_uploading: "PDF hazırlanıyor ve yükleniyor…",
             ts_msg_upload_success: "Başarıyla yüklendi.",
             ts_msg_upload_fail: "Yükleme başarısız.",
@@ -2282,10 +2303,11 @@
             ts_tab_digital: "Digital timesheet",
             ts_paper_info: "Upload your completed timesheet as a photo or PDF.",
             ts_upload_paper_btn: "Upload timesheet",
-            ts_digital_info: "Create your digital timesheet. Your entries are saved automatically.",
+            ts_digital_info: "Create your digital timesheet. Fill everything in and then click “Save”.",
             ts_month: "Month",
             ts_year: "Year",
             ts_create_month: "Create month",
+            ts_save_btn: "Save",
             ts_reset_btn: "Reset",
             ts_th_date: "Date",
             ts_th_day: "Day",
@@ -2294,6 +2316,7 @@
             ts_th_break: "Break",
             ts_th_work: "Work hours",
             ts_th_night: "Night",
+            ts_th_akkord: "Piecework",
             ts_th_status: "Status",
             ts_th_note: "Note",
             ts_total: "Total",
@@ -2304,6 +2327,9 @@
             ts_status_holiday: "Holiday",
             ts_status_off: "Off",
             ts_msg_saved: "Saved.",
+            ts_msg_unsaved: "Changes not saved.",
+            ts_msg_saving: "Saving…",
+            ts_msg_save_fail: "Save failed.",
             ts_msg_uploading: "Creating and uploading PDF…",
             ts_msg_upload_success: "Uploaded successfully.",
             ts_msg_upload_fail: "Upload failed.",
@@ -4270,7 +4296,8 @@ settingsSaveProfile.addEventListener('click', async () => {
         bound: false,
         state: null,
         saveTimer: null,
-        lastSavedAt: 0
+        lastSavedAt: 0,
+        dirty: false
     };
 
     const monthNames = {
@@ -4344,10 +4371,12 @@ settingsSaveProfile.addEventListener('click', async () => {
             createBtn: document.getElementById("ts-create-btn"),
             uploadBtn: document.getElementById("ts-upload-btn"),
             resetBtn: document.getElementById("ts-reset-btn"),
+            saveBtn: document.getElementById("ts-save-btn"),
             tbody: document.getElementById("ts-tbody"),
             msg: document.getElementById("ts-digital-message"),
             totalHours: document.getElementById("ts-total-hours"),
             totalNight: document.getElementById("ts-total-night"),
+            totalAkkord: document.getElementById("ts-total-akkord"),
             modalOverlay: document.getElementById("global-modal-overlay"),
             modalTitle: document.getElementById("global-modal-title"),
             modalMsg: document.getElementById("global-modal-message"),
@@ -4360,7 +4389,7 @@ settingsSaveProfile.addEventListener('click', async () => {
         if(!el) return;
         el.textContent = text || "";
         el.style.opacity = text ? "1" : "0";
-        el.style.color = kind === "error" ? "#ffb4b4" : (kind === "ok" ? "#b8ffcf" : "");
+        el.style.color = kind === "error" ? "#ffb4b4" : (kind === "ok" ? "#b8ffcf" : (kind === "warn" ? "#ffe08a" : ""));
     }
 
     function showModal(titleKey, msgKey){
@@ -4398,16 +4427,150 @@ settingsSaveProfile.addEventListener('click', async () => {
         const rows = [];
         for(let d=1; d<=daysInMonth; d++){
             rows.push({
+                uid: `d${d}-0`,
                 day: d,
+                extra: false,
                 start: "",
                 end: "",
                 breakMin: 0,
                 status: "work",
                 note: "",
-                nightMin: 0
+                nightMin: 0,
+                akkord: "",
+                breakManual: false
             });
         }
         return { year, month, rows };
+    }
+
+    function makeUid(day){
+        return `d${day}-${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+    }
+
+    function normalizeState(state){
+        if(!state || !state.rows || !Array.isArray(state.rows)) return state;
+        const year = state.year;
+        const month = state.month;
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        // Ensure base rows exist for each day
+        const hasBase = new Set();
+        for(const r of state.rows){
+            if(!r) continue;
+            if(r.extra !== true){
+                hasBase.add(r.day);
+            }
+        }
+        for(let d=1; d<=daysInMonth; d++){
+            if(!hasBase.has(d)){
+                state.rows.push({
+                    uid: `d${d}-0`,
+                    day: d,
+                    extra: false,
+                    start: "",
+                    end: "",
+                    breakMin: 0,
+                    status: "work",
+                    note: "",
+                    nightMin: 0,
+                    akkord: "",
+                    breakManual: false
+                });
+            }
+        }
+
+        // Normalize each row
+        for(const r of state.rows){
+            if(!r) continue;
+            if(!r.uid) r.uid = (r.extra ? makeUid(r.day) : `d${r.day}-0`);
+            if(typeof r.extra !== 'boolean') r.extra = false;
+            if(typeof r.start !== 'string') r.start = '';
+            if(typeof r.end !== 'string') r.end = '';
+            if(typeof r.note !== 'string') r.note = '';
+            if(typeof r.akkord !== 'string') r.akkord = (r.akkord == null ? '' : String(r.akkord));
+            if(typeof r.breakMin !== 'number') r.breakMin = parseInt(r.breakMin || '0', 10) || 0;
+            if(typeof r.status !== 'string') r.status = 'work';
+            if(typeof r.nightMin !== 'number') r.nightMin = 0;
+            if(typeof r.breakManual !== 'boolean') r.breakManual = false;
+        }
+
+        // Sort by day, then base first, then extras in insertion order
+        state.rows.sort((a,b)=>{
+            if(a.day !== b.day) return a.day - b.day;
+            if((a.extra?1:0) !== (b.extra?1:0)) return (a.extra?1:0) - (b.extra?1:0);
+            return String(a.uid).localeCompare(String(b.uid));
+        });
+
+        return state;
+    }
+
+    function calcNightMinutes(start, end){
+        const s = timeToMinutes(start);
+        const e = timeToMinutes(end);
+        if(s==null || e==null) return 0;
+
+        const segments = [];
+        if(e < s){
+            segments.push([s, 1440]);
+            segments.push([0, e]);
+        } else {
+            segments.push([s, e]);
+        }
+
+        const nightSegments = [[1320,1440],[0,300]]; // 22:00-24:00 and 00:00-05:00
+        let total = 0;
+        for(const seg of segments){
+            const a1 = seg[0];
+            const a2 = seg[1];
+            for(const ns of nightSegments){
+                const b1 = ns[0];
+                const b2 = ns[1];
+                const s2 = Math.max(a1, b1);
+                const e2 = Math.min(a2, b2);
+                if(e2 > s2) total += (e2 - s2);
+            }
+        }
+        return total;
+    }
+
+    function addExtraRow(day){
+        if(!TS.state) return;
+        const uid = makeUid(day);
+        const row = {
+            uid,
+            day,
+            extra: true,
+            start: "",
+            end: "",
+            breakMin: 0,
+            status: "work",
+            note: "",
+            nightMin: 0,
+            akkord: "",
+            breakManual: false
+        };
+        // insert after last row of that day
+        let idx = -1;
+        for(let i=TS.state.rows.length-1; i>=0; i--){
+            if(TS.state.rows[i].day === day){ idx = i; break; }
+        }
+        if(idx === -1){
+            TS.state.rows.push(row);
+        } else {
+            TS.state.rows.splice(idx+1, 0, row);
+        }
+        markDirty(true);
+        renderTable();
+    }
+
+    function removeExtraRow(uid){
+        if(!TS.state) return;
+        const i = TS.state.rows.findIndex(r=>r && r.uid === uid);
+        if(i === -1) return;
+        if(TS.state.rows[i].extra !== true) return; // do not remove base rows
+        TS.state.rows.splice(i, 1);
+        markDirty(true);
+        renderTable();
     }
 
     function recalcRow(row){
@@ -4426,29 +4589,37 @@ settingsSaveProfile.addEventListener('click', async () => {
             row.nightMin = 0;
             return { workMin: 0, nightMin: 0 };
         }
+
         const dur = calcDurationMinutes(row.start, row.end);
         if(dur==null || dur<=0){
             row.breakMin = 0;
             row.nightMin = 0;
             return { workMin: 0, nightMin: 0 };
         }
+
         const autoBreak = calcAutoBreakMinutes(dur);
-        // keep user's manual override if set and >0, otherwise auto
         if(!row.breakManual){ row.breakMin = autoBreak; }
+
         const workMin = Math.max(0, dur - (row.breakMin||0));
-        // night minutes not auto in this simplified version unless user enters overnight; keep 0
-        return { workMin, nightMin: row.nightMin||0 };
+        const nightRaw = calcNightMinutes(row.start, row.end);
+        row.nightMin = Math.min(nightRaw, workMin);
+
+        return { workMin, nightMin: row.nightMin };
     }
 
     function calcTotals(state){
         let totalWorkMin = 0;
         let totalNightMin = 0;
+        let totalAkkordHours = 0;
         for(const row of state.rows){
             const {workMin, nightMin} = recalcRow(row);
             totalWorkMin += workMin;
             totalNightMin += nightMin;
+            const a = parseFloat((row.akkord||"0").toString().replace(",","."));
+            if(!Number.isNaN(a) && a>0) totalAkkordHours += a;
         }
-        return { totalWorkMin, totalNightMin };
+        totalAkkordHours = Math.round(totalAkkordHours*100)/100;
+        return { totalWorkMin, totalNightMin, totalAkkordHours };
     }
 
     function statusLabelKey(status){
@@ -4472,62 +4643,119 @@ settingsSaveProfile.addEventListener('click', async () => {
 
     function renderTable(){
         const els = ensureElements();
-        if(!TS.state){ els.tbody.innerHTML=""; return; }
-        const {year, month, rows} = TS.state;
-        const lang = (typeof currentLanguage !== "undefined" ? currentLanguage : "de");
+        if(!els.tbody || !TS.state) return;
+        TS.state = normalizeState(TS.state);
         els.tbody.innerHTML = "";
+
+        const lang = (typeof currentLanguage !== "undefined" ? currentLanguage : "de");
+        const year = TS.state.year;
+        const month = TS.state.month;
+        const rows = TS.state.rows;
 
         for(const row of rows){
             const dateObj = new Date(year, month-1, row.day);
             const tr = document.createElement("tr");
             applyStatusPill(tr, row.status);
 
+            // ensure break/night/work are computed BEFORE we fill inputs
+            const rcalc = recalcRow(row);
+
+            // Date cell
             const dateTd = document.createElement("td");
-            dateTd.textContent = `${pad2(row.day)}.${pad2(month)}.${year}`;
+            dateTd.textContent = row.extra ? "" : (pad2(row.day) + "." + pad2(month) + "." + year);
             tr.appendChild(dateTd);
 
+            // Day cell + plus / delete
             const dayTd = document.createElement("td");
-            dayTd.textContent = getWeekday(lang, dateObj);
+            if(row.extra){
+                const wrap = document.createElement('div');
+                wrap.className = 'ts-daycell';
+                const hint = document.createElement('div');
+                hint.className = 'ts-rowhint';
+                hint.textContent = '↳';
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'ts-plus-btn';
+                del.title = (typeof t==="function") ? t('ts_remove_row') : 'Zeile entfernen';
+                del.textContent = '−';
+                del.addEventListener('click', ()=> removeExtraRow(row.uid));
+                const top = document.createElement('div');
+                top.className = 'ts-daycell-top';
+                top.appendChild(hint);
+                top.appendChild(del);
+                wrap.appendChild(top);
+                dayTd.appendChild(wrap);
+            } else {
+                const wrap = document.createElement('div');
+                wrap.className = 'ts-daycell';
+                const top = document.createElement('div');
+                top.className = 'ts-daycell-top';
+                const wd = document.createElement('div');
+                wd.textContent = getWeekday(lang, dateObj);
+                const plus = document.createElement('button');
+                plus.type = 'button';
+                plus.className = 'ts-plus-btn';
+                plus.title = (typeof t==="function") ? t('ts_add_row') : 'Weitere Zeile';
+                plus.textContent = '+';
+                plus.addEventListener('click', ()=> addExtraRow(row.day));
+                top.appendChild(wd);
+                top.appendChild(plus);
+                wrap.appendChild(top);
+                dayTd.appendChild(wrap);
+            }
             tr.appendChild(dayTd);
 
+            // Beginn
             const startTd = document.createElement("td");
             const startIn = document.createElement("input");
-            startIn.type = "time"; startIn.value = row.start || "";
-            startIn.disabled = row.status!=="work";
-            startIn.addEventListener("change", ()=>{ row.start = startIn.value; onStateChanged(); });
+            startIn.type = "time";
+            startIn.value = row.start || "";
+            startIn.disabled = row.status !== "work";
             startTd.appendChild(startIn);
             tr.appendChild(startTd);
 
+            // Ende
             const endTd = document.createElement("td");
             const endIn = document.createElement("input");
-            endIn.type="time"; endIn.value = row.end || "";
-            endIn.disabled = row.status!=="work";
-            endIn.addEventListener("change", ()=>{ row.end = endIn.value; onStateChanged(); });
+            endIn.type = "time";
+            endIn.value = row.end || "";
+            endIn.disabled = row.status !== "work";
             endTd.appendChild(endIn);
             tr.appendChild(endTd);
 
+            // Pause
             const breakTd = document.createElement("td");
             const breakIn = document.createElement("input");
-            breakIn.type="number"; breakIn.min="0"; breakIn.step="5";
-            breakIn.value = String(row.breakMin||0);
-            breakIn.disabled = row.status!=="work";
-            breakIn.addEventListener("input", ()=>{
-                row.breakMin = parseInt(breakIn.value||"0",10)||0;
-                row.breakManual = true;
-                onStateChanged();
-            });
+            breakIn.type = "number";
+            breakIn.min = "0";
+            breakIn.step = "5";
+            breakIn.value = String(row.breakMin || 0);
+            breakIn.disabled = row.status !== "work";
             breakTd.appendChild(breakIn);
             tr.appendChild(breakTd);
 
+            // Arbeitszeit (Text)
             const workTd = document.createElement("td");
-            const w = recalcRow(row).workMin;
-            workTd.textContent = fmtHours(minutesToHours(w));
+            workTd.textContent = fmtHours(minutesToHours(rcalc.workMin));
             tr.appendChild(workTd);
 
+            // Nacht (Text)
             const nightTd = document.createElement("td");
-            nightTd.textContent = fmtHours(minutesToHours(row.nightMin||0));
+            nightTd.textContent = fmtHours(minutesToHours(row.nightMin || 0));
             tr.appendChild(nightTd);
 
+            // Akkord (Eingabe)
+            const akkordTd = document.createElement("td");
+            const akkordIn = document.createElement("input");
+            akkordIn.type = "number";
+            akkordIn.min = "0";
+            akkordIn.step = "0.25";
+            akkordIn.value = row.akkord || "";
+            akkordIn.disabled = row.status !== "work";
+            akkordTd.appendChild(akkordIn);
+            tr.appendChild(akkordTd);
+
+            // Status
             const statusTd = document.createElement("td");
             const sel = document.createElement("select");
             const opts = ["work","vacation","sick","holiday","off"];
@@ -4538,52 +4766,99 @@ settingsSaveProfile.addEventListener('click', async () => {
                 sel.appendChild(op);
             }
             sel.value = row.status || "work";
-            sel.addEventListener("change", ()=>{
-                row.status = sel.value;
-                row.breakManual = false;
-                onStateChanged();
-                renderTable();
-            });
             statusTd.appendChild(sel);
             tr.appendChild(statusTd);
 
+            // Notiz
             const noteTd = document.createElement("td");
             const noteIn = document.createElement("input");
-            noteIn.type="text";
-            noteIn.className="ts-note";
+            noteIn.type = "text";
+            noteIn.className = "ts-note";
             noteIn.value = row.note || "";
-            noteIn.addEventListener("input", ()=>{ row.note = noteIn.value; onStateChanged(true); });
             noteTd.appendChild(noteIn);
             tr.appendChild(noteTd);
+
+            // --- Events (kein Auto-Save, kein Re-Render beim Tippen) ---
+            const updateWorkAndTotals = ()=>{
+                const r = recalcRow(row);
+                workTd.textContent = fmtHours(minutesToHours(r.workMin));
+                nightTd.textContent = fmtHours(minutesToHours(row.nightMin || 0));
+                updateTotalsOnly();
+            };
+
+            startIn.addEventListener("change", ()=>{
+                row.start = startIn.value;
+                updateWorkAndTotals();
+                markDirty(true);
+            });
+            endIn.addEventListener("change", ()=>{
+                row.end = endIn.value;
+                updateWorkAndTotals();
+                markDirty(true);
+            });
+            breakIn.addEventListener("change", ()=>{
+                row.breakMin = parseInt(breakIn.value || "0", 10) || 0;
+                row.breakManual = true;
+                updateWorkAndTotals();
+                markDirty(true);
+            });
+            akkordIn.addEventListener("input", ()=>{
+                row.akkord = akkordIn.value;
+                updateTotalsOnly();
+                markDirty(true);
+            });
+            noteIn.addEventListener("input", ()=>{
+                row.note = noteIn.value;
+                markDirty(true);
+            });
+            sel.addEventListener("change", ()=>{
+                row.status = sel.value;
+                row.breakManual = false;
+                markDirty(true);
+                renderTable();
+            });
 
             els.tbody.appendChild(tr);
         }
 
-        const totals = calcTotals(TS.state);
-        els.totalHours.textContent = fmtHours(minutesToHours(totals.totalWorkMin));
-        els.totalNight.textContent = fmtHours(minutesToHours(totals.totalNightMin));
+        updateTotalsOnly();
     }
 
-    function debounceSave(){
-        clearTimeout(TS.saveTimer);
-        TS.saveTimer = setTimeout(async ()=>{
-            try{
-                await saveDraftToSupabase();
-                TS.lastSavedAt = Date.now();
-                const els = ensureElements();
-                setInfo(els.msg, (typeof t==="function") ? t("ts_msg_saved") : "Gespeichert.", "ok");
-                setTimeout(()=>{ if(els.msg && (Date.now()-TS.lastSavedAt)>2500) setInfo(els.msg,""); }, 2600);
-            }catch(e){
-                // ignore noisy autosave failures; user can still upload later
-            }
-        }, 800);
-    }
-
-    function onStateChanged(isSilent){
+    function updateTotalsOnly(){
         if(!TS.state) return;
-        renderTable();
-        if(!isSilent) debounceSave();
-        else debounceSave();
+        const els = ensureElements();
+        const totals = calcTotals(TS.state);
+        if(els.totalHours) els.totalHours.textContent = fmtHours(minutesToHours(totals.totalWorkMin));
+        if(els.totalNight) els.totalNight.textContent = fmtHours(minutesToHours(totals.totalNightMin));
+        if(els.totalAkkord) els.totalAkkord.textContent = fmtHours(totals.totalAkkordHours || 0);
+    }
+
+    function markDirty(silent){
+        TS.dirty = true;
+        const els = ensureElements();
+        if(!silent){
+            setInfo(els.msg, (typeof t==="function") ? t("ts_msg_unsaved") : "Änderungen nicht gespeichert.", "warn");
+        }
+    }
+
+    async function manualSaveDraft(){
+        const els = ensureElements();
+        if(!TS.state){ setInfo(els.msg, "", ""); return; }
+        if(!supabaseClient || !currentUser){
+            setInfo(els.msg, (typeof t==="function")?t("ts_msg_save_fail"):"Speichern fehlgeschlagen.", "error");
+            return;
+        }
+        setInfo(els.msg, (typeof t==="function")?t("ts_msg_saving"):"Speichere…", "");
+        try{
+            await saveDraftToSupabase();
+            TS.dirty = false;
+            TS.lastSavedAt = Date.now();
+            setInfo(els.msg, (typeof t==="function") ? t("ts_msg_saved") : "Gespeichert.", "ok");
+            setTimeout(()=>{ if(els.msg && !TS.dirty && (Date.now()-TS.lastSavedAt)>2500) setInfo(els.msg, ""); }, 2600);
+        }catch(e){
+            console.error(e);
+            setInfo(els.msg, (typeof t==="function")?t("ts_msg_save_fail"):"Speichern fehlgeschlagen.", "error");
+        }
     }
 
     async function saveDraftToSupabase(){
@@ -4672,7 +4947,7 @@ settingsSaveProfile.addEventListener('click', async () => {
         const totals = document.createElement("div");
         totals.style.marginTop="8px";
         totals.style.fontWeight="700";
-        totals.textContent = `${(typeof t==="function") ? t("ts_total") : "Summe"}: ${document.getElementById("ts-total-hours").textContent} h`;
+        totals.textContent = `${(typeof t==="function") ? t("ts_total") : "Summe"}: ${document.getElementById("ts-total-hours").textContent} h | ${(typeof t==="function") ? t("ts_th_akkord") : "Akkord"}: ${(document.getElementById("ts-total-akkord")?document.getElementById("ts-total-akkord").textContent:"0.00")} h`;
         container.appendChild(totals);
 
         document.body.appendChild(container);
@@ -4790,9 +5065,9 @@ settingsSaveProfile.addEventListener('click', async () => {
         const year = parseInt(els.yearSel.value,10);
         const month = parseInt(els.monthSel.value,10);
         const draft = await loadDraftFromSupabase(year, month);
-        TS.state = draft || buildInitialState(year, month);
+        TS.state = normalizeState(draft || buildInitialState(year, month));
+        TS.dirty = false;
         renderTable();
-        debounceSave();
     }
 
     function fillMonthYear(){
@@ -4889,6 +5164,12 @@ settingsSaveProfile.addEventListener('click', async () => {
         els.resetBtn.addEventListener("click", async ()=>{
             await resetTimesheet();
         });
+
+        if(els.saveBtn){
+            els.saveBtn.addEventListener("click", async ()=>{
+                await manualSaveDraft();
+            });
+        }
     }
 
     function onLanguageChanged(){
