@@ -786,10 +786,44 @@
 .ts-remove-btn:hover{background:rgba(220,53,69,0.28)}
 /* Modal */
 #global-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
-#global-modal{width:min(520px, 100%);background:rgba(20,20,24,0.96);border:1px solid rgba(255,255,255,0.14);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.45);padding:16px}
-#global-modal h4{margin:0 0 8px 0;font-size:18px}
-#global-modal p{margin:0 0 14px 0;opacity:.92;line-height:1.4}
+#global-modal{width:min(520px, 100%);background:#fff;color:#111;border:1px solid rgba(0,0,0,0.14);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35);padding:16px}
+#global-modal h4{margin:0 0 8px 0;font-size:18px;color:#111}
+#global-modal p{margin:0 0 14px 0;opacity:1;line-height:1.4;color:#111}
 #global-modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+
+        .simple-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .simple-table th, .simple-table td {
+            border: 1px solid #e0e0e0;
+            padding: 6px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .simple-table th {
+            background: #f3f3f3;
+            font-weight: 700;
+        }
+        .simple-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #eee;
+        }
+        .card-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .card-body {
+            padding: 10px 12px;
+            overflow-x: auto;
+        }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -801,7 +835,7 @@
 <div class="brand-logo">B</div>
 <div>
 <div class="brand-title">Bayrak Mitarbeiter-Portal</div>
-<div class="brand-subtitle">Interne Web-App · Testversion</div>
+<div class="brand-subtitle">Interne Web-App</div>
 </div>
 </div>
 <div class="top-right">
@@ -921,6 +955,11 @@
 <span class="icon">📥</span> <span data-i18n="nav_admin_uploads">Admin · Uploads</span>
 <span class="request-badge hidden" id="sidebar-admin-uploads-badge"></span>
 </li>
+</li>
+<li class="hidden" data-target="section-admin-live" id="sidebar-admin-live-link">
+<span class="icon">📊</span> <span data-i18n="nav_admin_live">Admin · Live View</span>
+</li>
+
 </ul>
 <div class="sidebar-admin hidden" id="sidebar-admin-label">
                     Sie sind <strong>Administrator</strong> und können Mitarbeiter &amp; Rollen verwalten.
@@ -975,6 +1014,11 @@
 <div class="tile-icon">📥</div>
 <div class="tile-title" data-i18n="tile_admin_uploads_title">Admin Uploads</div>
 <div class="tile-sub" data-i18n="tile_admin_uploads_sub">Dateien für Mitarbeiter hochladen</div>
+</div>
+<div class="tile-card hidden" data-target="section-admin-live" id="tile-admin-live">
+<div class="tile-icon">📊</div>
+<div class="tile-title" data-i18n="tile_admin_live_title">Live View</div>
+<div class="tile-sub" data-i18n="tile_admin_live_sub">Stundenzettel (aktuell)</div>
 </div>
 </div>
 </div>
@@ -1035,7 +1079,7 @@
 </div>
 </div>
 <div class="portal-section-content hidden" id="section-timesheet">
-  <h3 class="section-title" data-i18n="ts_title">Stundenzettel</h3>
+  <h3 class="section-title" data-i18n="section_timesheets_title">Stundenzettel</h3>
 
   <div class="document-category" style="padding-top: 0;">
     <div class="tab-row">
@@ -1071,7 +1115,7 @@
 
         <div class="ts-controls-spacer"></div>
 
-        <button class="btn primary" id="ts-upload-btn" type="button" data-i18n="ts_upload_btn">Hochladen (PDF)</button>
+        <button class="btn primary" id="ts-upload-btn" type="button" data-i18n="ts_upload_btn">Hochladen</button>
         <button class="btn danger" id="ts-reset-btn" type="button" data-i18n="ts_reset_btn">Zurücksetzen</button>
       </div>
 
@@ -1250,10 +1294,44 @@
 </div>
 </div>
 </div>
+
+<div class="portal-section-content hidden" id="section-admin-live">
+<h3 class="section-title" data-i18n="admin_live_title">Admin · Live View (Stundenzettel)</h3>
+<p class="info" data-i18n="admin_live_info">Hier können Sie die aktuell gespeicherten (nicht finalen) Stundenzettel Ihrer Mitarbeiter einsehen. Änderungen sind nur für Mitarbeiter möglich.</p>
+
+<div class="form-row" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
+  <div style="min-width:240px; flex:1;">
+    <label class="label" for="admin-live-employee" data-i18n="admin_live_employee">Mitarbeiter</label>
+    <select id="admin-live-employee" style="width:100%;"></select>
+  </div>
+  <div style="min-width:140px;">
+    <label class="label" for="admin-live-month" data-i18n="admin_live_month">Monat</label>
+    <select id="admin-live-month" style="width:100%;"></select>
+  </div>
+  <div style="min-width:120px;">
+    <label class="label" for="admin-live-year" data-i18n="admin_live_year">Jahr</label>
+    <select id="admin-live-year" style="width:100%;"></select>
+  </div>
+  <button class="btn" id="admin-live-load-btn" type="button" data-i18n="admin_live_load">Anzeigen</button>
+</div>
+
+<div class="card" style="margin-top:12px;">
+  <div class="card-header">
+    <strong data-i18n="admin_live_table_title">Live-Stundenzettel</strong>
+    <span class="muted" id="admin-live-meta" style="margin-left:10px;"></span>
+  </div>
+  <div class="card-body" id="admin-live-result">
+    <p class="info" data-i18n="admin_live_empty">Bitte Mitarbeiter und Monat auswählen.</p>
+  </div>
+</div>
+</div>
+
 <div class="portal-section-content hidden" id="section-employee-detail">
 <h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
 <div class="info" id="employee-detail-meta" style="margin-bottom:12px;"></div>
 <button class="btn-secondary" id="employee-detail-back-btn" style="margin-bottom: 15px;">Zurück zur Übersicht</button>
+<button class="btn-small danger" id="employee-detail-delete-btn" type="button" style="margin-left:10px; margin-bottom:15px;">Mitarbeiter löschen</button>
+<div class="settings-message" id="employee-detail-delete-msg" style="margin-bottom:12px;"></div>
 <h4>Hochgeladene Dokumente</h4>
 <ul class="document-list" id="employee-detail-docs"></ul>
 </div>
@@ -1281,6 +1359,18 @@
             nav_settings: "Einstellungen",
             nav_admin: "Admin · Mitarbeiter",
             nav_admin_uploads: "Admin · Uploads",
+            nav_admin_live: "Admin · Live View",
+            tile_admin_live_title: "Live View",
+            tile_admin_live_sub: "Stundenzettel (aktuell)",
+            admin_live_title: "Admin · Live View (Stundenzettel)",
+            admin_live_info: "Hier können Sie die aktuell gespeicherten (nicht finalen) Stundenzettel Ihrer Mitarbeiter einsehen. Änderungen sind nur für Mitarbeiter möglich.",
+            admin_live_employee: "Mitarbeiter",
+            admin_live_month: "Monat",
+            admin_live_year: "Jahr",
+            admin_live_load: "Anzeigen",
+            admin_live_table_title: "Live-Stundenzettel",
+            admin_live_empty: "Bitte Mitarbeiter und Monat auswählen.",
+
             greeting_hello: "Guten Tag,",
             greeting_subtitle: "Willkommen im Bayrak Mitarbeiter-Portal. Wählen Sie eine Kachel oder einen Menüpunkt.",
             section_settings_title: "Einstellungen",
@@ -1337,6 +1427,7 @@
             ts_tab_digital: "Digitaler Stundenzettel",
             ts_paper_info: "Laden Sie hier Ihren ausgefüllten Stundenzettel als Foto oder PDF hoch.",
             ts_upload_paper_btn: "Stundenzettel hochladen",
+            ts_upload_btn: "Hochladen",
             ts_digital_info: "Erstellen Sie Ihren digitalen Stundenzettel. Füllen Sie alles aus und klicken Sie anschließend auf „Speichern“." ,
             ts_month: "Monat",
             ts_year: "Jahr",
@@ -1438,6 +1529,7 @@
             ts_tab_digital: "Dijital Puantaj",
             ts_paper_info: "Doldurduğunuz puantajı fotoğraf veya PDF olarak yükleyin.",
             ts_upload_paper_btn: "Puantaj yükle",
+            ts_upload_btn: "Yükle",
             ts_digital_info: "Dijital çalışma çizelgenizi oluşturun. Tüm alanları doldurun ve ardından “Kaydet”e tıklayın.",
             ts_month: "Ay",
             ts_year: "Yıl",
@@ -1539,6 +1631,7 @@
             ts_tab_digital: "Цифровой табель",
             ts_paper_info: "Загрузите заполненный табель как фото или PDF.",
             ts_upload_paper_btn: "Загрузить табель",
+            ts_upload_btn: "Загрузить",
             ts_digital_info: "Создайте цифровой табель. Данные сохраняются автоматически.",
             ts_month: "Месяц",
             ts_year: "Год",
@@ -1635,6 +1728,7 @@
             ts_tab_digital: "Цифровий табель",
             ts_paper_info: "Завантажте заповнений табель як фото або PDF.",
             ts_upload_paper_btn: "Завантажити табель",
+            ts_upload_btn: "Завантажити",
             ts_digital_info: "Створіть цифровий табель. Дані зберігаються автоматично.",
             ts_month: "Місяць",
             ts_year: "Рік",
@@ -1731,6 +1825,7 @@
             ts_tab_digital: "برگه دیجیتال",
             ts_paper_info: "برگه تکمیل‌شده را به صورت عکس یا PDF آپلود کنید.",
             ts_upload_paper_btn: "آپلود برگه",
+            ts_upload_btn: "آپلود",
             ts_digital_info: "برگه دیجیتال را تکمیل کنید. اطلاعات به‌صورت خودکار ذخیره می‌شود.",
             ts_month: "ماه",
             ts_year: "سال",
@@ -1923,6 +2018,7 @@
             ts_tab_digital: "ډیجیټل پاڼه",
             ts_paper_info: "ډکه شوې پاڼه د عکس یا PDF په توګه پورته کړئ.",
             ts_upload_paper_btn: "پاڼه پورته کړئ",
+            ts_upload_btn: "اپلوډ",
             ts_digital_info: "ډیجیټل پاڼه ډکه کړئ. معلومات په اوتومات ډول خوندي کېږي.",
             ts_month: "میاشت",
             ts_year: "کال",
@@ -2019,6 +2115,7 @@
             ts_tab_digital: "سجل رقمي",
             ts_paper_info: "ارفع السجل المُعبأ كصورة أو PDF.",
             ts_upload_paper_btn: "رفع السجل",
+            ts_upload_btn: "رفع",
             ts_digital_info: "أنشئ السجل الرقمي. يتم حفظ البيانات تلقائياً.",
             ts_month: "الشهر",
             ts_year: "السنة",
@@ -2115,6 +2212,7 @@
             ts_tab_digital: "Pontaj digital",
             ts_paper_info: "Încărcați pontajul completat ca poză sau PDF.",
             ts_upload_paper_btn: "Încărcați pontajul",
+            ts_upload_btn: "Încarcă",
             ts_digital_info: "Creați pontajul digital. Datele se salvează automat.",
             ts_month: "Luna",
             ts_year: "Anul",
@@ -2211,6 +2309,7 @@
             ts_tab_digital: "Дигитален таймшит",
             ts_paper_info: "Качете попълнения таймшит като снимка или PDF.",
             ts_upload_paper_btn: "Качи таймшит",
+            ts_upload_btn: "Качи",
             ts_digital_info: "Създайте дигитален таймшит. Данните се запазват автоматично.",
             ts_month: "Месец",
             ts_year: "Година",
@@ -2251,6 +2350,18 @@
             nav_settings: "Settings",
             nav_admin: "Admin · Employees",
             nav_admin_uploads: "Admin · Uploads",
+            nav_admin_live: "Admin · Live View",
+            tile_admin_live_title: "Live View",
+            tile_admin_live_sub: "Stundenzettel (aktuell)",
+            admin_live_title: "Admin · Live View (Stundenzettel)",
+            admin_live_info: "Hier können Sie die aktuell gespeicherten (nicht finalen) Stundenzettel Ihrer Mitarbeiter einsehen. Änderungen sind nur für Mitarbeiter möglich.",
+            admin_live_employee: "Mitarbeiter",
+            admin_live_month: "Monat",
+            admin_live_year: "Jahr",
+            admin_live_load: "Anzeigen",
+            admin_live_table_title: "Live-Stundenzettel",
+            admin_live_empty: "Bitte Mitarbeiter und Monat auswählen.",
+
             greeting_hello: "Hello,",
             greeting_subtitle: "Welcome to the Bayrak employee portal. Please choose a tile or a menu item.",
             section_settings_title: "Settings",
@@ -2307,6 +2418,7 @@
             ts_tab_digital: "Digital timesheet",
             ts_paper_info: "Upload your completed timesheet as a photo or PDF.",
             ts_upload_paper_btn: "Upload timesheet",
+            ts_upload_btn: "Upload",
             ts_digital_info: "Create your digital timesheet. Fill everything in and then click “Save”.",
             ts_month: "Month",
             ts_year: "Year",
@@ -2407,6 +2519,7 @@
     // Globale Variablen
     let currentUser = null;
     let currentProfile = null;
+    let currentEmployeeDetailProfile = null;
     let allProfilesCache = []; // Für Admin-Auswahl
 
     // DOM-Referenzen
@@ -2470,6 +2583,16 @@
     const adminTimesheetsNewCount = document.getElementById('admin-timesheets-new-count');
     const adminSicknotesOverview = document.getElementById('admin-sicknotes-overview');
     const adminSicknotesNewCount = document.getElementById('admin-sicknotes-new-count');
+
+    // Admin Live View Elements
+    const sidebarAdminLiveLink = document.getElementById('sidebar-admin-live-link');
+    const tileAdminLive = document.getElementById('tile-admin-live');
+    const adminLiveEmployee = document.getElementById('admin-live-employee');
+    const adminLiveMonth = document.getElementById('admin-live-month');
+    const adminLiveYear = document.getElementById('admin-live-year');
+    const adminLiveLoadBtn = document.getElementById('admin-live-load-btn');
+    const adminLiveResult = document.getElementById('admin-live-result');
+    const adminLiveMeta = document.getElementById('admin-live-meta');
     const adminDocsOverview = document.getElementById('admin-docs-overview');
     const adminDocsNewCount = document.getElementById('admin-docs-new-count');
     const sidebarAdminUploadsBadge = document.getElementById('sidebar-admin-uploads-badge');
@@ -2485,6 +2608,8 @@
     const employeeDetailMeta = document.getElementById('employee-detail-meta');
     const employeeDetailDocs = document.getElementById('employee-detail-docs');
     const employeeDetailBackBtn = document.getElementById('employee-detail-back-btn');
+    const employeeDetailDeleteBtn = document.getElementById('employee-detail-delete-btn');
+    const employeeDetailDeleteMsg = document.getElementById('employee-detail-delete-msg');
 
     // Documents
     const docsUnterwList = document.getElementById('docs-unterweisungen-list');
@@ -2665,6 +2790,9 @@
             loadAdminDocumentOverviews();
             initAdminUploadsSelect();
         }
+        if (targetId === 'section-admin-live' && currentProfile?.role === 'admin') {
+            initAdminLiveView();
+        }
     }
 
     function initNavigation() {
@@ -2684,6 +2812,10 @@
 
         employeeDetailBackBtn.addEventListener('click', () => {
             setActiveSection('section-admin');
+        });
+
+        if (employeeDetailDeleteBtn) employeeDetailDeleteBtn.addEventListener('click', () => {
+            if (currentEmployeeDetailProfile) deleteEmployee(currentEmployeeDetailProfile);
         });
     }
 
@@ -2852,6 +2984,8 @@
             sidebarAdminLabel.classList.remove('hidden');
             tileAdmin.classList.remove('hidden');
             tileAdminUploads.classList.remove('hidden');
+            if(sidebarAdminLiveLink) sidebarAdminLiveLink.classList.remove('hidden');
+            if(tileAdminLive) tileAdminLive.classList.remove('hidden');
             loadPendingUserCount();
         } else {
             sidebarAdminLink.classList.add('hidden');
@@ -3441,6 +3575,245 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
         allProfilesCache = profiles;
         return profiles;
     }
+    // --- ADMIN LIVE VIEW (read-only) ---
+    let _adminLiveInitDone = false;
+
+    async function initAdminLiveView() {
+        if (!adminLiveEmployee || !adminLiveMonth || !adminLiveYear || !adminLiveLoadBtn || !adminLiveResult) return;
+
+        if (_adminLiveInitDone) return;
+        _adminLiveInitDone = true;
+
+        // Fill months
+        const monthNames = [
+            '01 - Januar','02 - Februar','03 - März','04 - April','05 - Mai','06 - Juni',
+            '07 - Juli','08 - August','09 - September','10 - Oktober','11 - November','12 - Dezember'
+        ];
+        adminLiveMonth.innerHTML = '';
+        monthNames.forEach((label, i) => {
+            const opt = document.createElement('option');
+            opt.value = String(i+1).padStart(2,'0');
+            opt.textContent = label;
+            adminLiveMonth.appendChild(opt);
+        });
+
+        // Fill years (current year +/- 2)
+        const now = new Date();
+        const y = now.getFullYear();
+        adminLiveYear.innerHTML = '';
+        for (let yy = y-2; yy <= y+2; yy++) {
+            const opt = document.createElement('option');
+            opt.value = String(yy);
+            opt.textContent = String(yy);
+            if (yy === y) opt.selected = true;
+            adminLiveYear.appendChild(opt);
+        }
+
+        // Default month
+        adminLiveMonth.value = String(now.getMonth()+1).padStart(2,'0');
+
+        // Fill employees
+        await refreshAdminLiveEmployees();
+
+        adminLiveLoadBtn.addEventListener('click', async () => {
+            await loadAdminLiveTimesheet();
+        });
+
+        // Auto load if possible
+        if (adminLiveEmployee.options.length > 0) {
+            await loadAdminLiveTimesheet();
+        }
+    }
+
+    async function refreshAdminLiveEmployees() {
+        const profiles = await loadAllProfiles();
+        const approved = profiles.filter(p => p.is_approved || p.role === 'admin');
+        adminLiveEmployee.innerHTML = '';
+        approved.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            const name = (p.full_name || (p.first_name ? (p.first_name + ' ' + (p.last_name||'')) : '') || p.email || p.id);
+            opt.textContent = name.trim();
+            adminLiveEmployee.appendChild(opt);
+        });
+    }
+
+    
+    // Admin: read another user's draft timesheet.
+    // 1) Try direct Storage download (works if Storage policies allow admin read).
+    // 2) Fallback to Edge Function 'admin-read-timesheet-draft' (Service Role) if Storage blocks it.
+    function withTimeout(promise, ms, label){
+        let t = null;
+        const timeout = new Promise((_, reject) => {
+            t = setTimeout(() => reject(new Error((label?label+": ":"") + "Timeout nach " + ms + "ms")), ms);
+        });
+        return Promise.race([promise, timeout]).finally(()=>{ if(t) clearTimeout(t); });
+    }
+
+    async function adminFetchTimesheetDraft(userId, year, month){
+        const path = getDraftPath(userId, Number(year), Number(month));
+
+        // Try direct storage download first
+        try {
+            const { data, error } = await withTimeout(supabaseClient.storage.from(STORAGE_BUCKET).download(path), 8000, "Storage-Download");
+            if (!error && data) {
+                const txt = await data.text();
+                try { return { state: JSON.parse(txt), meta: { via: "storage", path } }; } catch(e){ /* ignore */ }
+            }
+        } catch(e) { /* ignore */ }
+
+        // Fallback via Edge Function (recommended if Storage policies restrict admin access)
+        try {
+            const { data: fnData, error: fnError } = await withTimeout(supabaseClient.functions.invoke("admin-read-timesheet-draft", {
+                body: { bucket: STORAGE_BUCKET, path }
+            }), 8000, "Edge-Function");
+
+            if (fnError) {
+                return { state: null, meta: { via: "edge", path }, error: fnError };
+            }
+
+            // Accept common response shapes:
+            // { content: "<json string>" } OR { json: {...} } OR direct object
+            if (fnData && typeof fnData === "object") {
+                if (fnData.json && typeof fnData.json === "object") {
+                    return { state: fnData.json, meta: { via: "edge", path } };
+                }
+                if (typeof fnData.content === "string") {
+                    try { return { state: JSON.parse(fnData.content), meta: { via: "edge", path } }; } catch(e){ /* ignore */ }
+                }
+                // if function returns the state directly
+                if (fnData.rows || fnData.month || fnData.year) {
+                    return { state: fnData, meta: { via: "edge", path } };
+                }
+            }
+
+            return { state: null, meta: { via: "edge", path }, error: { message: "Unexpected response from Edge Function." } };
+        } catch(e) {
+            return { state: null, meta: { via: "edge", path }, error: e };
+        }
+    }
+
+async function loadAdminLiveTimesheet() {
+        const userId = adminLiveEmployee.value;
+        const month = adminLiveMonth.value;
+        const year = adminLiveYear.value;
+
+        if (!userId || !month || !year) {
+            adminLiveResult.innerHTML = '<p class="info">Bitte Mitarbeiter und Monat auswählen.</p>';
+            return;
+        }
+
+        adminLiveResult.innerHTML = '<p class="info">Lade Daten…</p>';
+        if (adminLiveMeta) adminLiveMeta.textContent = '';
+
+        try {
+            // Live-Entwürfe werden als JSON im Storage abgelegt (Draft-Speicherung).
+            // Admin: je nach Storage-Policy kann der direkte Zugriff auf fremde Ordner blockiert sein.
+            const { state: fetchedState, meta: fetchedMeta, error: fetchedError } = await adminFetchTimesheetDraft(userId, year, month);
+
+            if (!fetchedState) {
+                // Show a helpful message if admin access is blocked
+                const maybeMsg = (fetchedError && (fetchedError.message || fetchedError.error_description)) ? (fetchedError.message || fetchedError.error_description) : "";
+                const isAccess = /permission|not authorized|unauthorized|forbidden|403/i.test(maybeMsg);
+                const isMissingFn = /Function not found|404|Not Found/i.test(maybeMsg);
+                const isTimeout = /Timeout/i.test(maybeMsg);
+
+                if (isAccess) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Zugriff verweigert.</p>
+                        <p class="info">Entweder fehlen Storage-Policies für Admin-Lesezugriff auf <code>timesheets/*</code>, oder die Edge Function <code>admin-read-timesheet-draft</code> ist nicht aktiv.</p>
+                    `;
+                } else if (isTimeout) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Zeitüberschreitung beim Laden.</p>
+                        <p class="info">Bitte prüfen Sie Ihre Internetverbindung. Wenn Sie lokal über <code>file://</code> öffnen, testen Sie bitte auch einmal über einen lokalen Server (z. B. VSCode „Live Server“), da manche Browser Fetch bei <code>file://</code> blockieren können.</p>
+                    `;
+                } else if (isMissingFn) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Edge Function fehlt.</p>
+                        <p class="info">Bitte die Supabase Edge Function <code>admin-read-timesheet-draft</code> anlegen (Service Role), oder Storage-Policy für Admin-Lesen erlauben.</p>
+                    `;
+                } else {
+                    adminLiveResult.innerHTML = '<p class="info">Keine gespeicherten Live-Daten für diesen Monat.</p>';
+                }
+
+                if (adminLiveMeta) adminLiveMeta.textContent = `${String(month).padStart(2,'0')}.${year}`;
+                return;
+            }
+
+            let state = fetchedState;
+
+            state = normalizeState(state);
+
+            // Render table (read-only)
+            const table = document.createElement('table');
+            table.className = 'simple-table';
+            table.innerHTML = `
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Beginn</th>
+                  <th>Ende</th>
+                  <th>Pause</th>
+                  <th>Std.</th>
+                  <th>Nacht</th>
+                  <th>Akkord</th>
+                  <th>Status</th>
+                  <th>Notiz</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            const daysInMonth = new Date(Number(year), Number(month), 0).getDate();
+            const rows = (state.rows || []).slice().sort((a,b)=>{
+                if((a.day||0)!==(b.day||0)) return (a.day||0)-(b.day||0);
+                // base row first
+                const ax = a.extra===true ? 1 : 0;
+                const bx = b.extra===true ? 1 : 0;
+                return ax-bx;
+            });
+
+            let countFilled = 0;
+
+            rows.forEach(r => {
+                if (!r) return;
+                // compute
+                const tmp = { ...r };
+                const { workMin, nightMin } = recalcRow(tmp);
+                const hasAny = (tmp.start && tmp.end) || (tmp.note && tmp.note.trim()) || (tmp.akkord && tmp.akkord.trim()) || (tmp.status && tmp.status !== 'work');
+                if (hasAny) countFilled++;
+
+                const dateStr = `${pad2(tmp.day)}.${pad2(Number(month))}.${year}` + (tmp.extra===true ? ' +' : '');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td>${dateStr}</td>
+                  <td>${escapeHtml(tmp.start || '')}</td>
+                  <td>${escapeHtml(tmp.end || '')}</td>
+                  <td>${(tmp.breakMin ?? 0)}</td>
+                  <td>${(workMin/60).toFixed(2)}</td>
+                  <td>${(nightMin/60).toFixed(2)}</td>
+                  <td>${escapeHtml(tmp.akkord || '')}</td>
+                  <td>${escapeHtml(tmp.status || '')}</td>
+                  <td>${escapeHtml(tmp.note || '')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            adminLiveResult.innerHTML = '';
+            adminLiveResult.appendChild(table);
+
+            if (adminLiveMeta) {
+                adminLiveMeta.textContent = `${String(month).padStart(2,'0')}.${year} • ${countFilled} Einträge${(fetchedMeta && fetchedMeta.via)?' • via '+fetchedMeta.via:''}`;
+            }
+        } catch (e) {
+            console.error(e);
+            adminLiveResult.innerHTML = `<p class="info"><b>Live View Fehler:</b> ${escapeHtml(e && (e.message || e.toString ? e.toString() : String(e)) || 'Unbekannter Fehler')}</p>`;
+        }
+    }
+
+
 async function loadPendingUserCount() {
         const profiles = await loadAllProfiles();
         const pending = profiles.filter(p => !p.is_approved);
@@ -3495,8 +3868,18 @@ async function loadPendingUserCount() {
             btnOpen.textContent = 'Details';
             btnOpen.onclick = () => openEmployeeDetail(p);
             
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn-small danger';
+            btnDelete.textContent = 'Löschen';
+            btnDelete.onclick = () => deleteEmployee(p);
+            if (currentUser && p.id === currentUser.id) {
+                btnDelete.disabled = true;
+                btnDelete.title = 'Eigenen Account kann man nicht löschen';
+            }
+
             actions.appendChild(btnOpen);
             actions.appendChild(btnSave);
+            actions.appendChild(btnDelete);
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:${p.role === 'admin' ? 'var(--blue-dark)' : (p.employment_type === 'fulltime' ? '#4caf50' : '#ff9800')}">${initials}</div>
@@ -3567,8 +3950,18 @@ async function loadPendingUserCount() {
             btnOpen.textContent = 'Details';
             btnOpen.onclick = () => openEmployeeDetail(p);
             
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn-small danger';
+            btnDelete.textContent = 'Löschen';
+            btnDelete.onclick = () => deleteEmployee(p);
+            if (currentUser && p.id === currentUser.id) {
+                btnDelete.disabled = true;
+                btnDelete.title = 'Eigenen Account kann man nicht löschen';
+            }
+
             actions.appendChild(btnOpen);
             actions.appendChild(btnApprove);
+            actions.appendChild(btnDelete);
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:#ff9800">${initials}</div>
@@ -3677,6 +4070,64 @@ async function loadPendingUserCount() {
         else {
             alert('Daten aktualisiert');
             loadEmployeeGrid();
+        }
+    }
+
+
+    async function deleteEmployee(profile) {
+        if (!profile || !profile.id) return;
+        if (!currentProfile || currentProfile.role !== 'admin') return alert('Nur Admins dürfen Mitarbeiter löschen.');
+        if (currentUser && currentUser.id === profile.id) return alert('Sie können Ihren eigenen Account nicht löschen.');
+
+        // Strong confirmation
+        const name = profile.full_name || profile.email || profile.id;
+        const ok1 = confirm(`Möchten Sie den Mitarbeiter wirklich löschen?\n\n${name}\n\nAchtung: Alle zugehörigen Dokumente/Dateien werden ebenfalls gelöscht.`);
+        if (!ok1) return;
+
+        const typed = prompt('Bitte zur Bestätigung das Wort LÖSCHEN eingeben:');
+        if (!typed || typed.trim().toLowerCase() !== 'löschen') return;
+
+        if (employeeDetailDeleteMsg) {
+            employeeDetailDeleteMsg.style.color = '#f57c00';
+            employeeDetailDeleteMsg.textContent = 'Lösche Mitarbeiter…';
+        }
+
+        try {
+            // Preferred: Edge Function using Service Role (must exist in Supabase)
+            const { data, error } = await supabaseClient.functions.invoke('admin-delete-user', {
+                body: { user_id: profile.id }
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            // If Edge Function returns something helpful, ignore; refresh UI
+            if (employeeDetailDeleteMsg) {
+                employeeDetailDeleteMsg.style.color = 'green';
+                employeeDetailDeleteMsg.textContent = 'Mitarbeiter gelöscht.';
+            }
+
+            // refresh caches/UI
+            currentEmployeeDetailProfile = null;
+            await loadAllProfiles();
+            await loadEmployeeGrid();
+            // Also refresh admin uploads overview if visible
+            if (currentProfile?.role === 'admin') {
+                try { await loadAdminDocumentOverviews(); } catch(e) {}
+            }
+            setActiveSection('section-admin');
+        } catch (e) {
+            console.error('deleteEmployee failed:', e);
+
+            // Fallback: explain missing Edge Function
+            const msg = (e && e.message) ? e.message : String(e);
+            if (employeeDetailDeleteMsg) {
+                employeeDetailDeleteMsg.style.color = 'red';
+                employeeDetailDeleteMsg.textContent = 'Löschen fehlgeschlagen: ' + msg + ' (Hinweis: Dafür wird eine Supabase Edge Function "admin-delete-user" benötigt.)';
+            } else {
+                alert('Löschen fehlgeschlagen: ' + msg + '\n(Hinweis: Dafür wird eine Supabase Edge Function "admin-delete-user" benötigt.)');
+            }
         }
     }
 
@@ -4124,6 +4575,14 @@ async function deleteOwnDocument(doc) {
         // ... (Logik wie zuvor)
         setActiveSection('section-employee-detail');
 
+        currentEmployeeDetailProfile = profile;
+        // Delete button visibility
+        if (employeeDetailDeleteBtn) {
+            const canDelete = currentProfile && currentProfile.role === 'admin' && currentUser && profile && profile.id && currentUser.id !== profile.id;
+            employeeDetailDeleteBtn.classList.toggle('hidden', !canDelete);
+            if (employeeDetailDeleteMsg) employeeDetailDeleteMsg.textContent = '';
+        }
+
         employeeDetailInfoTitle.textContent = profile.full_name || profile.email;
         const roleText = profile.role === 'admin' ? 'Administrator' : `Mitarbeiter (${profile.employment_type || 'N/A'})`;
         const approvalText = profile.is_approved ? `Freigegeben am ${new Date(profile.approved_at).toLocaleDateString('de-DE')}` : 'Wartet auf Freigabe';
@@ -4323,6 +4782,16 @@ settingsSaveProfile.addEventListener('click', async () => {
     }
 
     function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function escapeHtml(str){
+        return String(str)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#39;');
+    }
+
 
     function timeToMinutes(t){
         if(!t || typeof t !== "string" || !t.includes(":")) return null;
@@ -4792,6 +5261,10 @@ settingsSaveProfile.addEventListener('click', async () => {
                 const r = recalcRow(row);
                 workTd.textContent = fmtHours(minutesToHours(r.workMin));
                 nightTd.textContent = fmtHours(minutesToHours(row.nightMin || 0));
+                // Auto-break: reflect calculated break immediately
+                if(!row.breakManual){
+                    breakIn.value = String(row.breakMin || 0);
+                }
                 updateTotalsOnly();
             };
 
