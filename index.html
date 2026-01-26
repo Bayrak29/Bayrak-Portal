@@ -1330,6 +1330,8 @@
 <h3 class="section-title">Mitarbeiter-Details: <span id="employee-detail-info-title"></span></h3>
 <div class="info" id="employee-detail-meta" style="margin-bottom:12px;"></div>
 <button class="btn-secondary" id="employee-detail-back-btn" style="margin-bottom: 15px;">Zurück zur Übersicht</button>
+<button class="btn-small danger" id="employee-detail-delete-btn" type="button" style="margin-left:10px; margin-bottom:15px;">Mitarbeiter löschen</button>
+<div class="settings-message" id="employee-detail-delete-msg" style="margin-bottom:12px;"></div>
 <h4>Hochgeladene Dokumente</h4>
 <ul class="document-list" id="employee-detail-docs"></ul>
 </div>
@@ -1342,6 +1344,115 @@
     const SUPABASE_URL = 'https://tieypqqmdpzpxzxottik.supabase.co'; // <--- PRÜFEN SIE DIESE URL
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpZXlwcXFtZHB6cHh6eG90dGlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1Nzk0MjMsImV4cCI6MjA4MDE1NTQyM30.zvG9iGzuXOyfYU3mAvqQEXUrFDnmyrupwG0uYG6qf_c'; // <--- PRÜFEN SIE DIESEN KEY
     const STORAGE_BUCKET = 'documents';
+
+    // --- GLOBAL HELPERS (needed for Admin Live View) ---
+    // (Timesheet module defines its own helpers inside an IIFE; Admin Live View needs these in module scope.)
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function escapeHtml(str){
+        return String(str)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/\'/g,'&#39;');
+    }
+
+    function timeToMinutes(t){
+        if(!t || typeof t !== 'string' || !t.includes(':')) return null;
+        const [hh, mm] = t.split(':').map(x=>parseInt(x,10));
+        if(Number.isNaN(hh) || Number.isNaN(mm)) return null;
+        return hh*60 + mm;
+    }
+
+    function calcNightMinutes(startMin, endMin){
+        // Night is 22:00 - 05:00
+        if(startMin == null || endMin == null) return 0;
+        let s = startMin;
+        let e = endMin;
+        // handle overnight shift
+        if(e < s) e += 24*60;
+        // compute overlap with [22:00, 29:00)
+        const nightStart = 22*60;
+        const nightEnd = 29*60; // 05:00 next day
+        const overlap = Math.max(0, Math.min(e, nightEnd) - Math.max(s, nightStart));
+        // Also handle shifts that start after midnight (0-5) by normalizing into next-day window
+        // If shift is entirely in early morning (e.g., 02:00-04:00), s=120,e=240, overlap=0 above.
+        // Add 24h to compare with night window.
+        let overlap2 = 0;
+        if(e <= 24*60){
+            const s2 = s + 24*60;
+            const e2 = e + 24*60;
+            overlap2 = Math.max(0, Math.min(e2, nightEnd) - Math.max(s2, nightStart));
+        }
+        return Math.max(overlap, overlap2);
+    }
+
+    function recalcRow(row){
+        // Mirror the core logic from the timesheet module for Admin Live View (read-only).
+        if(row.status === 'vacation' || row.status === 'sick' || row.status === 'holiday'){
+            row.start = '';
+            row.end = '';
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 8*60, nightMin: 0 };
+        }
+        if(row.status === 'off'){
+            row.start = '';
+            row.end = '';
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        const s = timeToMinutes(row.start);
+        const e0 = timeToMinutes(row.end);
+        if(s == null || e0 == null){
+            row.breakMin = row.breakMin ?? 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        let e = e0;
+        if(e < s) e += 24*60;
+        const total = Math.max(0, e - s);
+        // Break rules: up to 6h => 0; 6.25-9.5h => 30; from 9.75h => 45
+        const hours = total / 60;
+        let br = 0;
+        if(hours >= 9.75) br = 45;
+        else if(hours >= 6.25) br = 30;
+        else br = 0;
+        row.breakMin = br;
+        const work = Math.max(0, total - br);
+        const night = calcNightMinutes(s, e0);
+        row.nightMin = night;
+        return { workMin: work, nightMin: night };
+    }
+
+    function normalizeState(state){
+        // Minimal normalization used by Live View table rendering.
+        if(!state || typeof state !== 'object') return { rows: [] };
+        const out = { ...state };
+        if(!Array.isArray(out.rows)) out.rows = [];
+        // Normalize row fields
+        out.rows = out.rows.map(r => {
+            if(!r || typeof r !== 'object') return null;
+            const rr = { ...r };
+            rr.day = Number(rr.day || rr.d || 0);
+            rr.extra = rr.extra === true;
+            rr.start = (rr.start || rr.s || '').toString();
+            rr.end = (rr.end || rr.e || '').toString();
+            rr.breakMin = (rr.breakMin ?? rr.break ?? rr.pause ?? 0);
+            rr.nightMin = (rr.nightMin ?? rr.night ?? 0);
+            rr.akkord = (rr.akkord ?? rr.piecework ?? '').toString();
+            rr.note = (rr.note ?? rr.notiz ?? '').toString();
+            rr.status = (rr.status ?? 'work').toString();
+            return rr;
+        }).filter(Boolean);
+        return out;
+    }
+
+    function getDraftPath(userId, year, month){
+        return `timesheets/${userId}/drafts/${year}-${pad2(month)}.json`;
+    }
 
     // Supabase-Client initialisieren
     // WICHTIG: Verwenden von 'let' und defensive Initialisierung, um Fatal Errors zu vermeiden.
@@ -1462,7 +1573,10 @@
             ts_confirm_save_pdf: "Möchten Sie die Datei auf Ihrem Gerät speichern?",
             ts_btn_yes: "Ja",
             ts_btn_no: "Nein"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         tr: {
             nav_dashboard: "Ana Sayfa",
             nav_uploads: "Belgeler & Yüklemeler",
@@ -1564,7 +1678,10 @@
             ts_confirm_save_pdf: "Dosyayı cihazınıza kaydetmek ister misiniz?",
             ts_btn_yes: "Evet",
             ts_btn_no: "Hayır"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         ru: {
             nav_dashboard: "Главная",
             nav_uploads: "Документы и загрузки",
@@ -1661,7 +1778,10 @@
             ts_confirm_save_pdf: "Сохранить файл на устройство?",
             ts_btn_yes: "Да",
             ts_btn_no: "Нет"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         uk: {
             nav_dashboard: "Головна",
             nav_uploads: "Документи та завантаження",
@@ -1758,7 +1878,10 @@
             ts_confirm_save_pdf: "Зберегти файл на пристрої?",
             ts_btn_yes: "Так",
             ts_btn_no: "Ні"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         fa: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "مدارک و بارگذاری‌ها",
@@ -1855,7 +1978,10 @@
             ts_confirm_save_pdf: "می‌خواهید فایل را روی دستگاه ذخیره کنید؟",
             ts_btn_yes: "بله",
             ts_btn_no: "خیر"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         prs: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "اسناد و بارگذاری‌ها",
@@ -1951,7 +2077,10 @@
             ts_confirm_save_pdf: "می‌خواهید فایل را در دستگاه ذخیره کنید؟",
             ts_btn_yes: "بلی",
             ts_btn_no: "نخیر"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         ps: {
             nav_dashboard: "کور پاڼه",
             nav_uploads: "لاسوندونه او پورته کول",
@@ -2048,7 +2177,10 @@
             ts_confirm_save_pdf: "ایا فایل په وسیله کې خوندي کړئ؟",
             ts_btn_yes: "هو",
             ts_btn_no: "نه"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         ar: {
             nav_dashboard: "الصفحة الرئيسية",
             nav_uploads: "الملفات والتحميلات",
@@ -2145,7 +2277,10 @@
             ts_confirm_save_pdf: "هل تريد حفظ الملف على جهازك؟",
             ts_btn_yes: "نعم",
             ts_btn_no: "لا"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         ro: {
             nav_dashboard: "Acasă",
             nav_uploads: "Documente & Upload-uri",
@@ -2242,7 +2377,10 @@
             ts_confirm_save_pdf: "Doriți să salvați fișierul pe dispozitiv?",
             ts_btn_yes: "Da",
             ts_btn_no: "Nu"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         bg: {
             nav_dashboard: "Начало",
             nav_uploads: "Документи и качвания",
@@ -2339,7 +2477,10 @@
             ts_confirm_save_pdf: "Искате ли да запазите файла на устройството?",
             ts_btn_yes: "Да",
             ts_btn_no: "Не"
-},
+,
+            ts_reset_day: "Tag zurücksetzen",
+            ts_reset_day_title: "Tag zurücksetzen",
+            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
         en: {
             nav_dashboard: "Home",
             nav_uploads: "Documents & Uploads",
@@ -2453,7 +2594,10 @@
             ts_confirm_save_pdf: "Do you want to save the file to your device?",
             ts_btn_yes: "Yes",
             ts_btn_no: "No"
-}
+,
+            ts_reset_day: "Reset day",
+            ts_reset_day_title: "Reset day",
+            ts_reset_day_msg: "Do you really want to reset {date} completely?"}
     };
 
     let currentLanguage = 'de';
@@ -2507,7 +2651,13 @@
 
     if (window.supabase && window.supabase.createClient) {
         // Erfolgreiche Initialisierung
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
     } else {
         // Fehler beim Laden der CDN-Bibliothek (häufigste Ursache für nicht funktionierende Buttons)
         console.error("FATAL ERROR: Supabase-Bibliothek (CDN) wurde nicht geladen. Das Skript kann nicht ausgeführt werden.");
@@ -2517,6 +2667,7 @@
     // Globale Variablen
     let currentUser = null;
     let currentProfile = null;
+    let currentEmployeeDetailProfile = null;
     let allProfilesCache = []; // Für Admin-Auswahl
 
     // DOM-Referenzen
@@ -2605,6 +2756,8 @@
     const employeeDetailMeta = document.getElementById('employee-detail-meta');
     const employeeDetailDocs = document.getElementById('employee-detail-docs');
     const employeeDetailBackBtn = document.getElementById('employee-detail-back-btn');
+    const employeeDetailDeleteBtn = document.getElementById('employee-detail-delete-btn');
+    const employeeDetailDeleteMsg = document.getElementById('employee-detail-delete-msg');
 
     // Documents
     const docsUnterwList = document.getElementById('docs-unterweisungen-list');
@@ -2807,6 +2960,10 @@
 
         employeeDetailBackBtn.addEventListener('click', () => {
             setActiveSection('section-admin');
+        });
+
+        if (employeeDetailDeleteBtn) employeeDetailDeleteBtn.addEventListener('click', () => {
+            if (currentEmployeeDetailProfile) deleteEmployee(currentEmployeeDetailProfile);
         });
     }
 
@@ -3629,7 +3786,62 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
         });
     }
 
-    async function loadAdminLiveTimesheet() {
+    
+    // Admin: read another user's draft timesheet.
+    // 1) Try direct Storage download (works if Storage policies allow admin read).
+    // 2) Fallback to Edge Function 'admin-read-timesheet-draft' (Service Role) if Storage blocks it.
+    function withTimeout(promise, ms, label){
+        let t = null;
+        const timeout = new Promise((_, reject) => {
+            t = setTimeout(() => reject(new Error((label?label+": ":"") + "Timeout nach " + ms + "ms")), ms);
+        });
+        return Promise.race([promise, timeout]).finally(()=>{ if(t) clearTimeout(t); });
+    }
+
+    async function adminFetchTimesheetDraft(userId, year, month){
+        const path = getDraftPath(userId, Number(year), Number(month));
+
+        // Try direct storage download first
+        try {
+            const { data, error } = await withTimeout(supabaseClient.storage.from(STORAGE_BUCKET).download(path), 8000, "Storage-Download");
+            if (!error && data) {
+                const txt = await data.text();
+                try { return { state: JSON.parse(txt), meta: { via: "storage", path } }; } catch(e){ /* ignore */ }
+            }
+        } catch(e) { /* ignore */ }
+
+        // Fallback via Edge Function (recommended if Storage policies restrict admin access)
+        try {
+            const { data: fnData, error: fnError } = await withTimeout(supabaseClient.functions.invoke("admin-read-timesheet-draft", {
+                body: { bucket: STORAGE_BUCKET, path }
+            }), 8000, "Edge-Function");
+
+            if (fnError) {
+                return { state: null, meta: { via: "edge", path }, error: fnError };
+            }
+
+            // Accept common response shapes:
+            // { content: "<json string>" } OR { json: {...} } OR direct object
+            if (fnData && typeof fnData === "object") {
+                if (fnData.json && typeof fnData.json === "object") {
+                    return { state: fnData.json, meta: { via: "edge", path } };
+                }
+                if (typeof fnData.content === "string") {
+                    try { return { state: JSON.parse(fnData.content), meta: { via: "edge", path } }; } catch(e){ /* ignore */ }
+                }
+                // if function returns the state directly
+                if (fnData.rows || fnData.month || fnData.year) {
+                    return { state: fnData, meta: { via: "edge", path } };
+                }
+            }
+
+            return { state: null, meta: { via: "edge", path }, error: { message: "Unexpected response from Edge Function." } };
+        } catch(e) {
+            return { state: null, meta: { via: "edge", path }, error: e };
+        }
+    }
+
+async function loadAdminLiveTimesheet() {
         const userId = adminLiveEmployee.value;
         const month = adminLiveMonth.value;
         const year = adminLiveYear.value;
@@ -3639,27 +3851,49 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
             return;
         }
 
-        const ymLabel = `${String(month).padStart(2,'0')}.${year}`;
         adminLiveResult.innerHTML = '<p class="info">Lade Daten…</p>';
         if (adminLiveMeta) adminLiveMeta.textContent = '';
 
-        // Helper: timeout wrapper
-        const withTimeout = (promise, ms, label) => {
-            let t;
-            const timeout = new Promise((_, rej) => {
-                t = setTimeout(() => rej(new Error(label || 'timeout')), ms);
-            });
-            return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
-        };
+        try {
+            // Live-Entwürfe werden als JSON im Storage abgelegt (Draft-Speicherung).
+            // Admin: je nach Storage-Policy kann der direkte Zugriff auf fremde Ordner blockiert sein.
+            const { state: fetchedState, meta: fetchedMeta, error: fetchedError } = await adminFetchTimesheetDraft(userId, year, month);
 
-        // Helper: render from state
-        const renderState = (rawState) => {
-            let state = rawState;
-            try {
-                if (typeof state === 'string') state = JSON.parse(state);
-            } catch (_) { /* ignore */ }
+            if (!fetchedState) {
+                // Show a helpful message if admin access is blocked
+                const maybeMsg = (fetchedError && (fetchedError.message || fetchedError.error_description)) ? (fetchedError.message || fetchedError.error_description) : "";
+                const isAccess = /permission|not authorized|unauthorized|forbidden|403/i.test(maybeMsg);
+                const isMissingFn = /Function not found|404|Not Found/i.test(maybeMsg);
+                const isTimeout = /Timeout/i.test(maybeMsg);
+
+                if (isAccess) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Zugriff verweigert.</p>
+                        <p class="info">Entweder fehlen Storage-Policies für Admin-Lesezugriff auf <code>timesheets/*</code>, oder die Edge Function <code>admin-read-timesheet-draft</code> ist nicht aktiv.</p>
+                    `;
+                } else if (isTimeout) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Zeitüberschreitung beim Laden.</p>
+                        <p class="info">Bitte prüfen Sie Ihre Internetverbindung. Wenn Sie lokal über <code>file://</code> öffnen, testen Sie bitte auch einmal über einen lokalen Server (z. B. VSCode „Live Server“), da manche Browser Fetch bei <code>file://</code> blockieren können.</p>
+                    `;
+                } else if (isMissingFn) {
+                    adminLiveResult.innerHTML = `
+                        <p class="info"><b>Live View:</b> Edge Function fehlt.</p>
+                        <p class="info">Bitte die Supabase Edge Function <code>admin-read-timesheet-draft</code> anlegen (Service Role), oder Storage-Policy für Admin-Lesen erlauben.</p>
+                    `;
+                } else {
+                    adminLiveResult.innerHTML = '<p class="info">Keine gespeicherten Live-Daten für diesen Monat.</p>';
+                }
+
+                if (adminLiveMeta) adminLiveMeta.textContent = `${String(month).padStart(2,'0')}.${year}`;
+                return;
+            }
+
+            let state = fetchedState;
+
             state = normalizeState(state);
 
+            // Render table (read-only)
             const table = document.createElement('table');
             table.className = 'simple-table';
             table.innerHTML = `
@@ -3680,25 +3914,23 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
             `;
             const tbody = table.querySelector('tbody');
 
+            const daysInMonth = new Date(Number(year), Number(month), 0).getDate();
             const rows = (state.rows || []).slice().sort((a,b)=>{
                 if((a.day||0)!==(b.day||0)) return (a.day||0)-(b.day||0);
+                // base row first
                 const ax = a.extra===true ? 1 : 0;
                 const bx = b.extra===true ? 1 : 0;
                 return ax-bx;
             });
 
             let countFilled = 0;
+
             rows.forEach(r => {
                 if (!r) return;
+                // compute
                 const tmp = { ...r };
-                const calc = recalcRow(tmp);
-                const workMin = calc?.workMin ?? 0;
-                const nightMin = calc?.nightMin ?? 0;
-
-                const hasAny = (tmp.start && tmp.end) ||
-                    (tmp.note && tmp.note.trim()) ||
-                    (tmp.akkord && tmp.akkord.trim()) ||
-                    (tmp.status && tmp.status !== 'work');
+                const { workMin, nightMin } = recalcRow(tmp);
+                const hasAny = (tmp.start && tmp.end) || (tmp.note && tmp.note.trim()) || (tmp.akkord && tmp.akkord.trim()) || (tmp.status && tmp.status !== 'work');
                 if (hasAny) countFilled++;
 
                 const dateStr = `${pad2(tmp.day)}.${pad2(Number(month))}.${year}` + (tmp.extra===true ? ' +' : '');
@@ -3721,71 +3953,13 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
             adminLiveResult.appendChild(table);
 
             if (adminLiveMeta) {
-                adminLiveMeta.textContent = `${ymLabel} • ${countFilled} Einträge`;
+                adminLiveMeta.textContent = `${String(month).padStart(2,'0')}.${year} • ${countFilled} Einträge${(fetchedMeta && fetchedMeta.via)?' • via '+fetchedMeta.via:''}`;
             }
-        };
-
-        try {
-            // 1) Try DB first (falls ihr Drafts in Postgres speichert)
-            try {
-                const dbTry = await withTimeout(
-                    supabaseClient
-                        .from('timesheet_states')
-                        .select('state, data, json, payload, month, year, user_id, updated_at, created_at')
-                        .eq('user_id', userId)
-                        .eq('year', Number(year))
-                        .eq('month', Number(month))
-                        .order('updated_at', { ascending: false })
-                        .limit(1),
-                    8000,
-                    'db-timeout'
-                );
-                const dbErr = dbTry?.error;
-                const dbRows = dbTry?.data;
-
-                if (!dbErr && Array.isArray(dbRows) && dbRows.length > 0) {
-                    const row = dbRows[0];
-                    const rawState = row.state ?? row.data ?? row.json ?? row.payload;
-                    if (rawState) {
-                        renderState(rawState);
-                        return;
-                    }
-                }
-            } catch (_) { /* ignore and fallback to storage */ }
-
-            // 2) Fallback: Storage draft JSON
-            const path = getDraftPath(userId, Number(year), Number(month));
-            const downloadRes = await withTimeout(
-                supabaseClient.storage.from(STORAGE_BUCKET).download(path),
-                12000,
-                'storage-timeout'
-            );
-
-            if (downloadRes?.error || !downloadRes?.data) {
-                adminLiveResult.innerHTML = '<p class="info">Keine gespeicherten Live-Daten für diesen Monat.</p>';
-                if (adminLiveMeta) adminLiveMeta.textContent = ymLabel;
-                return;
-            }
-
-            const txt = await withTimeout(downloadRes.data.text(), 8000, 'blob-timeout');
-            let parsed = null;
-            try { parsed = JSON.parse(txt); } catch(e){ parsed = null; }
-
-            if (!parsed) {
-                adminLiveResult.innerHTML = '<p class="info">Keine gespeicherten Live-Daten für diesen Monat.</p>';
-                if (adminLiveMeta) adminLiveMeta.textContent = ymLabel;
-                return;
-            }
-
-            renderState(parsed);
         } catch (e) {
             console.error(e);
-            const msg = (e && e.message) ? e.message : 'unbekannter Fehler';
-            adminLiveResult.innerHTML = `<p class="info">Live View konnte nicht geladen werden. (${escapeHtml(msg)})</p>`;
-            if (adminLiveMeta) adminLiveMeta.textContent = ymLabel;
+            adminLiveResult.innerHTML = `<p class="info"><b>Live View Fehler:</b> ${escapeHtml(e && (e.message || e.toString ? e.toString() : String(e)) || 'Unbekannter Fehler')}</p>`;
         }
     }
-
 
 
 async function loadPendingUserCount() {
@@ -3842,8 +4016,18 @@ async function loadPendingUserCount() {
             btnOpen.textContent = 'Details';
             btnOpen.onclick = () => openEmployeeDetail(p);
             
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn-small danger';
+            btnDelete.textContent = 'Löschen';
+            btnDelete.onclick = () => deleteEmployee(p);
+            if (currentUser && p.id === currentUser.id) {
+                btnDelete.disabled = true;
+                btnDelete.title = 'Eigenen Account kann man nicht löschen';
+            }
+
             actions.appendChild(btnOpen);
             actions.appendChild(btnSave);
+            actions.appendChild(btnDelete);
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:${p.role === 'admin' ? 'var(--blue-dark)' : (p.employment_type === 'fulltime' ? '#4caf50' : '#ff9800')}">${initials}</div>
@@ -3914,8 +4098,18 @@ async function loadPendingUserCount() {
             btnOpen.textContent = 'Details';
             btnOpen.onclick = () => openEmployeeDetail(p);
             
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn-small danger';
+            btnDelete.textContent = 'Löschen';
+            btnDelete.onclick = () => deleteEmployee(p);
+            if (currentUser && p.id === currentUser.id) {
+                btnDelete.disabled = true;
+                btnDelete.title = 'Eigenen Account kann man nicht löschen';
+            }
+
             actions.appendChild(btnOpen);
             actions.appendChild(btnApprove);
+            actions.appendChild(btnDelete);
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:#ff9800">${initials}</div>
@@ -4024,6 +4218,64 @@ async function loadPendingUserCount() {
         else {
             alert('Daten aktualisiert');
             loadEmployeeGrid();
+        }
+    }
+
+
+    async function deleteEmployee(profile) {
+        if (!profile || !profile.id) return;
+        if (!currentProfile || currentProfile.role !== 'admin') return alert('Nur Admins dürfen Mitarbeiter löschen.');
+        if (currentUser && currentUser.id === profile.id) return alert('Sie können Ihren eigenen Account nicht löschen.');
+
+        // Strong confirmation
+        const name = profile.full_name || profile.email || profile.id;
+        const ok1 = confirm(`Möchten Sie den Mitarbeiter wirklich löschen?\n\n${name}\n\nAchtung: Alle zugehörigen Dokumente/Dateien werden ebenfalls gelöscht.`);
+        if (!ok1) return;
+
+        const typed = prompt('Bitte zur Bestätigung das Wort LÖSCHEN eingeben:');
+        if (!typed || typed.trim().toLowerCase() !== 'löschen') return;
+
+        if (employeeDetailDeleteMsg) {
+            employeeDetailDeleteMsg.style.color = '#f57c00';
+            employeeDetailDeleteMsg.textContent = 'Lösche Mitarbeiter…';
+        }
+
+        try {
+            // Preferred: Edge Function using Service Role (must exist in Supabase)
+            const { data, error } = await supabaseClient.functions.invoke('admin-delete-user', {
+                body: { user_id: profile.id }
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            // If Edge Function returns something helpful, ignore; refresh UI
+            if (employeeDetailDeleteMsg) {
+                employeeDetailDeleteMsg.style.color = 'green';
+                employeeDetailDeleteMsg.textContent = 'Mitarbeiter gelöscht.';
+            }
+
+            // refresh caches/UI
+            currentEmployeeDetailProfile = null;
+            await loadAllProfiles();
+            await loadEmployeeGrid();
+            // Also refresh admin uploads overview if visible
+            if (currentProfile?.role === 'admin') {
+                try { await loadAdminDocumentOverviews(); } catch(e) {}
+            }
+            setActiveSection('section-admin');
+        } catch (e) {
+            console.error('deleteEmployee failed:', e);
+
+            // Fallback: explain missing Edge Function
+            const msg = (e && e.message) ? e.message : String(e);
+            if (employeeDetailDeleteMsg) {
+                employeeDetailDeleteMsg.style.color = 'red';
+                employeeDetailDeleteMsg.textContent = 'Löschen fehlgeschlagen: ' + msg + ' (Hinweis: Dafür wird eine Supabase Edge Function "admin-delete-user" benötigt.)';
+            } else {
+                alert('Löschen fehlgeschlagen: ' + msg + '\n(Hinweis: Dafür wird eine Supabase Edge Function "admin-delete-user" benötigt.)');
+            }
         }
     }
 
@@ -4471,6 +4723,14 @@ async function deleteOwnDocument(doc) {
         // ... (Logik wie zuvor)
         setActiveSection('section-employee-detail');
 
+        currentEmployeeDetailProfile = profile;
+        // Delete button visibility
+        if (employeeDetailDeleteBtn) {
+            const canDelete = currentProfile && currentProfile.role === 'admin' && currentUser && profile && profile.id && currentUser.id !== profile.id;
+            employeeDetailDeleteBtn.classList.toggle('hidden', !canDelete);
+            if (employeeDetailDeleteMsg) employeeDetailDeleteMsg.textContent = '';
+        }
+
         employeeDetailInfoTitle.textContent = profile.full_name || profile.email;
         const roleText = profile.role === 'admin' ? 'Administrator' : `Mitarbeiter (${profile.employment_type || 'N/A'})`;
         const approvalText = profile.is_approved ? `Freigegeben am ${new Date(profile.approved_at).toLocaleDateString('de-DE')}` : 'Wartet auf Freigabe';
@@ -4571,34 +4831,46 @@ settingsSaveProfile.addEventListener('click', async () => {
             settingsProfileMsg.style.color = 'red';
             return;
         }
+        // 2. Update Auth Meta (nur wenn Name geändert wurde & eine Session vorhanden ist)
+        const prevFirst = (currentProfile && currentProfile.first_name) ? String(currentProfile.first_name) : '';
+        const prevLast = (currentProfile && currentProfile.last_name) ? String(currentProfile.last_name) : '';
+        const nameChanged = (firstName !== prevFirst) || (lastName !== prevLast);
 
-        // 2. Update Auth Meta
-        const { error: authError } = await supabaseClient.auth.updateUser({
-            data: { full_name: fullName, first_name: firstName, last_name: lastName }
-        });
-        
-        if (authError) {
-            settingsProfileMsg.textContent = 'Fehler beim Aktualisieren des Auth-Namen: ' + authError.message;
-            settingsProfileMsg.style.color = 'red';
-        } else {
-            settingsProfileMsg.textContent = 'Gespeichert.';
-            settingsProfileMsg.style.color = 'green';
-            userNameText.textContent = fullName;
-
-            currentProfile.full_name = fullName;
-            currentProfile.first_name = firstName;
-            currentProfile.last_name = lastName;
-            currentProfile.language = selectedLanguage;
-            if (isAdmin) {
-                currentProfile.employment_type = employmentType;
+        let authError = null;
+        if (nameChanged) {
+            const { data: sessData } = await supabaseClient.auth.getSession();
+            if (sessData && sessData.session) {
+                const r = await supabaseClient.auth.updateUser({
+                    data: { full_name: fullName, first_name: firstName, last_name: lastName }
+                });
+                authError = r.error || null;
             }
-
-            initSettingsFromProfile();
-
-            const langToApply = currentProfile.language || 'de';
-            applyLanguage(langToApply);
         }
-    });
+
+        // Profildaten gelten als gespeichert, auch wenn Auth-Meta nicht aktualisiert werden konnte.
+        // Sprache wird immer übernommen.
+        settingsProfileMsg.textContent = 'Gespeichert.';
+        settingsProfileMsg.style.color = 'green';
+        userNameText.textContent = fullName;
+
+        currentProfile.full_name = fullName;
+        currentProfile.first_name = firstName;
+        currentProfile.last_name = lastName;
+        currentProfile.language = selectedLanguage;
+        if (isAdmin) {
+            currentProfile.employment_type = employmentType;
+        }
+
+        initSettingsFromProfile();
+
+        const langToApply = currentProfile.language || 'de';
+        applyLanguage(langToApply);
+
+        // Optional: Nur warnen, wenn Name geändert wurde und UpdateUser scheiterte (nicht bei reiner Sprachänderung)
+        if (nameChanged && authError && authError.message && !/Auth session missing/i.test(authError.message)) {
+            console.warn('Auth Meta Update Warnung:', authError);
+        }
+});
 
     settingsChangePw.addEventListener('click', async () => {
         // ... (Logik wie zuvor)
@@ -4939,6 +5211,66 @@ settingsSaveProfile.addEventListener('click', async () => {
         renderTable();
     }
 
+
+    function dayHasAny(day){
+        if(!TS.state || !Array.isArray(TS.state.rows)) return false;
+        const d = Number(day);
+        return TS.state.rows.some(r=>{
+            if(!r || Number(r.day)!==d) return false;
+            const hasTime = (r.start && String(r.start).trim()) || (r.end && String(r.end).trim());
+            const hasNote = (r.note && String(r.note).trim());
+            const hasAkk  = (r.akkord && String(r.akkord).trim());
+            const hasStatus = (r.status && r.status !== "work");
+            const hasBreak = (r.breakMin && Number(r.breakMin) > 0) || (r.breakManual === true);
+            return !!(hasTime || hasNote || hasAkk || hasStatus || hasBreak);
+        });
+    }
+
+    async function resetDay(day){
+        if(!TS.state) return;
+        const d = Number(day);
+        const year = TS.state.year;
+        const month = TS.state.month;
+
+        const trText = (key, fallback)=>{
+            if(typeof t === "function"){
+                const v = t(key);
+                if(v && v !== key) return v;
+            }
+            return fallback;
+        };
+
+        const dateStr = `${pad2(d)}.${pad2(month)}.${year}`;
+        const title = trText("ts_reset_day_title", "Tag zurücksetzen");
+        const msgTpl = trText("ts_reset_day_msg", "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?");
+        const msg = String(msgTpl).replace("{date}", dateStr);
+
+        const ok = await showModal(title, msg);
+        if(!ok) return;
+
+        // Remove all rows for that day (base + extra)
+        TS.state.rows = (TS.state.rows || []).filter(r => r && Number(r.day) !== d);
+
+        // Re-add a clean base row for that day
+        TS.state.rows.push({
+            uid: `d${d}-0`,
+            day: d,
+            extra: false,
+            start: "",
+            end: "",
+            breakMin: 0,
+            status: "work",
+            note: "",
+            nightMin: 0,
+            akkord: "",
+            breakManual: false
+        });
+
+        TS.state = normalizeState(TS.state);
+        markDirty(true);
+        renderTable();
+    }
+
     function recalcRow(row){
         // Status shortcuts
         if(row.status === "vacation" || row.status === "sick" || row.status === "holiday"){
@@ -5058,14 +5390,32 @@ settingsSaveProfile.addEventListener('click', async () => {
                 top.className = 'ts-daycell-top';
                 const wd = document.createElement('div');
                 wd.textContent = getWeekday(lang, dateObj);
+
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.alignItems = 'center';
+                actions.style.gap = '6px';
+
                 const plus = document.createElement('button');
                 plus.type = 'button';
                 plus.className = 'ts-plus-btn';
                 plus.title = (typeof t==="function") ? t('ts_add_row') : 'Weitere Zeile';
                 plus.textContent = '+';
                 plus.addEventListener('click', ()=> addExtraRow(row.day));
+
+                const reset = document.createElement('button');
+                reset.type = 'button';
+                reset.className = 'ts-plus-btn';
+                reset.title = (typeof t==="function") ? t('ts_reset_day') : 'Tag zurücksetzen';
+                reset.textContent = '↺';
+                reset.style.display = dayHasAny(row.day) ? 'flex' : 'none';
+                reset.addEventListener('click', ()=> resetDay(row.day));
+
+                actions.appendChild(plus);
+                actions.appendChild(reset);
+
                 top.appendChild(wd);
-                top.appendChild(plus);
+                top.appendChild(actions);
                 wrap.appendChild(top);
                 dayTd.appendChild(wrap);
             }
