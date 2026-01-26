@@ -1345,6 +1345,115 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpZXlwcXFtZHB6cHh6eG90dGlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1Nzk0MjMsImV4cCI6MjA4MDE1NTQyM30.zvG9iGzuXOyfYU3mAvqQEXUrFDnmyrupwG0uYG6qf_c'; // <--- PRÜFEN SIE DIESEN KEY
     const STORAGE_BUCKET = 'documents';
 
+    // --- GLOBAL HELPERS (needed for Admin Live View) ---
+    // (Timesheet module defines its own helpers inside an IIFE; Admin Live View needs these in module scope.)
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function escapeHtml(str){
+        return String(str)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/\'/g,'&#39;');
+    }
+
+    function timeToMinutes(t){
+        if(!t || typeof t !== 'string' || !t.includes(':')) return null;
+        const [hh, mm] = t.split(':').map(x=>parseInt(x,10));
+        if(Number.isNaN(hh) || Number.isNaN(mm)) return null;
+        return hh*60 + mm;
+    }
+
+    function calcNightMinutes(startMin, endMin){
+        // Night is 22:00 - 05:00
+        if(startMin == null || endMin == null) return 0;
+        let s = startMin;
+        let e = endMin;
+        // handle overnight shift
+        if(e < s) e += 24*60;
+        // compute overlap with [22:00, 29:00)
+        const nightStart = 22*60;
+        const nightEnd = 29*60; // 05:00 next day
+        const overlap = Math.max(0, Math.min(e, nightEnd) - Math.max(s, nightStart));
+        // Also handle shifts that start after midnight (0-5) by normalizing into next-day window
+        // If shift is entirely in early morning (e.g., 02:00-04:00), s=120,e=240, overlap=0 above.
+        // Add 24h to compare with night window.
+        let overlap2 = 0;
+        if(e <= 24*60){
+            const s2 = s + 24*60;
+            const e2 = e + 24*60;
+            overlap2 = Math.max(0, Math.min(e2, nightEnd) - Math.max(s2, nightStart));
+        }
+        return Math.max(overlap, overlap2);
+    }
+
+    function recalcRow(row){
+        // Mirror the core logic from the timesheet module for Admin Live View (read-only).
+        if(row.status === 'vacation' || row.status === 'sick' || row.status === 'holiday'){
+            row.start = '';
+            row.end = '';
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 8*60, nightMin: 0 };
+        }
+        if(row.status === 'off'){
+            row.start = '';
+            row.end = '';
+            row.breakMin = 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        const s = timeToMinutes(row.start);
+        const e0 = timeToMinutes(row.end);
+        if(s == null || e0 == null){
+            row.breakMin = row.breakMin ?? 0;
+            row.nightMin = 0;
+            return { workMin: 0, nightMin: 0 };
+        }
+        let e = e0;
+        if(e < s) e += 24*60;
+        const total = Math.max(0, e - s);
+        // Break rules: up to 6h => 0; 6.25-9.5h => 30; from 9.75h => 45
+        const hours = total / 60;
+        let br = 0;
+        if(hours >= 9.75) br = 45;
+        else if(hours >= 6.25) br = 30;
+        else br = 0;
+        row.breakMin = br;
+        const work = Math.max(0, total - br);
+        const night = calcNightMinutes(s, e0);
+        row.nightMin = night;
+        return { workMin: work, nightMin: night };
+    }
+
+    function normalizeState(state){
+        // Minimal normalization used by Live View table rendering.
+        if(!state || typeof state !== 'object') return { rows: [] };
+        const out = { ...state };
+        if(!Array.isArray(out.rows)) out.rows = [];
+        // Normalize row fields
+        out.rows = out.rows.map(r => {
+            if(!r || typeof r !== 'object') return null;
+            const rr = { ...r };
+            rr.day = Number(rr.day || rr.d || 0);
+            rr.extra = rr.extra === true;
+            rr.start = (rr.start || rr.s || '').toString();
+            rr.end = (rr.end || rr.e || '').toString();
+            rr.breakMin = (rr.breakMin ?? rr.break ?? rr.pause ?? 0);
+            rr.nightMin = (rr.nightMin ?? rr.night ?? 0);
+            rr.akkord = (rr.akkord ?? rr.piecework ?? '').toString();
+            rr.note = (rr.note ?? rr.notiz ?? '').toString();
+            rr.status = (rr.status ?? 'work').toString();
+            return rr;
+        }).filter(Boolean);
+        return out;
+    }
+
+    function getDraftPath(userId, year, month){
+        return `timesheets/${userId}/drafts/${year}-${pad2(month)}.json`;
+    }
+
     // Supabase-Client initialisieren
     // WICHTIG: Verwenden von 'let' und defensive Initialisierung, um Fatal Errors zu vermeiden.
     let supabaseClient = null; 
