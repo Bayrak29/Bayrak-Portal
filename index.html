@@ -1573,10 +1573,7 @@
             ts_confirm_save_pdf: "Möchten Sie die Datei auf Ihrem Gerät speichern?",
             ts_btn_yes: "Ja",
             ts_btn_no: "Nein"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         tr: {
             nav_dashboard: "Ana Sayfa",
             nav_uploads: "Belgeler & Yüklemeler",
@@ -1678,10 +1675,7 @@
             ts_confirm_save_pdf: "Dosyayı cihazınıza kaydetmek ister misiniz?",
             ts_btn_yes: "Evet",
             ts_btn_no: "Hayır"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         ru: {
             nav_dashboard: "Главная",
             nav_uploads: "Документы и загрузки",
@@ -1778,10 +1772,7 @@
             ts_confirm_save_pdf: "Сохранить файл на устройство?",
             ts_btn_yes: "Да",
             ts_btn_no: "Нет"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         uk: {
             nav_dashboard: "Головна",
             nav_uploads: "Документи та завантаження",
@@ -1878,10 +1869,7 @@
             ts_confirm_save_pdf: "Зберегти файл на пристрої?",
             ts_btn_yes: "Так",
             ts_btn_no: "Ні"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         fa: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "مدارک و بارگذاری‌ها",
@@ -1978,10 +1966,7 @@
             ts_confirm_save_pdf: "می‌خواهید فایل را روی دستگاه ذخیره کنید؟",
             ts_btn_yes: "بله",
             ts_btn_no: "خیر"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         prs: {
             nav_dashboard: "صفحه اصلی",
             nav_uploads: "اسناد و بارگذاری‌ها",
@@ -2077,10 +2062,7 @@
             ts_confirm_save_pdf: "می‌خواهید فایل را در دستگاه ذخیره کنید؟",
             ts_btn_yes: "بلی",
             ts_btn_no: "نخیر"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         ps: {
             nav_dashboard: "کور پاڼه",
             nav_uploads: "لاسوندونه او پورته کول",
@@ -2177,10 +2159,7 @@
             ts_confirm_save_pdf: "ایا فایل په وسیله کې خوندي کړئ؟",
             ts_btn_yes: "هو",
             ts_btn_no: "نه"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         ar: {
             nav_dashboard: "الصفحة الرئيسية",
             nav_uploads: "الملفات والتحميلات",
@@ -2277,10 +2256,7 @@
             ts_confirm_save_pdf: "هل تريد حفظ الملف على جهازك؟",
             ts_btn_yes: "نعم",
             ts_btn_no: "لا"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         ro: {
             nav_dashboard: "Acasă",
             nav_uploads: "Documente & Upload-uri",
@@ -2377,10 +2353,7 @@
             ts_confirm_save_pdf: "Doriți să salvați fișierul pe dispozitiv?",
             ts_btn_yes: "Da",
             ts_btn_no: "Nu"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         bg: {
             nav_dashboard: "Начало",
             nav_uploads: "Документи и качвания",
@@ -2477,10 +2450,7 @@
             ts_confirm_save_pdf: "Искате ли да запазите файла на устройството?",
             ts_btn_yes: "Да",
             ts_btn_no: "Не"
-,
-            ts_reset_day: "Tag zurücksetzen",
-            ts_reset_day_title: "Tag zurücksetzen",
-            ts_reset_day_msg: "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?"},
+},
         en: {
             nav_dashboard: "Home",
             nav_uploads: "Documents & Uploads",
@@ -2594,10 +2564,7 @@
             ts_confirm_save_pdf: "Do you want to save the file to your device?",
             ts_btn_yes: "Yes",
             ts_btn_no: "No"
-,
-            ts_reset_day: "Reset day",
-            ts_reset_day_title: "Reset day",
-            ts_reset_day_msg: "Do you really want to reset {date} completely?"}
+}
     };
 
     let currentLanguage = 'de';
@@ -2651,13 +2618,7 @@
 
     if (window.supabase && window.supabase.createClient) {
         // Erfolgreiche Initialisierung
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        });
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
         // Fehler beim Laden der CDN-Bibliothek (häufigste Ursache für nicht funktionierende Buttons)
         console.error("FATAL ERROR: Supabase-Bibliothek (CDN) wurde nicht geladen. Das Skript kann nicht ausgeführt werden.");
@@ -4831,46 +4792,34 @@ settingsSaveProfile.addEventListener('click', async () => {
             settingsProfileMsg.style.color = 'red';
             return;
         }
-        // 2. Update Auth Meta (nur wenn Name geändert wurde & eine Session vorhanden ist)
-        const prevFirst = (currentProfile && currentProfile.first_name) ? String(currentProfile.first_name) : '';
-        const prevLast = (currentProfile && currentProfile.last_name) ? String(currentProfile.last_name) : '';
-        const nameChanged = (firstName !== prevFirst) || (lastName !== prevLast);
 
-        let authError = null;
-        if (nameChanged) {
-            const { data: sessData } = await supabaseClient.auth.getSession();
-            if (sessData && sessData.session) {
-                const r = await supabaseClient.auth.updateUser({
-                    data: { full_name: fullName, first_name: firstName, last_name: lastName }
-                });
-                authError = r.error || null;
+        // 2. Update Auth Meta
+        const { error: authError } = await supabaseClient.auth.updateUser({
+            data: { full_name: fullName, first_name: firstName, last_name: lastName }
+        });
+        
+        if (authError) {
+            settingsProfileMsg.textContent = 'Fehler beim Aktualisieren des Auth-Namen: ' + authError.message;
+            settingsProfileMsg.style.color = 'red';
+        } else {
+            settingsProfileMsg.textContent = 'Gespeichert.';
+            settingsProfileMsg.style.color = 'green';
+            userNameText.textContent = fullName;
+
+            currentProfile.full_name = fullName;
+            currentProfile.first_name = firstName;
+            currentProfile.last_name = lastName;
+            currentProfile.language = selectedLanguage;
+            if (isAdmin) {
+                currentProfile.employment_type = employmentType;
             }
+
+            initSettingsFromProfile();
+
+            const langToApply = currentProfile.language || 'de';
+            applyLanguage(langToApply);
         }
-
-        // Profildaten gelten als gespeichert, auch wenn Auth-Meta nicht aktualisiert werden konnte.
-        // Sprache wird immer übernommen.
-        settingsProfileMsg.textContent = 'Gespeichert.';
-        settingsProfileMsg.style.color = 'green';
-        userNameText.textContent = fullName;
-
-        currentProfile.full_name = fullName;
-        currentProfile.first_name = firstName;
-        currentProfile.last_name = lastName;
-        currentProfile.language = selectedLanguage;
-        if (isAdmin) {
-            currentProfile.employment_type = employmentType;
-        }
-
-        initSettingsFromProfile();
-
-        const langToApply = currentProfile.language || 'de';
-        applyLanguage(langToApply);
-
-        // Optional: Nur warnen, wenn Name geändert wurde und UpdateUser scheiterte (nicht bei reiner Sprachänderung)
-        if (nameChanged && authError && authError.message && !/Auth session missing/i.test(authError.message)) {
-            console.warn('Auth Meta Update Warnung:', authError);
-        }
-});
+    });
 
     settingsChangePw.addEventListener('click', async () => {
         // ... (Logik wie zuvor)
@@ -5211,66 +5160,6 @@ settingsSaveProfile.addEventListener('click', async () => {
         renderTable();
     }
 
-
-    function dayHasAny(day){
-        if(!TS.state || !Array.isArray(TS.state.rows)) return false;
-        const d = Number(day);
-        return TS.state.rows.some(r=>{
-            if(!r || Number(r.day)!==d) return false;
-            const hasTime = (r.start && String(r.start).trim()) || (r.end && String(r.end).trim());
-            const hasNote = (r.note && String(r.note).trim());
-            const hasAkk  = (r.akkord && String(r.akkord).trim());
-            const hasStatus = (r.status && r.status !== "work");
-            const hasBreak = (r.breakMin && Number(r.breakMin) > 0) || (r.breakManual === true);
-            return !!(hasTime || hasNote || hasAkk || hasStatus || hasBreak);
-        });
-    }
-
-    async function resetDay(day){
-        if(!TS.state) return;
-        const d = Number(day);
-        const year = TS.state.year;
-        const month = TS.state.month;
-
-        const trText = (key, fallback)=>{
-            if(typeof t === "function"){
-                const v = t(key);
-                if(v && v !== key) return v;
-            }
-            return fallback;
-        };
-
-        const dateStr = `${pad2(d)}.${pad2(month)}.${year}`;
-        const title = trText("ts_reset_day_title", "Tag zurücksetzen");
-        const msgTpl = trText("ts_reset_day_msg", "Möchten Sie den Tag {date} wirklich komplett zurücksetzen?");
-        const msg = String(msgTpl).replace("{date}", dateStr);
-
-        const ok = await showModal(title, msg);
-        if(!ok) return;
-
-        // Remove all rows for that day (base + extra)
-        TS.state.rows = (TS.state.rows || []).filter(r => r && Number(r.day) !== d);
-
-        // Re-add a clean base row for that day
-        TS.state.rows.push({
-            uid: `d${d}-0`,
-            day: d,
-            extra: false,
-            start: "",
-            end: "",
-            breakMin: 0,
-            status: "work",
-            note: "",
-            nightMin: 0,
-            akkord: "",
-            breakManual: false
-        });
-
-        TS.state = normalizeState(TS.state);
-        markDirty(true);
-        renderTable();
-    }
-
     function recalcRow(row){
         // Status shortcuts
         if(row.status === "vacation" || row.status === "sick" || row.status === "holiday"){
@@ -5390,32 +5279,14 @@ settingsSaveProfile.addEventListener('click', async () => {
                 top.className = 'ts-daycell-top';
                 const wd = document.createElement('div');
                 wd.textContent = getWeekday(lang, dateObj);
-
-                const actions = document.createElement('div');
-                actions.style.display = 'flex';
-                actions.style.alignItems = 'center';
-                actions.style.gap = '6px';
-
                 const plus = document.createElement('button');
                 plus.type = 'button';
                 plus.className = 'ts-plus-btn';
                 plus.title = (typeof t==="function") ? t('ts_add_row') : 'Weitere Zeile';
                 plus.textContent = '+';
                 plus.addEventListener('click', ()=> addExtraRow(row.day));
-
-                const reset = document.createElement('button');
-                reset.type = 'button';
-                reset.className = 'ts-plus-btn';
-                reset.title = (typeof t==="function") ? t('ts_reset_day') : 'Tag zurücksetzen';
-                reset.textContent = '↺';
-                reset.style.display = dayHasAny(row.day) ? 'flex' : 'none';
-                reset.addEventListener('click', ()=> resetDay(row.day));
-
-                actions.appendChild(plus);
-                actions.appendChild(reset);
-
                 top.appendChild(wd);
-                top.appendChild(actions);
+                top.appendChild(plus);
                 wrap.appendChild(top);
                 dayTd.appendChild(wrap);
             }
@@ -5559,41 +5430,6 @@ settingsSaveProfile.addEventListener('click', async () => {
         if(!silent){
             setInfo(els.msg, (typeof t==="function") ? t("ts_msg_unsaved") : "Änderungen nicht gespeichert.", "warn");
         }
-        scheduleAutoSave(true);
-    }
-
-    function scheduleAutoSave(silent){
-        // Debounced autosave (important for mobile/PC sync)
-        try{
-            if(TS.saveTimer) clearTimeout(TS.saveTimer);
-            TS.saveTimer = setTimeout(()=>{ autoSaveDraft(!!silent); }, 1200);
-        }catch(e){}
-    }
-
-    async function autoSaveDraft(silent){
-        if(!TS.state || !TS.dirty) return;
-        if(!supabaseClient || !currentUser){
-            // keep dirty, cannot save right now
-            return;
-        }
-        const els = ensureElements();
-        if(!silent){
-            setInfo(els.msg, (typeof t==="function")?t("ts_msg_saving"):"Speichere…", "");
-        }
-        try{
-            await saveDraftToSupabase();
-            TS.dirty = false;
-            TS.lastSavedAt = Date.now();
-            if(!silent){
-                setInfo(els.msg, (typeof t==="function") ? t("ts_msg_saved") : "Gespeichert.", "ok");
-                setTimeout(()=>{ if(els.msg && !TS.dirty && (Date.now()-TS.lastSavedAt)>2500) setInfo(els.msg, ""); }, 2600);
-            }
-        }catch(e){
-            console.error(e);
-            if(!silent){
-                setInfo(els.msg, (typeof t==="function")?t("ts_msg_save_fail"):"Speichern fehlgeschlagen.", "error");
-            }
-        }
     }
 
     async function manualSaveDraft(){
@@ -5623,21 +5459,31 @@ settingsSaveProfile.addEventListener('click', async () => {
         const { error } = await supabaseClient
             .storage
             .from(STORAGE_BUCKET)
-            .upload(path, blob, { upsert: true, contentType: "application/json" });
+            .upload(path, blob, {
+                upsert: true,
+                contentType: "application/json",
+                cacheControl: "0"
+            });
         if(error) throw error;
     }
 
     async function loadDraftFromSupabase(year, month){
         if(!supabaseClient || !currentUser) return null;
         const path = getDraftPath(currentUser.id, year, month);
-        const { data, error } = await supabaseClient
+
+        // Use a signed URL to avoid stale browser/proxy caching across devices
+        const { data: signed, error: signErr } = await supabaseClient
             .storage
             .from(STORAGE_BUCKET)
-            .download(path);
-        if(error) return null;
-        const txt = await data.text();
+            .createSignedUrl(path, 60);
+
+        if(signErr || !signed || !signed.signedUrl) return null;
+
+        const res = await fetch(signed.signedUrl, { cache: "no-store" });
+        if(!res.ok) return null;
+
         try{
-            return JSON.parse(txt);
+            return await res.json();
         }catch(e){
             return null;
         }
@@ -5939,17 +5785,6 @@ settingsSaveProfile.addEventListener('click', async () => {
         bindTabs();
         fillMonthYear();
         bindActions();
-
-        // ensure autosave when user switches apps/tabs (mobile)
-        if(!TS.__lifecycleBound){
-            TS.__lifecycleBound = true;
-            document.addEventListener("visibilitychange", ()=>{
-                if(document.visibilityState === "hidden"){
-                    autoSaveDraft(true);
-                }
-            });
-            window.addEventListener("pagehide", ()=>{ autoSaveDraft(true); });
-        }
 
         // hook applyLanguage to refresh our dynamic labels
         if(typeof applyLanguage === "function" && !applyLanguage.__tsWrapped){
