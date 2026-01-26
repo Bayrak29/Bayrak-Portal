@@ -779,6 +779,7 @@
 
 .ts-daycell{display:flex;flex-direction:column;gap:6px;line-height:1}
 .ts-daycell-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ts-daycell-actions{display:flex;align-items:center;gap:6px}
 .ts-rowhint{font-size:11px;opacity:.75}
 .ts-plus-btn{width:22px;height:22px;border-radius:8px;border:1px solid rgba(255,255,255,0.20);background:rgba(0,0,0,0.18);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;user-select:none}
 .ts-plus-btn:hover{background:rgba(255,255,255,0.08)}
@@ -1570,6 +1571,8 @@
             ts_confirm_title: "Bestätigung",
             ts_confirm_reset_1: "Alle Inhalte werden gelöscht. Möchten Sie fortfahren?",
             ts_confirm_reset_2: "Sind Sie sicher? Die Tabelle wird komplett gelöscht.",
+            ts_confirm_reset_day: "Nur dieser Tag wird zurückgesetzt. Fortfahren?",
+            ts_reset_day: "Tag zurücksetzen",
             ts_confirm_save_pdf: "Möchten Sie die Datei auf Ihrem Gerät speichern?",
             ts_btn_yes: "Ja",
             ts_btn_no: "Nein"
@@ -2561,6 +2564,8 @@
             ts_confirm_title: "Confirmation",
             ts_confirm_reset_1: "All contents will be deleted. Continue?",
             ts_confirm_reset_2: "Are you sure? The table will be cleared completely.",
+            ts_confirm_reset_day: "Only this day will be reset. Continue?",
+            ts_reset_day: "Reset day",
             ts_confirm_save_pdf: "Do you want to save the file to your device?",
             ts_btn_yes: "Yes",
             ts_btn_no: "No"
@@ -5160,6 +5165,32 @@ settingsSaveProfile.addEventListener('click', async () => {
         renderTable();
     }
 
+    async function resetDay(day){
+        if(!TS.state) return;
+        const ok = await showModal("ts_confirm_title","ts_confirm_reset_day");
+        if(!ok) return;
+
+        // Remove all extra rows for this day
+        TS.state.rows = TS.state.rows.filter(r => !(r && r.extra === true && r.day === day));
+
+        // Reset base row for this day
+        const base = TS.state.rows.find(r => r && r.extra !== true && r.day === day);
+        if(base){
+            base.start = "";
+            base.end = "";
+            base.breakMin = 0;
+            base.status = "work";
+            base.note = "";
+            base.nightMin = 0;
+            base.akkord = "";
+            base.breakManual = false;
+        }
+
+        markDirty(true);
+        renderTable();
+    }
+
+
     function recalcRow(row){
         // Status shortcuts
         if(row.status === "vacation" || row.status === "sick" || row.status === "holiday"){
@@ -5279,14 +5310,28 @@ settingsSaveProfile.addEventListener('click', async () => {
                 top.className = 'ts-daycell-top';
                 const wd = document.createElement('div');
                 wd.textContent = getWeekday(lang, dateObj);
+
+                const reset = document.createElement('button');
+                reset.type = 'button';
+                reset.className = 'ts-plus-btn ts-reset-day-btn';
+                reset.title = (typeof t==="function") ? t('ts_reset_day') : 'Tag zurücksetzen';
+                reset.textContent = '↺';
+                reset.addEventListener('click', ()=> resetDay(row.day));
+
                 const plus = document.createElement('button');
                 plus.type = 'button';
                 plus.className = 'ts-plus-btn';
                 plus.title = (typeof t==="function") ? t('ts_add_row') : 'Weitere Zeile';
                 plus.textContent = '+';
                 plus.addEventListener('click', ()=> addExtraRow(row.day));
+
+                const actions = document.createElement('div');
+                actions.className = 'ts-daycell-actions';
+                actions.appendChild(reset);
+                actions.appendChild(plus);
+
                 top.appendChild(wd);
-                top.appendChild(plus);
+                top.appendChild(actions);
                 wrap.appendChild(top);
                 dayTd.appendChild(wrap);
             }
