@@ -1110,7 +1110,7 @@
 </select>
 </div>
 <div class="hidden" id="admin-unterweisungen-user-select-wrapper">
-<label for="admin-unterweisungen-user-select">Mitarbeiter auswählen</label>
+<label for="admin-unterweisungen-user-select">Empfänger auswählen</label>
 <select id="admin-unterweisungen-user-select"></select>
 </div>
 </div>
@@ -3189,22 +3189,38 @@ async function loadPendingUserCount() {
 // --- ADMIN UPLOAD ---
     
     function populateAdminUploadSelect(profiles) {
-        // ... (Logik wie zuvor)
         adminUnterwUserSelect.innerHTML = '';
-        profiles.forEach(p => {
+        // Sort: Mitarbeiter zuerst, dann Admins (optional)
+        const sorted = [...profiles].sort((a, b) => {
+            const ra = (a.role || '').toLowerCase();
+            const rb = (b.role || '').toLowerCase();
+            if (ra === rb) {
+                const na = (a.full_name || a.email || '').toLowerCase();
+                const nb = (b.full_name || b.email || '').toLowerCase();
+                return na.localeCompare(nb, 'de');
+            }
+            if (ra === 'admin') return 1;
+            if (rb === 'admin') return -1;
+            return 0;
+        });
+
+        sorted.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.id;
-            opt.textContent = p.full_name || p.email;
+            const labelBase = p.full_name || p.email || 'Unbekannt';
+            const roleTag = (p.role && p.role.toLowerCase() === 'admin') ? ' (Admin)' : '';
+            opt.textContent = labelBase + roleTag;
             adminUnterwUserSelect.appendChild(opt);
         });
     }
+
 
     async function initAdminUploadsSelect() {
         try {
             if (allProfilesCache.length === 0) {
                 await loadAllProfiles();
             }
-            const approved = allProfilesCache.filter(p => p.is_approved && p.role === 'user');
+            const approved = allProfilesCache.filter(p => p.is_approved && (p.role === 'user' || p.role === 'admin'));
             populateAdminUploadSelect(approved);
         } catch (e) {
             console.error('initAdminUploadsSelect error:', e);
