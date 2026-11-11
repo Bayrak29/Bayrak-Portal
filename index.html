@@ -628,6 +628,17 @@
             color: #fff;
         }
 
+        .btn-small.danger {
+            background: #b00020;
+            color: #fff;
+            margin-inline-start: auto; /* abgesetzt vom Speichern-Knopf */
+        }
+
+        .btn-small:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
         .admin-message {
             font-size: 0.8rem;
             margin-top: 4px;
@@ -1252,7 +1263,21 @@
             settings_email_label: "E-Mail",
             settings_employment_label: "Beschäftigungsart",
             settings_language_label: "Sprache / Language",
-            settings_save_profile: "Profil speichern"
+            settings_save_profile: "Profil speichern",
+            emp_delete_btn: "Löschen",
+            emp_delete_pending_btn: "Ablehnen und löschen",
+            emp_delete_running: "Wird gelöscht …",
+            emp_delete_confirm: "Mitarbeiter {name} ({email}) endgültig löschen?\n\nLogin, Profil, Stundenzettel, Krankmeldungen, Dokumente und Dateien werden unwiderruflich entfernt.",
+            emp_delete_prompt: "Zur Bestätigung bitte den Namen „{name}“ oder das Wort LÖSCHEN eintippen:",
+            emp_delete_prompt_word: "Zur Bestätigung bitte das Wort LÖSCHEN eintippen:",
+            emp_delete_wrong_input: "Eingabe stimmt nicht überein – es wurde nichts gelöscht.",
+            emp_delete_self: "Sie können sich nicht selbst löschen.",
+            emp_delete_not_ready: "Die Lösch-Funktion ist in der Datenbank noch nicht eingerichtet – es wurde nichts gelöscht.",
+            emp_delete_files_failed: "Die Dateien des Mitarbeiters konnten nicht vollständig gelöscht werden. Der Mitarbeiter wurde NICHT gelöscht.",
+            emp_delete_files_gone: "Hinweis: Die Dateien des Mitarbeiters wurden bereits gelöscht.",
+            emp_delete_failed: "Der Mitarbeiter konnte nicht gelöscht werden.",
+            emp_delete_fk: "Mitarbeiter ist noch mit anderen Daten verknüpft und kann nicht gelöscht werden.",
+            emp_delete_success: "{name} wurde gelöscht."
         },
         tr: {
             nav_dashboard: "Ana Sayfa",
@@ -3416,6 +3441,7 @@ async function loadPendingUserCount() {
             
             actions.appendChild(btnOpen);
             actions.appendChild(btnSave);
+            appendEmployeeDeleteButton(actions, p, 'emp_delete_btn');
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:${p.role === 'admin' ? 'var(--blue-dark)' : (p.employment_type === 'fulltime' ? '#4caf50' : '#ff9800')}">${initials}</div>
@@ -3489,6 +3515,7 @@ async function loadPendingUserCount() {
             
             actions.appendChild(btnOpen);
             actions.appendChild(btnApprove);
+            appendEmployeeDeleteButton(actions, p, 'emp_delete_pending_btn');
 
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:#ff9800">${initials}</div>
@@ -3622,7 +3649,200 @@ async function loadPendingUserCount() {
         loadEmployeeGrid();
     }
 
-    
+    // --- ADMIN: MITARBEITER ENDGÜLTIG LÖSCHEN ---
+    // Ablauf: Rückfragen → Vorprüfung in der DB → Dateien über die Storage-API löschen
+    // (die Datenbank selbst darf in storage.objects nicht löschen) → RPC admin_mitarbeiter_loeschen
+    // (löscht den Login; Profil, documents und Stempeluhr folgen per Kaskade).
+    let employeeDeleteRunning = false;
+    const STORAGE_LIST_PAGE = 100;
+    const STORAGE_REMOVE_BATCH = 100;
+
+    // t() mit Platzhaltern {name}, {email} (einmaliges Ersetzen, Daten werden nicht erneut ausgewertet)
+    function tFormat(key, vars) {
+        return t(key).replace(/\{(\w+)\}/g, (m, k) => (vars && Object.prototype.hasOwnProperty.call(vars, k)) ? String(vars[k]) : m);
+    }
+
+    function appendEmployeeDeleteButton(actions, profile, labelKey) {
+        if (!currentUser || !profile || profile.id === currentUser.id) return; // eigene Karte: kein Löschen
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-small danger';
+        btn.textContent = t(labelKey);
+        btn.onclick = () => deleteEmployee(profile, btn);
+        actions.appendChild(btn);
+    }
+
+    function describeEmployeeDeleteError(e) {
+        if (!e) return '';
+        if (isNetworkError(e)) return SERVER_UNREACHABLE_MSG;
+        const msg = String(e.message || e);
+        // Funktion fehlt in der Datenbank (SQL noch nicht eingespielt)
+        if (e.code === 'PGRST202' || e.code === '42883' || /could not find the function/i.test(msg)) return t('emp_delete_not_ready');
+        // Fremdschlüssel: Mitarbeiter hängt noch an anderen Daten
+        if (e.code === '23503') return t('emp_delete_fk');
+        return msg;
+    }
+
+    // Listet alle Dateien unter einem Ordner (ohne "/" am Ende) rekursiv auf.
+    // list() liefert Unterordner als Einträge ohne id → in diese absteigen.
+    async function listStorageFilesRecursive(prefix) {
+        const files = [];
+        const folders = [prefix];
+        let visited = 0;
+        while (folders.length > 0) {
+            const folder = folders.shift();
+            if (++visited > 1000) throw new Error('Zu viele Unterordner unter ' + prefix + '.');
+            let offset = 0;
+            while (true) {
+                const { data, error } = await supabaseClient.storage
+                    .from(STORAGE_BUCKET)
+                    .list(folder, { limit: STORAGE_LIST_PAGE, offset: offset, sortBy: { column: 'name', order: 'asc' } });
+                if (error) throw error;
+                if (!Array.isArray(data)) throw new Error('Ordner ' + folder + ' konnte nicht gelesen werden.');
+                for (const entry of data) {
+                    if (!entry || !entry.name) continue;
+                    const full = folder + '/' + entry.name;
+                    if (entry.id === null || entry.id === undefined) {
+                        folders.push(full);
+                    } else {
+                        files.push(full);
+                    }
+                }
+                if (data.length < STORAGE_LIST_PAGE) break;
+                offset += STORAGE_LIST_PAGE;
+            }
+        }
+        return files;
+    }
+
+    // Alle Dateien, die beim Löschen des Mitarbeiters weg sollen
+    async function collectEmployeeFilePaths(userId) {
+        const paths = new Set();
+        const ownPrefixes = [`timesheets/${userId}/`, `sicknotes/${userId}/`];
+        for (const prefix of ownPrefixes) {
+            (await listStorageFilesRecursive(prefix.slice(0, -1))).forEach(p => paths.add(p));
+        }
+
+        // Dateien seiner documents-Zeilen außerhalb der eigenen Ordner (v. a. Unterweisungen):
+        // nur löschen, wenn keine Zeile eines ANDEREN Mitarbeiters dieselbe Datei nutzt.
+        const { data: docs, error } = await supabaseClient
+            .from('documents')
+            .select('id, file_url')
+            .eq('user_id', userId);
+        if (error) throw error;
+        const rows = Array.isArray(docs) ? docs : [];
+        const checked = new Set();
+        for (const doc of rows) {
+            const path = getStoragePath(doc.file_url);
+            if (!path || checked.has(path) || ownPrefixes.some(pre => path.startsWith(pre))) continue;
+            checked.add(path);
+            // Zeilen ANDERER Mitarbeiter mit derselben Datei (alle Schreibweisen: Pfad, alte URL, wie gespeichert)
+            const variants = Array.from(new Set(rows
+                .filter(d => getStoragePath(d.file_url) === path)
+                .map(d => d.file_url)
+                .concat([path, STORAGE_PUBLIC_PREFIX + path])
+                .filter(Boolean)));
+            const { count, error: countError } = await supabaseClient
+                .from('documents')
+                .select('id', { count: 'exact', head: true })
+                .in('file_url', variants)
+                .neq('user_id', userId);
+            if (countError) throw countError;
+            if ((count || 0) === 0) paths.add(path);
+        }
+        return Array.from(paths);
+    }
+
+    // Entfernt Dateien in Paketen und prüft, dass sie wirklich weg sind
+    // (leere Rückgabe von remove = evtl. keine Berechtigung → per list nachsehen, wie in deleteDocumentAndFile)
+    async function removeStorageFilesVerified(paths) {
+        for (let i = 0; i < paths.length; i += STORAGE_REMOVE_BATCH) {
+            const batch = paths.slice(i, i + STORAGE_REMOVE_BATCH);
+            const { data, error } = await supabaseClient.storage.from(STORAGE_BUCKET).remove(batch);
+            if (error) throw error;
+            const removed = new Set((Array.isArray(data) ? data : []).map(o => o && o.name).filter(Boolean));
+            for (const path of batch) {
+                if (removed.has(path)) continue;
+                const exists = await storageFileExists(path);
+                if (exists === true) throw new Error('Datei konnte nicht gelöscht werden (keine Berechtigung): ' + path);
+                if (exists === null) throw new Error('Es konnte nicht geprüft werden, ob die Datei gelöscht wurde: ' + path);
+            }
+        }
+    }
+
+    async function deleteEmployee(profile, btn) {
+        if (employeeDeleteRunning || !profile || !profile.id) return;
+        if (currentUser && profile.id === currentUser.id) {
+            alert(t('emp_delete_self'));
+            return;
+        }
+
+        const name = String(profile.full_name || '').trim();
+        const email = String(profile.email || '').trim();
+        const shownName = name || email || '?';
+
+        if (!confirm(tFormat('emp_delete_confirm', { name: shownName, email: email || '-' }))) return;
+        const input = prompt(name ? tFormat('emp_delete_prompt', { name: name }) : t('emp_delete_prompt_word'), '');
+        if (input === null) return; // Abbrechen
+        // Groß/Klein egal, Leerzeichen am Rand egal, Umlaute vereinheitlicht (NFC)
+        const typed = input.normalize('NFC').trim();
+        const nameMatches = name && typed.toLowerCase() === name.normalize('NFC').trim().toLowerCase();
+        if (typed.toUpperCase() !== 'LÖSCHEN' && !nameMatches) {
+            alert(t('emp_delete_wrong_input'));
+            return;
+        }
+
+        employeeDeleteRunning = true;
+        const oldLabel = btn ? btn.textContent : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = t('emp_delete_running');
+        }
+        let filesTouched = false;
+
+        try {
+            // 1) Vorprüfung (Rechte, nicht man selbst, existiert, Funktion eingerichtet) – ändert nichts
+            const { error: checkError } = await supabaseClient.rpc('admin_mitarbeiter_loeschen_pruefen', { p_user_id: profile.id });
+            if (checkError) throw checkError;
+
+            // 2) Dateien löschen – scheitert das, wird der Mitarbeiter NICHT gelöscht
+            try {
+                const paths = await collectEmployeeFilePaths(profile.id);
+                if (paths.length > 0) {
+                    filesTouched = true;
+                    await removeStorageFilesVerified(paths);
+                }
+                const rest = (await listStorageFilesRecursive(`timesheets/${profile.id}`))
+                    .concat(await listStorageFilesRecursive(`sicknotes/${profile.id}`));
+                if (rest.length > 0) {
+                    filesTouched = true;
+                    throw new Error(rest.length + ' Datei(en) sind noch vorhanden.');
+                }
+            } catch (fileErr) {
+                alert(t('emp_delete_files_failed') + '\n\n' + describeEmployeeDeleteError(fileErr));
+                return;
+            }
+
+            // 3) Login + Profil + Einträge löschen
+            const { error: rpcError } = await supabaseClient.rpc('admin_mitarbeiter_loeschen', { p_user_id: profile.id });
+            if (rpcError) throw rpcError; // z. B. "Das ist der letzte Administrator. …"
+
+            alert(tFormat('emp_delete_success', { name: shownName }));
+        } catch (e) {
+            let msg = t('emp_delete_failed') + '\n\n' + describeEmployeeDeleteError(e);
+            if (filesTouched) msg += '\n\n' + t('emp_delete_files_gone');
+            alert(msg);
+        } finally {
+            employeeDeleteRunning = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = oldLabel;
+            }
+            await loadEmployeeGrid(); // Liste, Wartend-Zähler und allProfilesCache neu
+        }
+    }
+
+
     // Hinweis: Früher wurde hier die Edge Function "send-approval-email" aufgerufen.
     // Diese existiert in Supabase nicht – der Aufruf wurde entfernt. Bei Freigabe geht KEINE E-Mail raus.
 
