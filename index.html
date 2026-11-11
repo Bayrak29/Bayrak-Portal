@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <title>Bayrak Mitarbeiter-Portal</title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script crossorigin="anonymous" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
 <style>
         :root {
             --blue-dark: #004b7a;
@@ -1159,6 +1159,25 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpZXlwcXFtZHB6cHh6eG90dGlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1Nzk0MjMsImV4cCI6MjA4MDE1NTQyM30.zvG9iGzuXOyfYU3mAvqQEXUrFDnmyrupwG0uYG6qf_c'; // <--- PRÜFEN SIE DIESEN KEY
     const STORAGE_BUCKET = 'documents';
 
+    // Stundenzettel (doc_type 'stundenzettel') automatisch löschen, wenn älter als X Tage.
+    // 0 = Autolöschung aus. Betrifft nur Stundenzettel, keine Krankmeldungen/Dokumente/Unterweisungen.
+    const STUNDENZETTEL_AUTO_LOESCHEN_TAGE = 30;
+
+    // Uploads: maximale Größe und erlaubte Dateitypen (muss zu den Bucket-Einstellungen in Supabase passen)
+    const MAX_UPLOAD_MB = 15;
+    const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+    const ALLOWED_UPLOAD_TYPES = {
+        'image/jpeg': ['jpg', 'jpeg', 'jfif'],
+        'image/png': ['png'],
+        'image/heic': ['heic'],
+        'image/heif': ['heif'],
+        'image/webp': ['webp'],
+        'application/pdf': ['pdf']
+    };
+
+    // Alte Einträge enthalten noch die volle öffentliche URL – daraus wird der Speicherpfad gewonnen.
+    const STORAGE_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/`;
+
     // Supabase-Client initialisieren
     // WICHTIG: Verwenden von 'let' und defensive Initialisierung, um Fatal Errors zu vermeiden.
     let supabaseClient = null; 
@@ -1223,7 +1242,17 @@
             toggle_password_aria: "Passwort anzeigen",
             settings_change_password_btn: "Passwort ändern",
             employment_fulltime: "Vollzeit",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Anmeldung",
+            settings_info: "Hier können Sie Ihre Profildaten bearbeiten und Ihr Passwort ändern.",
+            settings_profile_heading: "Profildaten",
+            settings_profile_text: "Aktualisieren Sie hier Ihren Namen.",
+            settings_first_name_label: "Vorname",
+            settings_last_name_label: "Nachname",
+            settings_email_label: "E-Mail",
+            settings_employment_label: "Beschäftigungsart",
+            settings_language_label: "Sprache / Language",
+            settings_save_profile: "Profil speichern"
         },
         tr: {
             nav_dashboard: "Ana Sayfa",
@@ -1283,7 +1312,17 @@
             toggle_password_aria: "Şifreyi göster",
             settings_change_password_btn: "Şifre değiştir",
             employment_fulltime: "Tam zamanlı",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Giriş",
+            settings_info: "Burada profil bilgilerinizi düzenleyebilir ve şifrenizi değiştirebilirsiniz.",
+            settings_profile_heading: "Profil bilgileri",
+            settings_profile_text: "Adınızı buradan güncelleyebilirsiniz.",
+            settings_first_name_label: "Ad",
+            settings_last_name_label: "Soyad",
+            settings_email_label: "E-posta",
+            settings_employment_label: "Çalışma şekli",
+            settings_language_label: "Dil / Sprache",
+            settings_save_profile: "Profili kaydet"
         },
         ru: {
             nav_dashboard: "Главная",
@@ -1343,7 +1382,17 @@
             toggle_password_aria: "Показать пароль",
             settings_change_password_btn: "Изменить пароль",
             employment_fulltime: "Полная занятость",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Вход",
+            settings_info: "Здесь вы можете изменить данные профиля и пароль.",
+            settings_profile_heading: "Данные профиля",
+            settings_profile_text: "Здесь можно обновить ваше имя.",
+            settings_first_name_label: "Имя",
+            settings_last_name_label: "Фамилия",
+            settings_email_label: "Эл. почта",
+            settings_employment_label: "Тип занятости",
+            settings_language_label: "Язык / Sprache",
+            settings_save_profile: "Сохранить профиль"
         },
         uk: {
             nav_dashboard: "Головна",
@@ -1403,7 +1452,17 @@
             toggle_password_aria: "Показати пароль",
             settings_change_password_btn: "Змінити пароль",
             employment_fulltime: "Повна зайнятість",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Вхід",
+            settings_info: "Тут ви можете змінити дані профілю та пароль.",
+            settings_profile_heading: "Дані профілю",
+            settings_profile_text: "Тут можна оновити ваше ім'я.",
+            settings_first_name_label: "Ім'я",
+            settings_last_name_label: "Прізвище",
+            settings_email_label: "Ел. пошта",
+            settings_employment_label: "Тип зайнятості",
+            settings_language_label: "Мова / Sprache",
+            settings_save_profile: "Зберегти профіль"
         },
         fa: {
             nav_dashboard: "صفحه اصلی",
@@ -1463,7 +1522,17 @@
             toggle_password_aria: "نمایش رمز عبور",
             settings_change_password_btn: "تغییر رمز عبور",
             employment_fulltime: "تمام‌وقت",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "ورود",
+            settings_info: "در اینجا می‌توانید اطلاعات نمایه خود را ویرایش کرده و رمز عبور خود را تغییر دهید.",
+            settings_profile_heading: "اطلاعات نمایه",
+            settings_profile_text: "نام خود را در اینجا به‌روزرسانی کنید.",
+            settings_first_name_label: "نام",
+            settings_last_name_label: "نام خانوادگی",
+            settings_email_label: "ایمیل",
+            settings_employment_label: "نوع استخدام",
+            settings_language_label: "زبان / Sprache",
+            settings_save_profile: "ذخیره نمایه"
         },
         prs: {
             nav_dashboard: "صفحه اصلی",
@@ -1643,7 +1712,17 @@
             toggle_password_aria: "إظهار كلمة المرور",
             settings_change_password_btn: "تغيير كلمة المرور",
             employment_fulltime: "دوام كامل",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "تسجيل الدخول",
+            settings_info: "هنا يمكنك تعديل بيانات ملفك الشخصي وتغيير كلمة المرور.",
+            settings_profile_heading: "بيانات الملف الشخصي",
+            settings_profile_text: "يمكنك تحديث اسمك هنا.",
+            settings_first_name_label: "الاسم الأول",
+            settings_last_name_label: "اسم العائلة",
+            settings_email_label: "البريد الإلكتروني",
+            settings_employment_label: "نوع التوظيف",
+            settings_language_label: "اللغة / Sprache",
+            settings_save_profile: "حفظ الملف الشخصي"
         },
         ro: {
             nav_dashboard: "Acasă",
@@ -1703,7 +1782,17 @@
             toggle_password_aria: "Afișează parola",
             settings_change_password_btn: "Schimbă parola",
             employment_fulltime: "Normă întreagă",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Autentificare",
+            settings_info: "Aici vă puteți modifica datele de profil și parola.",
+            settings_profile_heading: "Date de profil",
+            settings_profile_text: "Aici vă puteți actualiza numele.",
+            settings_first_name_label: "Prenume",
+            settings_last_name_label: "Nume",
+            settings_email_label: "E-mail",
+            settings_employment_label: "Tip de angajare",
+            settings_language_label: "Limbă / Sprache",
+            settings_save_profile: "Salvează profilul"
         },
         bg: {
             nav_dashboard: "Начало",
@@ -1763,7 +1852,17 @@
             toggle_password_aria: "Покажи паролата",
             settings_change_password_btn: "Смени паролата",
             employment_fulltime: "Пълно работно време",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Вход",
+            settings_info: "Тук можете да редактирате данните на профила си и да смените паролата си.",
+            settings_profile_heading: "Данни на профила",
+            settings_profile_text: "Тук можете да актуализирате името си.",
+            settings_first_name_label: "Име",
+            settings_last_name_label: "Фамилия",
+            settings_email_label: "Имейл",
+            settings_employment_label: "Вид заетост",
+            settings_language_label: "Език / Sprache",
+            settings_save_profile: "Запази профила"
         },
         en: {
             nav_dashboard: "Home",
@@ -1823,7 +1922,17 @@
             toggle_password_aria: "Show password",
             settings_change_password_btn: "Change password",
             employment_fulltime: "Full-time",
-            employment_minijob: "Minijob"
+            employment_minijob: "Minijob",
+            login_title: "Login",
+            settings_info: "Here you can edit your profile data and change your password.",
+            settings_profile_heading: "Profile data",
+            settings_profile_text: "Update your name here.",
+            settings_first_name_label: "First name",
+            settings_last_name_label: "Last name",
+            settings_email_label: "Email",
+            settings_employment_label: "Employment type",
+            settings_language_label: "Language / Sprache",
+            settings_save_profile: "Save profile"
         }
     };
 
@@ -1894,6 +2003,7 @@
     const authSection = document.getElementById('auth-section');
     const portalSection = document.getElementById('portal-section');
     const pendingSection = document.getElementById('pending-section');
+    const pendingMessage = document.getElementById('pending-message');
     const loginBox = document.getElementById('login-box');
     const registerBox = document.getElementById('register-box');
     const resetBox = document.getElementById('reset-box');
@@ -2020,7 +2130,201 @@
     }
 
     function makeSafeFileName(name) {
-        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.{2,}/g, '.');
+    }
+
+    // Texte aus der Datenbank nie ungeprüft als HTML einsetzen
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const SERVER_UNREACHABLE_MSG = 'Server nicht erreichbar – bitte später erneut versuchen.';
+    const PROFILE_MISSING_MSG = 'Ihr Profil konnte nicht geladen werden. Bitte später erneut versuchen oder den Administrator kontaktieren.';
+
+    // Erkennt Netzwerkfehler (offline, Supabase pausiert/nicht erreichbar)
+    function isNetworkError(err, status) {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+        // 0 = keine Antwort; 502/503/504 und 52x/54x (Gateway, Projekt pausiert) = nicht erreichbar.
+        // HTTP 500 mit Antwort ist ein Serverfehler, kein Netzwerkproblem.
+        const unreachable = (code) => typeof code === 'number' && (code === 0 || code === 502 || code === 503 || code === 504 || (code >= 520 && code <= 599));
+        if (unreachable(status)) return true;
+        if (!err) return false;
+        if (err.name === 'AuthRetryableFetchError') return true;
+        if (unreachable(err.status)) return true;
+        const msg = `${err.name || ''} ${err.message || ''}`.toLowerCase();
+        return /failed to fetch|networkerror|network error|load failed|network request failed|fetcherror|err_internet|err_connection/.test(msg);
+    }
+
+    // Häufige englische Supabase-Meldungen auf Deutsch
+    function translateAuthError(err) {
+        if (!err) return '';
+        const msg = String(err.message || err);
+        const lower = msg.toLowerCase();
+        if (lower.includes('database error saving new user')) return 'Die Registrierung konnte nicht gespeichert werden. Bitte später erneut versuchen oder den Administrator kontaktieren.';
+        if (isNetworkError(err)) return SERVER_UNREACHABLE_MSG;
+        if (lower.includes('invalid login credentials')) return 'E-Mail-Adresse oder Passwort ist falsch.';
+        if (lower.includes('email not confirmed')) return 'Ihre E-Mail-Adresse ist noch nicht bestätigt. Bitte klicken Sie zuerst auf den Link in der Bestätigungs-E-Mail.';
+        if (lower.includes('user already registered') || lower.includes('already been registered')) return 'Diese E-Mail-Adresse ist bereits registriert. Bitte melden Sie sich an oder nutzen Sie „Passwort vergessen?“.';
+        if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Zu viele Versuche. Bitte warten Sie einige Minuten und versuchen Sie es dann erneut.';
+        if (lower.includes('password should be') || lower.includes('weak password')) return 'Das Passwort ist zu schwach. Bitte ein längeres bzw. sichereres Passwort wählen.';
+        if (lower.includes('same password') || lower.includes('should be different')) return 'Das neue Passwort muss sich vom bisherigen Passwort unterscheiden.';
+        if (lower.includes('unable to validate email') || lower.includes('invalid email') || lower.includes('invalid format')) return 'Bitte eine gültige E-Mail-Adresse eingeben.';
+        return msg;
+    }
+
+    // Meldet lokal ab (auch wenn der Server nicht erreichbar ist)
+    async function forceLocalSignOut() {
+        try {
+            await supabaseClient.auth.signOut({ scope: 'local' });
+        } catch (e) {
+            console.warn('Lokale Abmeldung fehlgeschlagen:', e);
+        }
+    }
+
+    // --- SPEICHERPFADE / DATEIEN ---
+
+    // Liefert den Speicherpfad im Bucket – aus reinem Pfad oder aus alter öffentlicher URL.
+    // Alles andere (fremde URLs, javascript: usw.) ergibt null und wird nicht verlinkt.
+    function getStoragePath(fileUrl) {
+        if (!fileUrl || typeof fileUrl !== 'string') return null;
+        const value = fileUrl.trim();
+        if (!value) return null;
+
+        if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+            // Nur URLs auf unser eigenes Supabase-Projekt zulassen
+            if (!value.startsWith(SUPABASE_URL + '/')) return null;
+            const markers = [
+                `/storage/v1/object/public/${STORAGE_BUCKET}/`,
+                `/storage/v1/object/sign/${STORAGE_BUCKET}/`,
+                `/storage/v1/object/authenticated/${STORAGE_BUCKET}/`
+            ];
+            for (const marker of markers) {
+                const idx = value.indexOf(marker);
+                if (idx !== -1) {
+                    let path = value.substring(idx + marker.length).split('?')[0].split('#')[0];
+                    try { path = decodeURIComponent(path); } catch (e) { /* Pfad bleibt wie er ist */ }
+                    return path || null;
+                }
+            }
+            return null;
+        }
+
+        // Reiner Speicherpfad (z. B. "timesheets/<uid>/123_datei.pdf")
+        if (value.startsWith('\\') || value.split('/').some(seg => seg === '..' || seg === '')) return null;
+        return value;
+    }
+
+    // Öffnet eine Datei über eine kurzlebige signierte URL (120 s).
+    // Das Fenster wird sofort im Klick geöffnet (sonst blockiert der Handy-Browser das Popup).
+    async function openStoredFile(fileUrl) {
+        const path = getStoragePath(fileUrl);
+        if (!path) {
+            alert('Diese Datei kann nicht geöffnet werden (ungültiger Speicherort).');
+            return;
+        }
+
+        let win = null;
+        try {
+            win = window.open('', '_blank');
+            if (win) {
+                try { win.opener = null; } catch (e) { /* egal */ }
+            }
+            if (win && win.document) {
+                win.document.title = 'Datei wird geladen …';
+                win.document.body.textContent = 'Datei wird geladen …';
+            }
+        } catch (e) {
+            win = null;
+        }
+
+        try {
+            const { data, error } = await supabaseClient.storage
+                .from(STORAGE_BUCKET)
+                .createSignedUrl(path, 120);
+
+            if (error || !data || !data.signedUrl) {
+                throw error || new Error('Keine Download-Adresse erhalten.');
+            }
+
+            if (win && !win.closed) {
+                win.location.href = data.signedUrl;
+            } else {
+                // Popup wurde blockiert: im selben Tab öffnen
+                window.location.href = data.signedUrl;
+            }
+        } catch (e) {
+            console.error('Datei öffnen fehlgeschlagen:', e);
+            if (win && !win.closed) win.close();
+            const reason = isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e);
+            alert('Die Datei konnte nicht geöffnet werden: ' + reason);
+        }
+    }
+
+    // Link "Öffnen" für ein Dokument erzeugen (oder Hinweis, wenn der Speicherort ungültig ist)
+    function createOpenLink(doc, fontSize) {
+        if (!getStoragePath(doc.file_url)) {
+            const span = document.createElement('span');
+            span.className = 'info';
+            span.textContent = 'Datei nicht verfügbar';
+            if (fontSize) span.style.fontSize = fontSize;
+            return span;
+        }
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = 'Öffnen';
+        if (fontSize) link.style.fontSize = fontSize;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            openStoredFile(doc.file_url);
+        });
+        return link;
+    }
+
+    // Prüft Typ und Größe einer Datei vor dem Upload.
+    // Rückgabe: { file } (ggf. mit korrigiertem MIME-Typ) oder { error } mit deutscher Meldung.
+    function prepareUploadFile(file) {
+        if (!file) return { error: 'Bitte eine Datei auswählen.' };
+        if (file.size === 0) return { error: 'Die ausgewählte Datei ist leer.' };
+        if (file.size > MAX_UPLOAD_BYTES) {
+            const mb = (file.size / (1024 * 1024)).toFixed(1).replace('.', ',');
+            return { error: `Die Datei ist zu groß (${mb} MB). Erlaubt sind höchstens ${MAX_UPLOAD_MB} MB.` };
+        }
+
+        const ext = (file.name.includes('.') ? file.name.split('.').pop() : '').toLowerCase();
+        let type = (file.type || '').toLowerCase();
+        if (type === 'image/jpg' || type === 'image/pjpeg') type = 'image/jpeg';
+
+        if (!ALLOWED_UPLOAD_TYPES[type]) {
+            // Manche Geräte liefern keinen oder einen allgemeinen Typ – dann nach Dateiendung
+            if (!type || type === 'application/octet-stream') {
+                type = Object.keys(ALLOWED_UPLOAD_TYPES).find(t => ALLOWED_UPLOAD_TYPES[t].includes(ext)) || '';
+            } else {
+                type = '';
+            }
+        }
+
+        if (!type) {
+            return { error: 'Dieser Dateityp ist nicht erlaubt. Bitte ein Foto (JPG, PNG, HEIC, WEBP) oder eine PDF-Datei hochladen.' };
+        }
+
+        const prepared = (file.type === type) ? file : new File([file], file.name, { type: type });
+        return { file: prepared };
+    }
+
+    // Prüft, ob eine Update/Delete-Abfrage wirklich eine Zeile getroffen hat
+    function ensureRowsAffected(data, actionText) {
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error(`${actionText} wurde nicht ausgeführt (keine Berechtigung oder Eintrag nicht mehr vorhanden).`);
+        }
     }
 
     function showAuthError(msg) {
@@ -2074,6 +2378,34 @@
         }
     }
 
+    // Letzte Aktivität wird in localStorage gemerkt (gilt für alle Tabs und nach Neuladen)
+    const LAST_ACTIVITY_KEY = 'bayrak_last_activity';
+    let lastLocalActivity = Date.now();
+    let lastActivityWrite = 0;
+
+    function storeLastActivity(force) {
+        const now = Date.now();
+        lastLocalActivity = now;
+        if (force || now - lastActivityWrite > 5000) {
+            lastActivityWrite = now;
+            try { localStorage.setItem(LAST_ACTIVITY_KEY, String(now)); } catch (e) { /* z. B. privater Modus */ }
+        }
+    }
+
+    function getStoredLastActivity() {
+        try {
+            const v = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '', 10);
+            return isNaN(v) ? null : v;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function isInactivityExpired() {
+        const last = getStoredLastActivity();
+        return last !== null && (Date.now() - last) > INACTIVITY_LIMIT_MS;
+    }
+
     function startTimer() {
         clearInterval(timerInterval);
         timeRemaining = INACTIVITY_LIMIT_MS / 1000;
@@ -2081,13 +2413,19 @@
         inactivityTimerEl.classList.remove('hidden');
 
         timerInterval = setInterval(() => {
-            timeRemaining--;
+            // Restzeit aus Zeitstempel berechnen (auch korrekt, wenn der Tab im Hintergrund gedrosselt wurde)
+            const last = Math.max(lastLocalActivity, getStoredLastActivity() || 0);
+            timeRemaining = Math.max(0, Math.round((INACTIVITY_LIMIT_MS - (Date.now() - last)) / 1000));
             updateTimerDisplay();
 
             if (timeRemaining <= 0) {
                 clearInterval(timerInterval);
+                timerInterval = null;
                 inactivityTimerEl.classList.add('hidden');
-                supabaseClient.auth.signOut().then(() => {
+                currentUser = null; // keine zusätzliche "Sitzung abgelaufen"-Meldung
+                // Nur dieses Gerät abmelden (andere Geräte, z. B. das Handy, bleiben angemeldet)
+                forceLocalSignOut()
+                    .finally(() => {
                     alert('Sie wurden wegen Inaktivität abgemeldet.');
                     showLogin();
                 });
@@ -2097,10 +2435,13 @@
 
     function resetInactivityTimer() {
         if (currentUser) {
-            clearTimeout(inactivityTimeout);
-            clearInterval(timerInterval);
-            inactivityTimeout = setTimeout(startTimer, INACTIVITY_LIMIT_MS - (10 * 60 * 1000) + (1 * 60 * 1000)); // Start timer 1 min before limit
-            startTimer();
+            storeLastActivity(false);
+            if (!timerInterval) {
+                startTimer();
+            } else {
+                timeRemaining = INACTIVITY_LIMIT_MS / 1000;
+                updateTimerDisplay();
+            }
         }
     }
 
@@ -2184,6 +2525,7 @@
         currentProfile = null;
         clearTimeout(inactivityTimeout);
         clearInterval(timerInterval);
+        timerInterval = null;
         inactivityTimerEl.classList.add('hidden');
 
         authSection.classList.remove('hidden');
@@ -2219,71 +2561,42 @@
     }
 
         
+    async function loadOwnProfile(userId) {
+        return await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+    }
+
+    // Gibt true zurück, wenn das Portal (oder die Warteseite) angezeigt wurde
     async function showPortal(user) {
         currentUser = user;
 
-        // Profil laden
-        let { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+        // Profil laden. Das Profil legt die Datenbank beim Registrieren selbst an (Trigger handle_new_user).
+        // Ein Profil wird im Browser NICHT mehr angelegt und es gibt kein Ersatzprofil.
+        let { data: profile, error, status } = await loadOwnProfile(user.id);
 
-        // Wenn kein Profil: Fallback → versuchen anzulegen, aber Admin NIE aussperren
+        if (!error && !profile) {
+            // Trigger evtl. noch nicht fertig: einmal kurz warten und erneut laden
+            await sleep(1500);
+            ({ data: profile, error, status } = await loadOwnProfile(user.id));
+        }
+
+        if (error && isNetworkError(error, status)) {
+            console.error('Profil laden: Server nicht erreichbar', error);
+            showLogin();
+            showAuthError(SERVER_UNREACHABLE_MSG);
+            return false;
+        }
+
         if (error || !profile) {
-            console.warn('Profil nicht gefunden, versuche Fallback-Profil anzulegen', error);
-
-            const meta = user.user_metadata || {};
-            const firstName = meta.first_name || '';
-            const lastName = meta.last_name || '';
-            const fullName =
-                meta.full_name ||
-                `${firstName} ${lastName}`.trim() ||
-                user.email;
-
-            // Best Effort: Profil in Tabelle anlegen – Fehler werden geloggt, aber Admin kommt trotzdem rein
-            // Sonderfall: erster Benutzer im System wird automatisch Admin, alle weiteren als normale Mitarbeiter angelegt
-            let insertData = null;
-            let shouldBecomeAdmin = false;
-            try {
-                const { data: existingProfiles, error: countError } = await supabaseClient
-                    .from('profiles')
-                    .select('id, role');
-
-                if (!countError && existingProfiles && existingProfiles.length === 0) {
-                    shouldBecomeAdmin = true;
-                }
-
-                const insertResult = await supabaseClient
-                    .from('profiles')
-                    .insert({
-                        id: user.id,
-                        email: user.email,
-                        first_name: firstName,
-                        last_name: lastName,
-                        full_name: fullName,
-                        role: shouldBecomeAdmin ? 'admin' : 'user',
-                        is_approved: shouldBecomeAdmin ? true : false,
-                        employment_type: shouldBecomeAdmin ? 'fulltime' : null
-                    })
-                    .select('*')
-                    .single();
-
-                insertData = insertResult.data;
-            } catch (e) {
-                console.error('Profil konnte nicht angelegt werden (RLS oder andere Ursache)', e);
-            }
-
-            profile = insertData || {
-                id: user.id,
-                email: user.email,
-                first_name: firstName,
-                last_name: lastName,
-                full_name: fullName,
-                role: 'admin',
-                is_approved: true,
-                employment_type: 'fulltime'
-            };
+            console.error('Profil konnte nicht geladen werden', error);
+            currentUser = null; // keine zusätzliche "Sitzung abgelaufen"-Meldung
+            await forceLocalSignOut();
+            showLogin();
+            showAuthError(PROFILE_MISSING_MSG);
+            return false;
         }
 
         currentProfile = profile;
@@ -2296,8 +2609,9 @@
 
         // Nur normale User ohne Freigabe sehen "Registrierung ausstehend"
         if (!isApproved && !isAdmin) {
+            storeLastActivity(true);
             showPending(user);
-            return;
+            return true;
         }
 
         // === Portal anzeigen ===
@@ -2348,7 +2662,9 @@
         // Initial Section
         setActiveSection('section-dashboard');
         updateUserDocumentsBadge();
+        storeLastActivity(true);
         resetInactivityTimer();
+        return true;
     }
 
 // --- AUTH HANDLERS ---
@@ -2357,19 +2673,31 @@
         if (!supabaseClient) return showAuthError('Kritischer Fehler: Anmeldefunktion nicht verfügbar.'); // Safety check
 
         clearAuthMessages();
-        const email = emailInput.value;
+        const email = emailInput.value.trim();
         const password = passwordInput.value;
 
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email,
-            password,
-        });
+        if (!email || !password) {
+            return showAuthError('Bitte E-Mail-Adresse und Passwort eingeben.');
+        }
 
-        if (error) {
-            showAuthError(error.message);
-        } else if (data.user) {
-            await showPortal(data.user);
-            await autoCleanupOldTimesheets();
+        loginBtn.disabled = true;
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                showAuthError(translateAuthError(error));
+            } else if (data.user) {
+                const shown = await showPortal(data.user);
+                if (shown) await autoCleanupOldTimesheets();
+            }
+        } catch (e) {
+            console.error('Login Error:', e);
+            showAuthError(translateAuthError(e));
+        } finally {
+            loginBtn.disabled = false;
         }
     });
 
@@ -2399,7 +2727,7 @@
         });
 
         if (error) {
-            showAuthError('Fehler: ' + error.message);
+            showAuthError('Fehler: ' + translateAuthError(error));
         } else {
             showAuthSuccess('E-Mail zum Zurücksetzen des Passworts gesendet. Bitte Posteingang prüfen.');
             // Nach erfolgreichem Versand zurück zum Login
@@ -2442,39 +2770,24 @@
             password: password,
             options: {
                 emailRedirectTo: window.location.origin + window.location.pathname,
+                // Diese Angaben übernimmt der Datenbank-Trigger handle_new_user in das Profil
+                // (Rolle und Freigabe setzt immer die Datenbank, nie der Browser).
                 data: {
                     first_name: firstName,
                     last_name: lastName,
                     full_name: `${firstName} ${lastName}`,
-                    role: 'user'
+                    language: currentLanguage || 'de'
                 }
             }
         });
 
         if (error) {
-            showAuthError(error.message);
+            showAuthError(translateAuthError(error));
+        } else if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+            // Supabase meldet bei bereits registrierter Adresse keinen Fehler, sondern einen Benutzer ohne Identität
+            showAuthError(translateAuthError({ message: 'User already registered' }));
         } else if (data.user) {
-            // After successful signup, insert initial profile data
-            const { error: profileError } = await supabaseClient
-                .from('profiles')
-                .insert([
-                    {
-                        id: data.user.id,
-                        email: email,
-                        first_name: firstName,
-                        last_name: lastName,
-                        full_name: `${firstName} ${lastName}`,
-                        role: 'user', // Default role
-                        is_approved: false, // Must be approved by admin
-                        employment_type: null // Wird erst bei Freigabe gesetzt
-                    }
-                ]);
-
-            if (profileError) {
-                console.error('Profile insertion error:', profileError);
-                // Continue, as the user is created in auth
-            }
-
+            // Das Profil legt der Datenbank-Trigger an – kein Insert mehr im Browser
             showAuthSuccess('Registrierung erfolgreich! Bitte E-Mail bestätigen. Nach Bestätigung muss ein Admin Ihren Zugang freigeben.');
             // Switch back to login box
             registerBox.classList.add('hidden');
@@ -2499,7 +2812,7 @@
         const { error: updateError } = await supabaseClient.auth.updateUser({ password: n1 });
 
         if (updateError) {
-            alert('Fehler: ' + updateError.message);
+            alert('Fehler: ' + translateAuthError(updateError));
         } else {
             alert('Passwort geändert.');
             window.location.hash = ''; // Clear recovery token
@@ -2508,17 +2821,21 @@
         }
     });
 
-    logoutBtn.addEventListener('click', async () => {
+    async function signOutAndShowLogin() {
         if (!supabaseClient) return showLogin(); // Safety check
-        await supabaseClient.auth.signOut();
+        currentUser = null; // keine zusätzliche "Sitzung abgelaufen"-Meldung
+        try {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) await forceLocalSignOut(); // z. B. Server nicht erreichbar
+        } catch (e) {
+            await forceLocalSignOut();
+        }
         showLogin();
-    });
+    }
+
+    logoutBtn.addEventListener('click', signOutAndShowLogin);
     
-    pendingLogoutBtn.addEventListener('click', async () => {
-        if (!supabaseClient) return showLogin(); // Safety check
-        await supabaseClient.auth.signOut();
-        showLogin();
-    });
+    pendingLogoutBtn.addEventListener('click', signOutAndShowLogin);
 
     showRegisterBtn.addEventListener('click', () => {
         loginBox.classList.add('hidden');
@@ -2604,10 +2921,35 @@
              return;
         }
 
-        const { data } = await supabaseClient.auth.getSession();
-        if (data.session) {
-            await showPortal(data.session.user);
-            await autoCleanupOldTimesheets();
+        // Abgemeldet oder Sitzung abgelaufen (z. B. in anderem Tab abgemeldet, Token ungültig) -> zurück zur Anmeldung
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+                // Nicht direkt im Callback weitere Supabase-Aufrufe machen (Sperre im Client) – daher setTimeout
+                setTimeout(() => {
+                    if (currentUser) {
+                        showLogin();
+                        showAuthError('Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.');
+                    }
+                }, 0);
+            }
+        });
+
+        const { data, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError && isNetworkError(sessionError)) {
+            showLogin();
+            showAuthError(SERVER_UNREACHABLE_MSG);
+            return;
+        }
+        if (data && data.session) {
+            // Zu lange inaktiv (auch bei geschlossenem Browser) -> abmelden
+            if (isInactivityExpired()) {
+                await forceLocalSignOut();
+                showLogin();
+                showAuthError('Sie wurden wegen Inaktivität abgemeldet. Bitte melden Sie sich erneut an.');
+                return;
+            }
+            const shown = await showPortal(data.session.user);
+            if (shown) await autoCleanupOldTimesheets();
         } else {
             showLogin();
         }
@@ -2615,26 +2957,39 @@
 
     // --- STORAGE & DOCUMENTS (COMMON) ---
 
+    // Lädt eine Datei hoch und gibt den SPEICHERPFAD zurück (keine öffentliche URL – der Bucket ist privat).
     async function uploadFileToStorage(file, folder) {
-        // ... (Logik wie zuvor)
-        const fileExtension = file.name.split('.').pop();
         const safeFileName = makeSafeFileName(file.name);
         const filePath = `${folder}/${Date.now()}_${safeFileName}`;
         
-        const { data, error } = await supabaseClient.storage
+        const { error } = await supabaseClient.storage
             .from(STORAGE_BUCKET)
-            .upload(filePath, file);
+            .upload(filePath, file, { upsert: false });
 
         if (error) {
             throw error;
         }
 
-        // Get public URL
-        const { data: urlData } = supabaseClient.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(filePath);
+        return filePath;
+    }
 
-        return urlData.publicUrl;
+    // Entfernt eine Datei aus dem Speicher (z. B. wenn der DB-Eintrag nach dem Upload scheitert)
+    async function removeStoragePath(path) {
+        if (!path) return { data: [], error: null };
+        const { data, error } = await supabaseClient.storage.from(STORAGE_BUCKET).remove([path]);
+        return { data, error };
+    }
+
+    // Gibt es die Datei noch? true / false, null = konnte nicht geprüft werden
+    async function storageFileExists(path) {
+        const idx = path.lastIndexOf('/');
+        const folder = idx === -1 ? '' : path.substring(0, idx);
+        const name = idx === -1 ? path : path.substring(idx + 1);
+        const { data, error } = await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .list(folder, { limit: 100, search: name });
+        if (error || !Array.isArray(data)) return null;
+        return data.some(entry => entry && entry.name === name);
     }
 
     async function insertDocumentRow(userId, title, docType, fileUrl) {
@@ -2642,6 +2997,55 @@
             .from('documents')
             .insert({ user_id: userId, title: title, doc_type: docType, file_url: fileUrl });
         if (error) throw error;
+    }
+
+    // Wie viele ANDERE documents-Zeilen verweisen noch auf dieselbe Datei?
+    // (Eine Unterweisung wird einmal hochgeladen und mehreren Mitarbeitern zugeordnet.)
+    async function countOtherReferences(doc, path) {
+        const variants = Array.from(new Set([doc.file_url, path, STORAGE_PUBLIC_PREFIX + path].filter(Boolean)));
+        const { count, error } = await supabaseClient
+            .from('documents')
+            .select('id', { count: 'exact', head: true })
+            .in('file_url', variants)
+            .neq('id', doc.id);
+        if (error) throw error;
+        return count || 0;
+    }
+
+    // Löscht einen Dokument-Eintrag. Die Datei im Speicher wird nur entfernt,
+    // wenn keine andere Zeile mehr auf sie verweist; erst Datei, dann DB-Zeile.
+    async function deleteDocumentAndFile(doc) {
+        const path = getStoragePath(doc.file_url);
+
+        if (path) {
+            const others = await countOtherReferences(doc, path);
+            if (others === 0) {
+                const { data: removed, error: storageError } = await removeStoragePath(path);
+                if (storageError) {
+                    throw new Error('Die Datei konnte nicht aus dem Speicher gelöscht werden: ' + (isNetworkError(storageError) ? SERVER_UNREACHABLE_MSG : storageError.message));
+                }
+                // Supabase meldet fehlende Berechtigung nicht als Fehler, sondern mit leerer Liste
+                if (!Array.isArray(removed) || removed.length === 0) {
+                    const exists = await storageFileExists(path);
+                    if (exists === true) {
+                        throw new Error('Die Datei konnte nicht aus dem Speicher gelöscht werden (keine Berechtigung). Der Eintrag bleibt erhalten.');
+                    }
+                    if (exists === null) {
+                        throw new Error('Es konnte nicht geprüft werden, ob die Datei gelöscht wurde. Der Eintrag bleibt erhalten – bitte später erneut versuchen.');
+                    }
+                    // exists === false: Datei war schon weg -> Eintrag darf gelöscht werden
+                }
+            }
+        }
+
+        const { data: deleted, error: dbError } = await supabaseClient
+            .from('documents')
+            .delete()
+            .eq('id', doc.id)
+            .select('id');
+
+        if (dbError) throw dbError;
+        ensureRowsAffected(deleted, 'Das Löschen');
     }
 
     function renderDocumentList(listEl, docs) {
@@ -2671,12 +3075,7 @@
             actionsDiv.style.gap = '8px';
             actionsDiv.style.alignItems = 'center';
 
-            const link = document.createElement('a');
-            link.href = doc.file_url;
-            link.target = '_blank';
-            link.textContent = 'Öffnen';
-
-            actionsDiv.appendChild(link);
+            actionsDiv.appendChild(createOpenLink(doc));
 
             const isAdmin = currentProfile && currentProfile.role === 'admin';
             const isOwner = currentUser && doc.user_id === currentUser.id;
@@ -2783,13 +3182,33 @@
 
     // --- UPLOAD HANDLERS (USER) ---
 
-    async function handleUserUpload(fileInput, docType, folder) {
-        // ... (Logik wie zuvor)
-        const file = fileInput.files[0];
-        if (!file || !currentUser) return;
+    let userUploadRunning = false;
 
+    async function handleUserUpload(fileInput, docType, folder, button) {
+        const selected = fileInput.files[0];
+        if (!selected || !currentUser) return;
+
+        if (userUploadRunning) {
+            fileInput.value = null;
+            alert('Es läuft bereits ein Upload. Bitte warten.');
+            return;
+        }
+
+        const checked = prepareUploadFile(selected);
+        if (checked.error) {
+            fileInput.value = null;
+            alert(checked.error);
+            return;
+        }
+        const file = checked.file;
+
+        userUploadRunning = true;
+        const uploadButtons = [uploadTimesheetBtn, uploadSicknoteBtn, uploadTimesheetPaperBtn, button].filter(Boolean);
+        uploadButtons.forEach(b => { b.disabled = true; });
+
+        let path = null;
         try {
-            const url = await uploadFileToStorage(file, `${folder}/${currentUser.id}`);
+            path = await uploadFileToStorage(file, `${folder}/${currentUser.id}`);
             const dateStr = new Date().toLocaleDateString('de-DE');
             let label = 'Dokument';
             if (docType === 'stundenzettel') {
@@ -2801,15 +3220,22 @@
             }
             const title = `${label} ${dateStr} – ${file.name}`;
 
-            await insertDocumentRow(currentUser.id, title, docType, url);
+            try {
+                await insertDocumentRow(currentUser.id, title, docType, path);
+            } catch (dbErr) {
+                await removeStoragePath(path); // keine verwaiste Datei zurücklassen
+                throw dbErr;
+            }
 
             alert('Upload erfolgreich!');
             loadDocumentsForUser(currentUser);
         } catch (e) {
             console.error('Upload Error:', e);
-            alert('Upload fehlgeschlagen: ' + (e.message || e));
+            alert('Upload fehlgeschlagen: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e)));
         } finally {
             fileInput.value = null; // Reset input field
+            userUploadRunning = false;
+            uploadButtons.forEach(b => { b.disabled = false; });
         }
     }
 
@@ -2818,7 +3244,7 @@ uploadTimesheetBtn.addEventListener('click', () => {
     });
 
     uploadTimesheetInput.addEventListener('change', () => {
-        handleUserUpload(uploadTimesheetInput, 'dokument', 'timesheets');
+        handleUserUpload(uploadTimesheetInput, 'dokument', 'timesheets', uploadTimesheetBtn);
     });
 
     uploadSicknoteBtn.addEventListener('click', () => {
@@ -2826,7 +3252,7 @@ uploadTimesheetBtn.addEventListener('click', () => {
     });
 
     uploadSicknoteInput.addEventListener('change', () => {
-        handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'sicknotes');
+        handleUserUpload(uploadSicknoteInput, 'krankmeldung', 'sicknotes', uploadSicknoteBtn);
     });
 
     
@@ -2837,7 +3263,7 @@ uploadTimesheetBtn.addEventListener('click', () => {
         });
 
         uploadTimesheetPaperInput.addEventListener('change', () => {
-            handleUserUpload(uploadTimesheetPaperInput, 'stundenzettel', 'timesheets');
+            handleUserUpload(uploadTimesheetPaperInput, 'stundenzettel', 'timesheets', uploadTimesheetPaperBtn);
         });
     }
 
@@ -2848,6 +3274,7 @@ function formatIsoToGerman(isoStr) {
     }
 digitalSicknoteSubmit?.addEventListener('click', async () => {
         if (!currentUser || !currentProfile) return;
+        if (digitalSicknoteSubmit.disabled) return; // Doppelklick
 
         if (!digitalSicknoteFrom.value || !digitalSicknoteTo.value) {
             if (digitalSicknoteMessage) {
@@ -2880,12 +3307,19 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
 
         const content = `Digitale Krankmeldung\n\nMitarbeiter: ${name}\nZeitraum: ${fromStr} bis ${toStr}\nErstellt am: ${createdAtStr}\n`;
         const fileName = `digitale_krankmeldung_${fromStr}_bis_${toStr}.txt`;
-        const file = new File([content], fileName, { type: 'text/plain' });
+        // UTF-8-BOM, damit der Browser Umlaute richtig anzeigt (MIME bleibt 'text/plain' wegen der Bucket-Einstellung)
+        const file = new File(['\uFEFF' + content], fileName, { type: 'text/plain' });
 
+        digitalSicknoteSubmit.disabled = true;
         try {
-            const url = await uploadFileToStorage(file, `sicknotes/${currentUser.id}`);
+            const path = await uploadFileToStorage(file, `sicknotes/${currentUser.id}`);
             const title = `Digitale Krankmeldung ${fromStr} bis ${toStr}`;
-            await insertDocumentRow(currentUser.id, title, 'krankmeldung', url);
+            try {
+                await insertDocumentRow(currentUser.id, title, 'krankmeldung', path);
+            } catch (dbErr) {
+                await removeStoragePath(path); // keine verwaiste Datei zurücklassen
+                throw dbErr;
+            }
 
             if (digitalSicknoteMessage) {
                 digitalSicknoteMessage.textContent = 'Digitale Krankmeldung wurde gespeichert.';
@@ -2897,9 +3331,13 @@ digitalSicknoteSubmit?.addEventListener('click', async () => {
         } catch (e) {
             console.error('Digitale Krankmeldung Fehler:', e);
             if (digitalSicknoteMessage) {
-                digitalSicknoteMessage.textContent = 'Fehler beim Speichern der digitalen Krankmeldung.';
+                digitalSicknoteMessage.textContent = isNetworkError(e)
+                    ? SERVER_UNREACHABLE_MSG
+                    : 'Fehler beim Speichern der digitalen Krankmeldung.';
                 digitalSicknoteMessage.style.color = 'red';
             }
+        } finally {
+            digitalSicknoteSubmit.disabled = false;
         }
     });
 
@@ -2944,7 +3382,7 @@ async function loadPendingUserCount() {
         grid.className = 'employee-grid';
 
         profiles.forEach(p => {
-            const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
+            const initials = escapeHtml(String(p.full_name || p.email || '?').substring(0,2).toUpperCase());
             const card = document.createElement('div');
             card.className = 'employee-card';
             if(p.role === 'admin') card.classList.add('admin');
@@ -2982,8 +3420,8 @@ async function loadPendingUserCount() {
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:${p.role === 'admin' ? 'var(--blue-dark)' : (p.employment_type === 'fulltime' ? '#4caf50' : '#ff9800')}">${initials}</div>
                 <div>
-                    <div class="employee-info-main">${p.full_name || '-'}</div>
-                    <div class="employee-info-sub">${p.email}</div>
+                    <div class="employee-info-main">${escapeHtml(p.full_name || '-')}</div>
+                    <div class="employee-info-sub">${escapeHtml(p.email)}</div>
                     <div class="employee-role-selector"><label>Rolle:</label></div>
                 </div>
             `;
@@ -3007,6 +3445,7 @@ async function loadPendingUserCount() {
     function renderPendingGroup(profiles) {
         // ... (Logik wie zuvor)
         pendingEmployeesContent.innerHTML = '';
+        pendingEmployeesContent.appendChild(noPendingUsers); // Hinweis sonst nach dem Leeren nicht mehr im DOM
         noPendingUsers.classList.add('hidden');
 
         if(profiles.length === 0) {
@@ -3018,7 +3457,7 @@ async function loadPendingUserCount() {
         grid.className = 'employee-grid';
 
         profiles.forEach(p => {
-            const initials = (p.full_name || p.email).substring(0,2).toUpperCase();
+            const initials = escapeHtml(String(p.full_name || p.email || '?').substring(0,2).toUpperCase());
             const card = document.createElement('div');
             card.className = 'employee-card pending';
             
@@ -3054,8 +3493,8 @@ async function loadPendingUserCount() {
             card.innerHTML = `
                 <div class="employee-avatar" style="border-color:#ff9800">${initials}</div>
                 <div>
-                    <div class="employee-info-main">${p.full_name || '-'}</div>
-                    <div class="employee-info-sub">${p.email}</div>
+                    <div class="employee-info-main">${escapeHtml(p.full_name || '-')}</div>
+                    <div class="employee-info-sub">${escapeHtml(p.email)}</div>
                     <div class="employee-info-sub" style="color:#e65100">Wartet auf Freigabe</div>
                     <div class="employee-role-selector"><label>Rolle:</label></div>
                 </div>
@@ -3131,60 +3570,61 @@ async function loadPendingUserCount() {
             employment_type: (role === 'admin') ? null : empType
         };
 
-        const targetProfile = allProfilesCache.find(p => p.id === id) || null;
-        const { error } = await supabaseClient.from('profiles').update(updates).eq('id', id);
-
-        if(error) {
-            alert('Fehler: ' + error.message);
-        } else {
-            // Optional: E-Mail-Benachrichtigung über Freigabe auslösen
-            if (targetProfile && targetProfile.email) {
-                sendApprovalNotificationEmail(targetProfile, updates);
-            }
+        try {
+            const { data, error } = await supabaseClient.from('profiles').update(updates).eq('id', id).select('id');
+            if (error) throw error;
+            ensureRowsAffected(data, 'Die Freigabe');
+            // Hinweis: Es wird KEINE Benachrichtigungs-E-Mail verschickt (keine Edge Function vorhanden).
+            alert('Benutzer freigegeben. Bitte informieren Sie den Mitarbeiter selbst – es wird keine E-Mail verschickt.');
             loadEmployeeGrid();
+        } catch (e) {
+            alert('Fehler: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e)));
         }
     }
 
     async function updateUserStatus(id, role, empType) {
-        // ... (Logik wie zuvor)
         const updates = {
             role: role,
             employment_type: (role === 'admin') ? null : empType
         };
 
-        const { error } = await supabaseClient.from('profiles').update(updates).eq('id', id);
+        const target = allProfilesCache.find(p => p.id === id) || null;
+        const isSelf = currentUser && id === currentUser.id;
+        const removesAdmin = target && target.role === 'admin' && role !== 'admin';
 
-        if(error) alert('Fehler: ' + error.message);
-        else {
-            alert('Daten aktualisiert');
-            loadEmployeeGrid();
+        if (removesAdmin) {
+            const adminCount = allProfilesCache.filter(p => p.role === 'admin').length;
+            if (adminCount <= 1) {
+                alert('Das ist der letzte Administrator. Bitte zuerst einen anderen Benutzer zum Administrator machen.');
+                return;
+            }
+            if (isSelf && !confirm('Sie entziehen sich selbst die Administrator-Rechte. Danach können Sie die Mitarbeiterverwaltung nicht mehr öffnen. Wirklich fortfahren?')) {
+                return;
+            }
         }
+
+        try {
+            const { data, error } = await supabaseClient.from('profiles').update(updates).eq('id', id).select('id');
+            if (error) throw error; // z. B. Meldung vom Datenbank-Trigger "letzter Administrator"
+            ensureRowsAffected(data, 'Die Änderung');
+        } catch (e) {
+            alert('Fehler: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e)));
+            loadEmployeeGrid();
+            return;
+        }
+
+        alert('Daten aktualisiert');
+        if (isSelf) {
+            // Eigene Rolle geändert: Portal mit neuen Rechten neu aufbauen
+            await showPortal(currentUser);
+            return;
+        }
+        loadEmployeeGrid();
     }
 
     
-    // Optionale E-Mail-Benachrichtigung bei Freigabe
-    // Hinweis: Damit wirklich E-Mails versendet werden, muss in Supabase
-    // eine Edge Function "send-approval-email" eingerichtet werden, die
-    // die eigentliche Mail verschickt. Diese Funktion wird hier nur aufgerufen.
-    async function sendApprovalNotificationEmail(profile, updates) {
-        try {
-            if (!supabaseClient || !profile || !profile.email) return;
-
-            await supabaseClient.functions.invoke('send-approval-email', {
-                body: {
-                    user_id: profile.id,
-                    email: profile.email,
-                    first_name: profile.first_name,
-                    last_name: profile.last_name,
-                    full_name: profile.full_name,
-                    role: updates.role,
-                    employment_type: updates.employment_type
-                }
-            });
-        } catch (e) {
-            console.warn('Konnte Freigabe-E-Mail nicht versenden (Edge Function fehlt oder Fehler):', e);
-        }
-    }
+    // Hinweis: Früher wurde hier die Edge Function "send-approval-email" aufgerufen.
+    // Diese existiert in Supabase nicht – der Aufruf wurde entfernt. Bei Freigabe geht KEINE E-Mail raus.
 
 // --- ADMIN UPLOAD ---
     
@@ -3217,9 +3657,7 @@ async function loadPendingUserCount() {
 
     async function initAdminUploadsSelect() {
         try {
-            if (allProfilesCache.length === 0) {
-                await loadAllProfiles();
-            }
+            await loadAllProfiles(); // immer frisch laden (neue Freigaben/Rollen)
             const approved = allProfilesCache.filter(p => p.is_approved && (p.role === 'user' || p.role === 'admin'));
             populateAdminUploadSelect(approved);
         } catch (e) {
@@ -3237,11 +3675,19 @@ async function loadPendingUserCount() {
         adminUnterwMessage.textContent = '';
         adminUnterwMessage.style.color = 'red';
 
-        const file = adminUnterwInput.files[0];
-        if (!file) {
+        if (adminUnterwUploadBtn.disabled) return; // Doppelklick
+
+        const selectedFile = adminUnterwInput.files[0];
+        if (!selectedFile) {
             adminUnterwMessage.textContent = 'Bitte eine Datei auswählen.';
             return;
         }
+        const checked = prepareUploadFile(selectedFile);
+        if (checked.error) {
+            adminUnterwMessage.textContent = checked.error;
+            return;
+        }
+        const file = checked.file;
 
         const scope = adminUnterwScope.value;
         const targetUserId = scope === 'single' ? adminUnterwUserSelect.value : null;
@@ -3253,8 +3699,11 @@ async function loadPendingUserCount() {
 
         let targetUsers = [];
 
-        if (allProfilesCache.length === 0) {
-            await loadAllProfiles();
+        adminUnterwUploadBtn.disabled = true;
+        try {
+            await loadAllProfiles(); // immer aktuellen Stand verwenden
+        } finally {
+            adminUnterwUploadBtn.disabled = false;
         }
 
         if (scope === 'all') {
@@ -3281,16 +3730,23 @@ async function loadPendingUserCount() {
         try {
             // 1. Upload file once to a general admin folder
             const folder = 'unterweisungen_admin';
-            const url = await uploadFileToStorage(file, folder);
+            const path = await uploadFileToStorage(file, folder);
 
-            // 2. Insert document row for each target user
+            // 2. Eine einzige Abfrage für alle Empfänger (alles oder nichts)
             const dateStr = new Date().toLocaleDateString('de-DE');
             const title = `Unterweisung ${dateStr} – ${file.name}`;
-            const insertPromises = targetUsers.map(userId => 
-                insertDocumentRow(userId, title, 'unterweisung', url)
-            );
+            const rows = targetUsers.map(userId => ({
+                user_id: userId,
+                title: title,
+                doc_type: 'unterweisung',
+                file_url: path
+            }));
 
-            await Promise.all(insertPromises);
+            const { error: insertError } = await supabaseClient.from('documents').insert(rows);
+            if (insertError) {
+                await removeStoragePath(path); // keine verwaiste Datei zurücklassen
+                throw insertError;
+            }
 
             adminUnterwMessage.textContent = `Erfolgreich für ${targetUsers.length} Benutzer hochgeladen.`;
             adminUnterwMessage.style.color = 'green';
@@ -3314,23 +3770,26 @@ async function loadPendingUserCount() {
             return;
         }
 
-        // Group by User -> Month
+        // Group by User (user_id, nicht Name – zwei gleichnamige Mitarbeiter bleiben getrennt) -> Month
         const map = {};
+        const names = {};
         docs.forEach(d => {
             // Find name from cache
             const prof = allProfilesCache.find(p => p.id === d.user_id);
-            const name = prof ? prof.full_name : 'Unbekannt';
-            
+            const userKey = d.user_id || 'unbekannt';
+            names[userKey] = prof ? (prof.full_name || prof.email || 'Unbekannt') : 'Unbekannt';
+
             const date = new Date(d.created_at);
             const key = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
 
-            if(!map[name]) map[name] = {};
-            if(!map[name][key]) map[name][key] = [];
-            
-            map[name][key].push(d);
+            if(!map[userKey]) map[userKey] = {};
+            if(!map[userKey][key]) map[userKey][key] = [];
+
+            map[userKey][key].push(d);
         });
 
-        for (const [name, months] of Object.entries(map)) {
+        for (const [userKey, months] of Object.entries(map)) {
+            const name = names[userKey];
             const userDiv = document.createElement('div');
             userDiv.className = 'admin-overview-entry';
             
@@ -3367,11 +3826,7 @@ async function loadPendingUserCount() {
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'admin-overview-actions';
 
-                    const link = document.createElement('a');
-                    link.href = doc.file_url;
-                    link.target = '_blank';
-                    link.textContent = 'Öffnen';
-                    link.style.fontSize = '0.8rem';
+                    const link = createOpenLink(doc, '0.8rem');
 
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
@@ -3400,49 +3855,24 @@ async function loadPendingUserCount() {
         if (!confirm('Möchten Sie dieses Dokument wirklich löschen?')) return;
 
         try {
-            let path = null;
-            if (doc.file_url) {
-                const prefix = '/storage/v1/object/public/documents/';
-                const idx = doc.file_url.indexOf(prefix);
-                if (idx !== -1) {
-                    path = doc.file_url.substring(idx + prefix.length);
-                }
-            }
-
-            if (path) {
-                const { error: storageError } = await supabaseClient
-                    .storage
-                    .from('documents')
-                    .remove([path]);
-                if (storageError) {
-                    console.error('Fehler beim Löschen aus Storage:', storageError);
-                }
-            }
-
-            const { error: dbError } = await supabaseClient
-                .from('documents')
-                .delete()
-                .eq('id', doc.id);
-
-            if (dbError) {
-                throw dbError;
-            }
-
+            await deleteDocumentAndFile(doc);
             await loadAdminDocumentOverviews();
         } catch (e) {
             console.error('Admin Delete Error:', e);
-            alert('Löschen fehlgeschlagen: ' + (e.message || e));
+            alert('Löschen fehlgeschlagen: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e)));
         }
     }
 
-    
+
     async function autoCleanupOldTimesheets() {
-        // Löscht automatisch Stundenzettel-Uploads, die älter als 30 Tage sind
+        // Löscht automatisch Stundenzettel-Uploads (nur doc_type 'stundenzettel'),
+        // die älter als STUNDENZETTEL_AUTO_LOESCHEN_TAGE sind. 0 = aus.
         if (!currentUser || !supabaseClient) return;
+        if (!STUNDENZETTEL_AUTO_LOESCHEN_TAGE || STUNDENZETTEL_AUTO_LOESCHEN_TAGE <= 0) return;
 
         try {
-            const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-            const cutoffIso = new Date(Date.now() - THIRTY_DAYS_MS).toISOString();
+            const maxAgeMs = STUNDENZETTEL_AUTO_LOESCHEN_TAGE * 24 * 60 * 60 * 1000;
+            const cutoffIso = new Date(Date.now() - maxAgeMs).toISOString();
 
             let query = supabaseClient
                 .from('documents')
@@ -3467,40 +3897,24 @@ async function loadPendingUserCount() {
                 return;
             }
 
+            let changed = false;
             for (const doc of oldDocs) {
-                let path = null;
-                if (doc.file_url) {
-                    const prefix = '/storage/v1/object/public/documents/';
-                    const idx = doc.file_url.indexOf(prefix);
-                    if (idx !== -1) {
-                        path = doc.file_url.substring(idx + prefix.length);
-                    }
-                }
-
-                if (path) {
-                    const { error: storageError } = await supabaseClient
-                        .storage
-                        .from('documents')
-                        .remove([path]);
-                    if (storageError) {
-                        console.error('Fehler beim Löschen aus Storage (Auto-Cleanup):', storageError);
-                    }
-                }
-
-                const { error: dbError } = await supabaseClient
-                    .from('documents')
-                    .delete()
-                    .eq('id', doc.id);
-
-                if (dbError) {
-                    console.error('Fehler beim Löschen aus DB (Auto-Cleanup):', dbError);
+                try {
+                    // Erst die Datei im Speicher löschen, die DB-Zeile nur bei Erfolg
+                    // (sonst bliebe eine Datei ohne Eintrag zurück).
+                    await deleteDocumentAndFile(doc);
+                    changed = true;
+                } catch (e) {
+                    console.error('Auto-Cleanup: Stundenzettel konnte nicht gelöscht werden:', doc.id, e);
                 }
             }
 
             // Nach dem Aufräumen die Anzeigen aktualisieren
-            await loadDocumentsForUser(currentUser);
-            if (currentProfile && currentProfile.role === 'admin') {
-                await loadAdminDocumentOverviews();
+            if (changed) {
+                await loadDocumentsForUser(currentUser);
+                if (currentProfile && currentProfile.role === 'admin') {
+                    await loadAdminDocumentOverviews();
+                }
             }
         } catch (e) {
             console.error('Auto-Cleanup Stundenzettel fehlgeschlagen:', e);
@@ -3522,41 +3936,20 @@ async function deleteOwnDocument(doc) {
         if (!confirm('Möchten Sie dieses Dokument wirklich löschen?')) return;
 
         try {
-            let path = null;
-            if (doc.file_url) {
-                const prefix = '/storage/v1/object/public/documents/';
-                const idx = doc.file_url.indexOf(prefix);
-                if (idx !== -1) {
-                    path = doc.file_url.substring(idx + prefix.length);
-                }
-            }
-
-            if (path) {
-                const { error: storageError } = await supabaseClient
-                    .storage
-                    .from('documents')
-                    .remove([path]);
-                if (storageError) {
-                    console.error('Fehler beim Löschen aus Storage:', storageError);
-                }
-            }
-
-            const { error: dbError } = await supabaseClient
-                .from('documents')
-                .delete()
-                .eq('id', doc.id);
-
-            if (dbError) {
-                throw dbError;
-            }
+            // Unterweisungen teilen sich eine Datei: sie wird nur gelöscht, wenn kein anderer Eintrag mehr darauf verweist
+            await deleteDocumentAndFile(doc);
 
             if (isAdmin) {
                 await loadAdminDocumentOverviews();
             }
             await loadDocumentsForUser(currentUser);
+            // Wenn der Admin gerade die Detailansicht eines Mitarbeiters offen hat: neu laden
+            if (isAdmin && lastOpenedEmployeeProfile && !document.getElementById('section-employee-detail').classList.contains('hidden')) {
+                await openEmployeeDetail(lastOpenedEmployeeProfile);
+            }
         } catch (e) {
             console.error('Delete Error:', e);
-            alert('Löschen fehlgeschlagen: ' + (e.message || e));
+            alert('Löschen fehlgeschlagen: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e)));
         }
     }
 
@@ -3617,13 +4010,18 @@ async function deleteOwnDocument(doc) {
 
     // --- EMPLOYEE DETAIL ---
 
+    let lastOpenedEmployeeProfile = null;
+
     async function openEmployeeDetail(profile) {
-        // ... (Logik wie zuvor)
+        lastOpenedEmployeeProfile = profile;
         setActiveSection('section-employee-detail');
 
         employeeDetailInfoTitle.textContent = profile.full_name || profile.email;
         const roleText = profile.role === 'admin' ? 'Administrator' : `Mitarbeiter (${profile.employment_type || 'N/A'})`;
-        const approvalText = profile.is_approved ? `Freigegeben am ${new Date(profile.approved_at).toLocaleDateString('de-DE')}` : 'Wartet auf Freigabe';
+        const approvedDate = profile.approved_at ? new Date(profile.approved_at) : null;
+        const approvalText = profile.is_approved
+            ? ((approvedDate && !isNaN(approvedDate.getTime())) ? `Freigegeben am ${approvedDate.toLocaleDateString('de-DE')}` : 'Freigegeben')
+            : 'Wartet auf Freigabe';
         employeeDetailMeta.textContent = `E-Mail: ${profile.email} · Rolle: ${roleText} · Status: ${approvalText}`;
 
         // Load Documents for this specific user
@@ -3635,7 +4033,7 @@ async function deleteOwnDocument(doc) {
         
         if (error) {
             console.error(error);
-            employeeDetailDocs.innerHTML = `<li class="document-item"><div class="document-item-title error">Fehler beim Laden der Dokumente: ${error.message}</div></li>`;
+            employeeDetailDocs.innerHTML = `<li class="document-item"><div class="document-item-title error">Fehler beim Laden der Dokumente: ${escapeHtml(error.message)}</div></li>`;
             return;
         }
 
@@ -3683,9 +4081,9 @@ async function deleteOwnDocument(doc) {
     }
 
 settingsSaveProfile.addEventListener('click', async () => {
-        // ... (Logik wie zuvor)
         settingsProfileMsg.textContent = '';
         settingsProfileMsg.style.color = 'red';
+        if (!currentUser || !currentProfile) return;
 
         const firstName = settingsFirstName.value.trim();
         const lastName = settingsLastName.value.trim();
@@ -3694,60 +4092,69 @@ settingsSaveProfile.addEventListener('click', async () => {
         const isAdmin = currentProfile?.role === 'admin';
         const fullName = `${firstName} ${lastName}`;
 
-        if (!firstName || !lastName) {
+        if (isAdmin && (!firstName || !lastName)) {
             settingsProfileMsg.textContent = 'Vor- und Nachname dürfen nicht leer sein.';
             return;
         }
 
         // 1. Update Profile Table
-        const updates = {
-            full_name: fullName,
-            first_name: firstName,
-            last_name: lastName,
-            language: selectedLanguage
-        };
+        // Mitarbeiter dürfen nur die Sprache ändern (die Datenbank sperrt alle anderen Spalten).
+        const updates = isAdmin
+            ? {
+                full_name: fullName,
+                first_name: firstName,
+                last_name: lastName,
+                language: selectedLanguage,
+                employment_type: employmentType
+            }
+            : { language: selectedLanguage };
 
-        if (isAdmin) {
-            updates.employment_type = employmentType;
-        }
+        settingsSaveProfile.disabled = true;
+        try {
+            const { data: updated, error: profileError } = await supabaseClient
+                .from('profiles')
+                .update(updates)
+                .eq('id', currentUser.id)
+                .select('id');
 
-        const { error: profileError } = await supabaseClient
-            .from('profiles')
-            .update(updates)
-            .eq('id', currentUser.id);
-
-        if (profileError) {
-            settingsProfileMsg.textContent = 'Fehler beim Speichern der Profildaten: ' + profileError.message;
+            if (profileError) throw profileError;
+            ensureRowsAffected(updated, 'Das Speichern');
+        } catch (e) {
+            settingsProfileMsg.textContent = 'Fehler beim Speichern der Profildaten: ' + (isNetworkError(e) ? SERVER_UNREACHABLE_MSG : (e.message || e));
             settingsProfileMsg.style.color = 'red';
+            settingsSaveProfile.disabled = false;
             return;
         }
+        settingsSaveProfile.disabled = false;
 
-        // 2. Update Auth Meta
-        const { error: authError } = await supabaseClient.auth.updateUser({
-            data: { full_name: fullName, first_name: firstName, last_name: lastName }
-        });
-        
-        if (authError) {
-            settingsProfileMsg.textContent = 'Fehler beim Aktualisieren des Auth-Namen: ' + authError.message;
-            settingsProfileMsg.style.color = 'red';
-        } else {
-            settingsProfileMsg.textContent = 'Gespeichert.';
-            settingsProfileMsg.style.color = 'green';
+        // 2. Update Auth Meta (nur Admins ändern Namen)
+        if (isAdmin) {
+            const { error: authError } = await supabaseClient.auth.updateUser({
+                data: { full_name: fullName, first_name: firstName, last_name: lastName }
+            });
+            if (authError) {
+                settingsProfileMsg.textContent = 'Fehler beim Aktualisieren des Auth-Namen: ' + translateAuthError(authError);
+                settingsProfileMsg.style.color = 'red';
+                return;
+            }
+        }
+
+        settingsProfileMsg.textContent = 'Gespeichert.';
+        settingsProfileMsg.style.color = 'green';
+
+        currentProfile.language = selectedLanguage;
+        if (isAdmin) {
             userNameText.textContent = fullName;
-
             currentProfile.full_name = fullName;
             currentProfile.first_name = firstName;
             currentProfile.last_name = lastName;
-            currentProfile.language = selectedLanguage;
-            if (isAdmin) {
-                currentProfile.employment_type = employmentType;
-            }
-
-            initSettingsFromProfile();
-
-            const langToApply = currentProfile.language || 'de';
-            applyLanguage(langToApply);
+            currentProfile.employment_type = employmentType;
         }
+
+        initSettingsFromProfile();
+
+        const langToApply = currentProfile.language || 'de';
+        applyLanguage(langToApply);
     });
 
     settingsChangePw.addEventListener('click', async () => {
@@ -3774,7 +4181,8 @@ settingsSaveProfile.addEventListener('click', async () => {
         const { error: updateError } = await supabaseClient.auth.updateUser({ password: n1 });
 
         if(updateError) {
-            settingsPasswordMsg.textContent = 'Fehler: ' + updateError.message;
+            settingsPasswordMsg.textContent = 'Fehler: ' + translateAuthError(updateError);
+            settingsPasswordMsg.style.color = 'red';
         } else {
             settingsPasswordMsg.textContent = 'Passwort geändert.';
             settingsPasswordMsg.style.color = 'green';
