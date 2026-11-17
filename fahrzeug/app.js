@@ -1,7 +1,7 @@
 "use strict";
 (function () {
   var API = "https://vzrvncxmleshwgtbvrtc.supabase.co/functions/v1/fahrt";
-  var MAX_FOTOS = 40;
+  var MAX_FOTOS = 20;
   var MAX_SEITE = 1600;
   var QUALITAET = 0.8;
 
@@ -62,7 +62,8 @@
 
   // ---- Zustand ----
   var phase = "abholung";
-  var fotos = []; // { blob, url }
+  var fotos = []; // { blob, url, hoch }
+  var laufend = null; // { vorgang, ziele } – fuer Wiederholung nach Funkloch
 
   function fotoZahlAktualisieren() {
     var n = fotos.length;
@@ -84,6 +85,7 @@
     weg.addEventListener("click", function () {
       var i = fotos.indexOf(eintrag);
       if (i >= 0) fotos.splice(i, 1);
+      vorgangVerwerfen();
       URL.revokeObjectURL(eintrag.url);
       kachel.remove();
       fotoZahlAktualisieren();
@@ -146,7 +148,13 @@
     return los();
   }
 
+  function vorgangVerwerfen() {
+    laufend = null;
+    fotos.forEach(function (f) { f.hoch = false; });
+  }
+
   function erfassenStarten(neuePhase) {
+    if (neuePhase !== phase) vorgangVerwerfen();
     phase = neuePhase;
     $("phase-titel").textContent = phase === "abholung" ? "Abholung" : "Rückgabe";
     try { $("name").value = localStorage.getItem("fz_name") || ""; } catch (e) {}
@@ -184,6 +192,7 @@
     if (fotos.length && !confirm("Fotos verwerfen?")) return;
     fotos.forEach(function (f) { URL.revokeObjectURL(f.url); });
     fotos = [];
+    laufend = null;
     $("fotos").textContent = "";
     start();
   });
@@ -199,7 +208,8 @@
         if (fotos.length >= MAX_FOTOS) return;
         $("foto-zahl").textContent = "Foto wird vorbereitet …";
         return verkleinern(d).then(function (blob) {
-          var e = { blob: blob, url: URL.createObjectURL(blob) };
+          var e = { blob: blob, url: URL.createObjectURL(blob), hoch: false };
+          vorgangVerwerfen();
           fotos.push(e);
           fotoAnzeigen(e);
         }).catch(function () { alert("Dieses Foto konnte nicht gelesen werden."); });
@@ -224,21 +234,33 @@
       $("senden-text").textContent = t;
     }
     fortschritt("Verbindung wird aufgebaut …");
-    var vorgang;
-    anfrage({ aktion: "start", phase: phase, name: name, anzahl: gesamt }).then(function (j) {
-      vorgang = j.vorgang;
+    // Bei Wiederholung (Funkloch) denselben Vorgang weiterfuehren, nur Fehlendes senden
+    if (laufend && laufend.name !== name) vorgangVerwerfen();
+    var beginn = laufend ? Promise.resolve(laufend) :
+      anfrage({ aktion: "start", phase: phase, name: name, anzahl: gesamt }).then(function (j) {
+        fotos.forEach(function (f) { f.hoch = false; });
+        laufend = { vorgang: j.vorgang, ziele: j.ziele, name: name };
+        return laufend;
+      });
+    beginn.then(function (l) {
       var kette = Promise.resolve();
-      j.ziele.forEach(function (z, i) {
+      l.ziele.forEach(function (z, i) {
         kette = kette.then(function () {
+          if (fotos[i].hoch) { fertigZahl++; return; }
           fortschritt("Foto " + (i + 1) + " von " + gesamt + " …");
-          return hochladen(z.url, fotos[i].blob).then(function () { fertigZahl++; });
+          return hochladen(z.url, fotos[i].blob).then(function () { fotos[i].hoch = true; fertigZahl++; });
         });
       });
       return kette;
     }).then(function () {
       fortschritt("Wird abgeschlossen …");
-      return anfrage({ aktion: "fertig", vorgang: vorgang });
+      return anfrage({ aktion: "fertig", vorgang: laufend.vorgang }).catch(function (e) {
+        // Vorgang abgelaufen/verworfen -> beim naechsten Versuch neu beginnen
+        if (/neu beginnen/i.test(e.message)) vorgangVerwerfen();
+        throw e;
+      });
     }).then(function (j) {
+      laufend = null;
       fertigZahl = gesamt + 1;
       fortschritt("");
       fotos.forEach(function (f) { URL.revokeObjectURL(f.url); });
