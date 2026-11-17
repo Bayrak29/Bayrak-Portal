@@ -18,14 +18,22 @@
 
   // ---- Token aus dem Link lesen und aus der Adresszeile entfernen ----
   var token = "";
-  var roh = (location.hash || "").replace(/^#/, "");
-  if (/^[A-Za-z0-9_-]{40,64}$/.test(roh)) {
-    token = roh;
-    try { sessionStorage.setItem("fz_token", token); } catch (e) {}
-    try { history.replaceState(null, "", location.pathname); } catch (e) {}
-  } else {
-    try { token = sessionStorage.getItem("fz_token") || ""; } catch (e) {}
+  function tokenLesen() {
+    var roh = (location.hash || "").replace(/^#/, "");
+    if (/^[A-Za-z0-9_-]{40,64}$/.test(roh)) {
+      token = roh;
+      try { sessionStorage.setItem("fz_token", token); } catch (e) {}
+      try { history.replaceState(null, "", location.pathname); } catch (e) {}
+      return true;
+    }
+    if (!token) { try { token = sessionStorage.getItem("fz_token") || ""; } catch (e) {} }
+    return false;
   }
+  tokenLesen();
+  // Erneuter Scan bei offener Seite aendert nur den #-Teil -> sauber neu laden
+  window.addEventListener("hashchange", function () {
+    if (tokenLesen()) location.reload();
+  });
 
   function anfrage(daten) {
     daten.token = token;
