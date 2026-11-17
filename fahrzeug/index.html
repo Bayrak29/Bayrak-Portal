@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src https://vzrvncxmleshwgtbvrtc.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f3a5f">
+<title>Fahrzeug-Nachweis</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<header>
+  <div class="marke">Bayrak Industrieservice</div>
+  <h1>Fahrzeug-Nachweis</h1>
+</header>
+
+<main>
+  <section id="laden" class="karte">
+    <p class="mitte">Einen Moment …</p>
+  </section>
+
+  <section id="fehler" class="karte versteckt">
+    <h2>Das hat nicht geklappt</h2>
+    <p id="fehler-text"></p>
+    <button id="fehler-neu" class="knopf zweit">Neu laden</button>
+  </section>
+
+  <section id="schritt-wahl" class="karte versteckt">
+    <div class="fahrzeug">
+      <div id="fz-name" class="fz-name"></div>
+      <div id="fz-kz" class="kennzeichen"></div>
+    </div>
+    <p id="unterwegs-info" class="hinweis versteckt"></p>
+    <button id="knopf-abholen" class="knopf">Fahrzeug abholen</button>
+    <button id="knopf-zurueck" class="knopf versteckt">Fahrzeug zurückgeben</button>
+    <button id="knopf-abholen-trotzdem" class="knopf zweit versteckt">Ich hole das Fahrzeug ab<br><small>(Rückgabe wurde vergessen)</small></button>
+  </section>
+
+  <section id="schritt-erfassen" class="karte versteckt">
+    <div class="phase" id="phase-titel"></div>
+    <label for="name" class="feldname">Dein Name</label>
+    <input id="name" type="text" maxlength="60" autocomplete="name" autocapitalize="words" placeholder="Vor- und Nachname" enterkeyhint="done">
+
+    <div class="feldname">Fotos vom Innenraum</div>
+    <p class="klein">Bitte z. B. Fahrersitz, Beifahrerseite, Rückbank/Laderaum und Armaturenbrett fotografieren.</p>
+    <div id="fotos" class="fotos"></div>
+    <input id="kamera" type="file" accept="image/*" capture="environment" class="versteckt">
+    <button id="knopf-foto" class="knopf zweit">📷 Foto aufnehmen</button>
+    <p id="foto-zahl" class="klein mitte"></p>
+
+    <button id="knopf-fertig" class="knopf" disabled>Fertig</button>
+    <button id="knopf-abbrechen" class="link">Abbrechen</button>
+  </section>
+
+  <section id="schritt-senden" class="karte versteckt">
+    <h2>Wird gespeichert …</h2>
+    <div class="balken"><div id="balken-innen"></div></div>
+    <p id="senden-text" class="mitte klein"></p>
+    <p class="klein mitte">Bitte die Seite nicht schließen.</p>
+  </section>
+
+  <section id="schritt-ok" class="karte versteckt">
+    <div class="haken">✓</div>
+    <h2 id="ok-titel" class="mitte"></h2>
+    <p id="ok-text" class="mitte"></p>
+    <p class="klein mitte">Du kannst die Seite jetzt schließen.</p>
+  </section>
+</main>
+<script src="app.js?v=1"></script>
+</body>
+</html>
