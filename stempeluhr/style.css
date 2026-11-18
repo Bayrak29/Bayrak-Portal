@@ -1,0 +1,127 @@
+/* Stempeluhr MTU – Stil wie Fahrzeug-Nachweis (webseite\fahrzeug\style.css), Schrift groesser fuer die Baustelle */
+:root {
+  --blau: #1f3a5f;
+  --blau-hell: #2d5a8e;
+  --grund: #eef1f5;
+  --karte: #ffffff;
+  --text: #1b1f24;
+  --grau: #5b6573;
+  --rand: #d5dbe3;
+  --gruen: #1e8e4e;
+  --rot: #b3261e;
+  --gelb: #fff4d6;
+  --orange: #c25e00;
+  --orange-hell: #fff0e0;
+  --info: #1d5fa8;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--grund);
+  color: var(--text);
+  font-size: 19px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+header {
+  background: var(--blau);
+  color: #fff;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+}
+.marke { font-size: 13px; opacity: .8; letter-spacing: .03em; }
+h1 { margin: 2px 0 0; font-size: 22px; }
+h2 { font-size: 23px; margin: 0 0 12px; }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px calc(32px + env(safe-area-inset-bottom)); }
+.karte {
+  background: var(--karte);
+  border-radius: 14px;
+  padding: 20px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  margin-bottom: 14px;
+}
+.karte.orange { background: var(--orange-hell); border: 2px solid var(--orange); }
+.karte.orange h2 { color: var(--orange); }
+.versteckt { display: none !important; }
+.mitte { text-align: center; }
+.gross { font-size: 21px; }
+.riesig { font-size: 30px; line-height: 1.2; }
+.klein { font-size: 15px; color: var(--grau); }
+.symbol { font-size: 54px; text-align: center; margin: 4px 0 8px; }
+.hinweis {
+  background: var(--gelb);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 17px;
+  margin: 12px 0;
+}
+.hinweis.rot { background: #fde7e5; color: var(--rot); }
+.fehlertext { color: var(--rot); font-weight: 600; margin: 10px 0 0; }
+.feldname { display: block; font-weight: 600; margin: 16px 0 6px; }
+input[type=text], input[type=tel], input[type=search], input[type=password] {
+  width: 100%;
+  font-size: 20px;
+  padding: 13px 12px;
+  border: 1px solid var(--rand);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+}
+input:focus { outline: 2px solid var(--blau-hell); border-color: transparent; }
+/* PIN: Ziffern verdeckt, ohne Passwort-Speicher-Abfrage des Browsers */
+input.pin {
+  -webkit-text-security: disc;
+  text-align: center;
+  font-size: 32px;
+  letter-spacing: .5em;
+  padding-left: .5em;
+  max-width: 220px;
+  display: block;
+  margin: 0 auto;
+}
+input.pin.lang { max-width: 300px; letter-spacing: .3em; } /* Startcode ebenfalls verdeckt (B2) */
+.feldname.mitte { text-align: center; }
+.suche { margin-bottom: 10px; }
+.knopf {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 16px;
+  font-size: 20px;
+  font-weight: 600;
+  border: 0;
+  border-radius: 12px;
+  background: var(--blau);
+  color: #fff;
+  cursor: pointer;
+}
+.knopf.gross-knopf { padding: 22px 16px; font-size: 26px; background: var(--gruen); }
+.knopf:disabled { opacity: .55; }
+.knopf.zweit { background: #fff; color: var(--blau); border: 2px solid var(--blau); }
+.knopf.wahl[aria-pressed=true] { background: var(--blau); color: #fff; }
+.namen .knopf.name { margin-top: 10px; text-align: left; padding: 16px 18px; }
+.zwei { display: flex; gap: 10px; }
+.zwei .knopf { margin-top: 0; }
+.haekchen { display: flex; gap: 12px; align-items: flex-start; margin: 18px 0 4px; font-size: 17px; }
+.haekchen input { width: 28px; height: 28px; flex: 0 0 28px; margin: 0; }
+.link {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: 0;
+  color: var(--grau);
+  font-size: 16px;
+  text-decoration: underline;
+  padding: 8px;
+}
+.haken {
+  width: 84px; height: 84px; margin: 4px auto 14px;
+  border-radius: 50%; background: var(--gruen); color: #fff;
+  font-size: 50px; line-height: 84px; text-align: center; font-weight: 700;
+}
+.haken.blau { background: var(--info); font-family: Georgia, serif; }
+#s-fehler h2 { color: var(--rot); }
+body.sendet .knopf { cursor: progress; }
+.datenschutz { margin-top: 18px; font-size: 15px; color: var(--grau); }
+.datenschutz summary { cursor: pointer; padding: 8px 0; text-decoration: underline; }
+.datenschutz p { margin: 8px 0; }
