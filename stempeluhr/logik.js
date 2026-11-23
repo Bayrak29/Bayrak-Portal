@@ -283,10 +283,25 @@
   // ---------- Antworten ----------
   function artText(art, s) { return t(sprache(s), art === "gehen" ? "gehen" : "kommen"); }
 
-  /** Ueberschrift fuer schritt "fertig". */
+  /** Ueberschrift fuer schritt "fertig" (25.11.2026): „Eingestempelt um 07:47“ / „Ausgestempelt um 16:02“. */
   function fertigTitel(j, s) {
-    var w = { art: artText(j && j.art, s), zeit: (j && j.zeit) || "" };
-    return t(sprache(s), j && j.schon ? "schon_erfasst" : "erfasst", w);
+    var art = j && j.art === "gehen" ? "gehen" : "kommen";
+    return t(sprache(s), (j && j.schon ? "schon_" : "erfasst_") + art, { zeit: (j && j.zeit) || "" });
+  }
+
+  /**
+   * Zustand fuer den Stempel-Bildschirm aus tippen/bereit (25.11.2026): ein = eingestempelt (naechstes "gehen"),
+   * seit = "HH:MM", bei Kommen an einem anderen Tag (Nachtschicht) "HH:MM (TT.MM.)", oder "" (alter Server ohne seit). Knopf: ein -> Ausstempeln, sonst Einstempeln.
+   */
+  function zustand(j) {
+    var ein = !!j && j.naechstes === "gehen";
+    var seit = ein && typeof j.seit === "string" && /^[0-9]{2}:[0-9]{2}( \([0-9]{2}\.[0-9]{2}\.\))?$/.test(j.seit) ? j.seit : "";
+    return {
+      ein: ein,
+      seit: seit,
+      text: ein ? (seit ? "zustand_ein" : "zustand_ein_ohne") : "zustand_aus",
+      knopf: ein ? "knopf_aus" : "knopf_ein"
+    };
   }
 
   var CODE_SCHLUESSEL = { veraltet: "f_verbraucht", ticket: "f_abgelaufen", gross: "f_zu_gross" };
@@ -395,6 +410,7 @@
     ziffernWestlich: ziffernWestlich,
     artText: artText,
     fertigTitel: fertigTitel,
+    zustand: zustand,
     fehlerAuswerten: fehlerAuswerten,
     fehlerText: fehlerText,
     nachreichenText: nachreichenText,

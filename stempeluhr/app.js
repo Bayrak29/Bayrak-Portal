@@ -3,7 +3,8 @@
 // Grundsaetze: keine PIN im Speicher des Handys (nur im Arbeitsspeicher, solange die Seite offen ist),
 // keine Ausgaben in die Konsole, Chip-Code sofort aus der Adresszeile, credentials "omit".
 // 24.11.2026: Unbekanntes Handy -> zwei Knoepfe „Mit Handynummer anmelden“ / „Ich bin neu“ (keine Namensliste, kein
-// Startcode mehr). Sprache per Flagge oben rechts (de, tr, ro, ru, fa, prs; fa/prs rechts-nach-links), alle Texte
+// Startcode mehr). 25.11.2026: nie mehr automatisch stempeln – Zustand („Du bist gerade eingestempelt (seit 07:47)“)
+// + Knopf Einstempeln/Ausstempeln, auch gleich nach der Anmeldung (dann ohne PIN-Feld). Sprache per Flagge oben rechts (de, tr, ro, ru, fa, prs; fa/prs rechts-nach-links), alle Texte
 // aus texte.js; Fehler werden nur nach `code` uebersetzt.
 (function () {
   // B5: nie eingebettet (iframe) laufen – Schutz gegen Clickjacking (GitHub Pages kann kein frame-ancestors senden).
@@ -221,7 +222,7 @@
 
   function vorgangEnde() {
     if (v && v.timer) clearTimeout(v.timer);
-    if (v) { v.ticket = null; v.bis = 0; v.timer = null; }
+    if (v) { v.ticket = null; v.bis = 0; v.timer = null; v.pinAnmeldung = null; }
   }
 
   function ablaufSetzen(sek) {
@@ -264,7 +265,8 @@
     var name = j.name || j.vorname || "";
     textSetzen("ok-text", function () {
       var hallo = name ? T("hallo_ausruf", { name: name }) : "";
-      return schon ? T("nichts_weiter") + (hallo ? " " + hallo : "") : hallo;
+      // schon = Knopf innerhalb von 1 Min. nach dem letzten Stempel (Schutz in der Datenbank) oder Wiederholung
+      return schon ? T("schon_kurz") + (hallo ? " " + hallo : "") : hallo;
     });
     $("ok-wartet").classList.toggle("versteckt", !j.wartet);
     zeige("s-ok");
@@ -289,13 +291,36 @@
     });
   }
 
-  /** Erneutes "tippen" eines gespeicherten Vorgangs lieferte ein Ticket: Reservierung laeuft ab jetzt neu. */
-  function schlangeReservierung(gueltigSek) {
-    if (!vorgangInSchlange()) return;
-    var r = L.reservierungMitTicket(Date.now(), gueltigSek);
-    schlangeSpeichern(L.schlangeHinzu(schlange(), {
-      p: v.p, m: v.m, vorgang: v.vorgang, handyzeit: v.handyzeit, ab: r.ab, rbis: r.rbis
-    }));
+  /**
+   * Pruefung A1 (23.11.2026): Der Server hat zu diesem Vorgang einen Bildschirm geliefert (pin/anmelden/bereit) –
+   * der Nutzer hat ihn gesehen. Ab jetzt entscheidet NUR der Knopf; der Vorgang darf nicht mehr automatisch aus der
+   * Warteschlange nachgereicht werden (frueher nur verschoben -> wurde spaeter trotzdem gestempelt).
+   * Reine Offline-Antipper ohne jede Server-Antwort bleiben in der Schlange.
+   */
+  function bildschirmGesehen() { vorgangAusSchlange(); }
+
+  /**
+   * Stempel-Bildschirm (25.11.2026): „Hallo Vorname Nachname“, Zustand („Du bist gerade eingestempelt (seit 07:47)“ /
+   * „Du bist nicht eingestempelt“), Knopf Einstempeln (gruen) / Ausstempeln (orange). Gestempelt wird erst per Knopf.
+   * mitPin = bekanntes Handy (PIN-Feld); ohne = gleich nach der Anmeldung (PIN ist gerade eingegeben, v.pinAnmeldung).
+   */
+  var mitPinFeld = true;
+  function stempelBildschirm(j, mitPin) {
+    mitPinFeld = mitPin;
+    var name = j.name || j.vorname || "";
+    var z = L.zustand(j);
+    textSetzen("pin-hallo", function () { return T("hallo", { name: name }); });
+    textSetzen("pin-zustand", function () { return T(z.text, { zeit: z.seit }); });
+    $("pin-zustand").className = "zustand mitte " + (z.ein ? "ein" : "aus");
+    textSetzen("pin-los", function () { return T(z.knopf); });
+    $("pin-los").className = "knopf gross-knopf" + (z.ein ? " aus" : "");
+    $("pin-block").classList.toggle("versteckt", !mitPin);
+    $("pin").value = "";
+    feldFehler("pin-fehler", null);
+    var n = mitPin && geraet() ? schlangeBereit().length : 0;
+    feldFehler("pin-schlange", n ? function () { return T("pin_schlange", { anzahl: L.anzahlText(n, sprache) }); } : null);
+    zeige("s-pin");
+    if (mitPin) $("pin").focus();
   }
 
   function tippenAntwort(j) {
@@ -303,26 +328,17 @@
     if (j.schritt === "pin" && L.tokenOk(j.ticket)) {
       personSprache(j);
       v.ticket = j.ticket;
+      v.pinAnmeldung = null;
       ablaufSetzen(j.gueltig_sek);
-      schlangeReservierung(j.gueltig_sek);
-      var name = j.name || j.vorname || "";
-      var naechstes = j.naechstes;
-      textSetzen("pin-hallo", function () { return T("hallo", { name: name }); });
-      textSetzen("pin-als", function () { return T("als_naechstes", { art: L.artText(naechstes, sprache) }); });
-      textSetzen("pin-los", function () { return L.artText(naechstes, sprache); });
-      $("pin").value = "";
-      feldFehler("pin-fehler", null);
-      var n = geraet() ? schlangeBereit().length : 0;
-      feldFehler("pin-schlange", n ? function () { return T("pin_schlange", { anzahl: L.anzahlText(n, sprache) }); } : null);
-      zeige("s-pin");
-      $("pin").focus();
+      bildschirmGesehen();
+      stempelBildschirm(j, true);
       return;
     }
     if (j.schritt === "anmelden" && L.tokenOk(j.ticket)) {
       // Seit 24.11.2026: keine Namensliste (Feld "namen" wird ignoriert), genau zwei Knoepfe
       v.ticket = j.ticket;
       ablaufSetzen(j.gueltig_sek);
-      schlangeReservierung(j.gueltig_sek);
+      bildschirmGesehen();
       zeige("s-wer");
       return;
     }
@@ -350,7 +366,7 @@
       if (e.status === 200 && e.j.schritt === "pin" && pin && L.tokenOk(e.j.ticket)) {
         v.ticket = e.j.ticket;
         ablaufSetzen(e.j.gueltig_sek);
-        schlangeReservierung(e.j.gueltig_sek);
+        bildschirmGesehen();
         stempeln(pin);
         return;
       }
@@ -360,11 +376,18 @@
     });
   }
 
-  // ---------- 2. stempeln (bekanntes Handy) ----------
+  // ---------- 2. stempeln per Knopf (bekanntes Handy mit PIN; gleich nach der Anmeldung ohne PIN-Feld) ----------
   function pinLos() {
     if (beschaeftigt || ablaufPruefen()) return;
-    var pin = L.ziffernWestlich($("pin").value.trim());
-    if (!L.pinFormatOk(pin)) { feldFehlerT("pin-fehler", "pin_eingeben"); return; }
+    if (!v || !v.ticket) { zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" }); return; }
+    var pin;
+    if (!mitPinFeld) {
+      pin = v && v.pinAnmeldung;
+      if (!L.pinFormatOk(pin)) { zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" }); return; }
+    } else {
+      pin = L.ziffernWestlich($("pin").value.trim());
+      if (!L.pinFormatOk(pin)) { feldFehlerT("pin-fehler", "pin_eingeben"); return; }
+    }
     feldFehler("pin-fehler", null);
     // API 1.5: gespeicherte Offline-Stempel ZUERST senden (gleiche PIN), dann den aktuellen.
     // Bewusst so (Pruefung A1, 18.11.2026): reine Offline-Stempel (z. B. Kommen 7:00 ohne Netz) muessen VOR dem
@@ -376,6 +399,7 @@
       sperren(false);
       if (r && r.fehler && r.fehler.art !== "netz") {
         if (r.fehler.code === "pin_falsch") {
+          pinFeldZeigen();
           $("pin").value = "";
           feldFehlerT("pin-fehler", "pin_falsch_nochmal");
           return;
@@ -385,6 +409,14 @@
       }
       stempeln(pin);
     });
+  }
+
+  /** PIN wider Erwarten falsch (z. B. gerade geaendert): PIN-Feld doch zeigen, damit man sie eintippen kann. */
+  function pinFeldZeigen() {
+    if (mitPinFeld) return;
+    mitPinFeld = true;
+    if (v) v.pinAnmeldung = null;
+    $("pin-block").classList.remove("versteckt");
   }
 
   function stempeln(pin) {
@@ -403,6 +435,7 @@
       }
       if (f.code === "verbraucht" && (v.unsicher || e.wiederholt)) { ergebnisNachholen(pin); return; }
       if (f.art === "eingabe") {
+        pinFeldZeigen();
         $("pin").value = "";
         feldFehlerF("pin-fehler", f);
         zeige("s-pin");
@@ -421,7 +454,8 @@
     if (!L.telefonNormalisieren(nummer)) { feldFehlerT("tel-fehler", "f_telefon_ungueltig"); return; }
     if (!L.pinFormatOk(pin)) { feldFehlerT("tel-fehler", "pin_eingeben"); return; }
     feldFehler("tel-fehler", null);
-    var daten = { aktion: "anmelden_telefon", ticket: v.ticket, telefon: nummer, pin: pin };
+    // ohne_stempel (25.11.2026): Anmelden stempelt nicht mehr – danach Zustand + Knopf (schritt "bereit")
+    var daten = { aktion: "anmelden_telefon", ticket: v.ticket, telefon: nummer, pin: pin, ohne_stempel: true };
     var g = geraet();
     if (g) daten.geraet = g;
     sperren(true);
@@ -445,10 +479,28 @@
     });
   }
 
+  /**
+   * Angemeldet. Neuer Server (25.11.2026): schritt "bereit" = Geraet gebunden, noch NICHT gestempelt -> gleicher
+   * Bildschirm wie beim bekannten Handy, aber ohne PIN-Feld; der Knopf stempelt mit dem bisherigen Ticket, dem neuen
+   * Geraet und der gerade eingegebenen PIN (nur im Arbeitsspeicher). Alter Server: schon gestempelt -> Ergebnis.
+   */
   function nachAnmeldung(j, pin) {
-    zeigeOk(j); // speichert das neue Geraete-Token und die Sprache der Person
     pinMerken(pin);
-    // Offline-Stempel von vor der Anmeldung jetzt mitsenden
+    if (j.schritt === "bereit" && L.tokenOk(j.geraet)) {
+      geraetSetzen(j.geraet);
+      personSprache(j);
+      v.pinAnmeldung = pin;
+      ablaufSetzen(j.gueltig_sek);
+      bildschirmGesehen();
+      stempelBildschirm(j, false);
+    } else if (j.schritt === "bereit") {
+      // Pruefung A4: "bereit" ohne gueltiges Geraete-Token ist NICHT gestempelt -> nie „Eingestempelt um …“ zeigen
+      zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" });
+      return;
+    } else {
+      zeigeOk(j); // alter Server: schon gestempelt; speichert das neue Geraete-Token und die Sprache der Person
+    }
+    // Offline-Stempel von vor der Anmeldung jetzt mitsenden (vor dem Knopf; pinLos wartet ggf. darauf)
     if (geraet() && schlangeBereit().length) nachreichenAlles(pin);
   }
 
@@ -479,7 +531,8 @@
     var daten = {
       aktion: "registrieren", ticket: v.ticket, vorname: vorname, nachname: nachname, art: neuArt,
       pin: pin, pin2: pin2, telefon: tel,
-      whatsapp_ok: $("neu-whatsapp").checked === true // Pflicht-Haekchen (oben geprueft), Server will genau true
+      whatsapp_ok: $("neu-whatsapp").checked === true, // Pflicht-Haekchen (oben geprueft), Server will genau true
+      ohne_stempel: true // 25.11.2026: erst per Knopf stempeln
     };
     // Sprache nur mitschicken, wenn der Mitarbeiter sie SELBST per Flagge gewaehlt hat (nicht nur Handy-Sprache)
     // -> Stammliste (nur wenn dort noch keine steht)

@@ -163,4 +163,17 @@ html[dir=rtl] .mitte { text-align: center; }
 html[dir=rtl] body { font-family: -apple-system, "Geeza Pro", "Segoe UI", Tahoma, Roboto, Arial, sans-serif; }
 /* Nachbesserung: Nummernfelder immer LTR (auch der Platzhalter), lange Namen umbrechen statt ueberlaufen */
 input[type=tel]::placeholder, input.pin::placeholder { direction: ltr; }
-#pin-hallo, #ok-titel, #ok-text, #pin-als, #fehler-text, .flagge #sprache-name { overflow-wrap: anywhere; }
+#pin-hallo, #ok-titel, #ok-text, #pin-zustand, #fehler-text, .flagge #sprache-name { overflow-wrap: anywhere; }
+
+/* ---------- 25.11.2026: Stempeln per Knopf – Zustand deutlich, Einstempeln gruen, Ausstempeln orange ---------- */
+.zustand {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  border-radius: 10px;
+  padding: 14px 12px;
+  margin: 6px 0 4px;
+}
+.zustand.ein { background: #e3f4ea; color: var(--gruen); border: 2px solid var(--gruen); }
+.zustand.aus { background: var(--grund); color: var(--text); border: 2px solid var(--rand); }
+.knopf.gross-knopf.aus { background: var(--orange); }
