@@ -3,9 +3,9 @@
 // Haelt nur die eigenen Dateien im Cache, damit die Seite auch ohne Netz aufgeht.
 // Faesst KEINE Anfragen an Supabase an (fremde Adresse -> Browser macht es selbst), speichert nie Antworten mit Daten.
 // Neue Version: VERSION hochzaehlen (und ?v= in index.html), alte eigene Caches werden beim Aktivieren geloescht.
-var VERSION = "stz-stempeluhr-v3";
+var VERSION = "stz-stempeluhr-v4";
 var PRAEFIX = "stz-stempeluhr-";
-var DATEIEN = ["./index.html", "./style.css", "./logik.js", "./app.js"];
+var DATEIEN = ["./index.html", "./style.css", "./texte.js", "./logik.js", "./app.js"];
 var NETZ_WARTEN_MS = 4000;
 
 self.addEventListener("install", function (ev) {
@@ -30,7 +30,7 @@ function eigeneDatei(url) {
   if (url.pathname.indexOf(basis) !== 0) return null;
   var rest = url.pathname.slice(basis.length);
   if (rest === "" || rest === "index.html") return "./index.html";
-  if (rest === "style.css" || rest === "logik.js" || rest === "app.js") return "./" + rest;
+  if (rest === "style.css" || rest === "texte.js" || rest === "logik.js" || rest === "app.js") return "./" + rest;
   return null;
 }
 

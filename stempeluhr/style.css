@@ -125,3 +125,42 @@ body.sendet .knopf { cursor: progress; }
 .datenschutz { margin-top: 18px; font-size: 15px; color: var(--grau); }
 .datenschutz summary { cursor: pointer; padding: 8px 0; text-decoration: underline; }
 .datenschutz p { margin: 8px 0; }
+
+/* ---------- 24.11.2026: Sprach-Flagge, zwei grosse Knoepfe, rechts-nach-links (fa/prs) ---------- */
+header { position: relative; padding-right: 150px; }
+/* Flagge immer oben RECHTS – bewusst physisch "right", auch bei dir=rtl */
+.flagge {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 12px;
+  left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 140px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 10px;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.flagge #sprache-flagge { font-size: 24px; line-height: 1; }
+.flagge #sprache-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[dir=rtl] header { padding-right: 150px; padding-left: 16px; text-align: start; }
+.sprachen .knopf { margin-top: 10px; font-size: 23px; padding: 16px 18px; text-align: start; }
+.sprachen .fl { font-size: 30px; vertical-align: middle; margin-inline-end: 10px; }
+/* "Mit Handynummer anmelden" / "Ich bin neu": gross, gut zu treffen */
+.knopf.riesen-knopf { padding: 26px 16px; font-size: 25px; margin-top: 16px; }
+/* Ziffern, PIN und Handynummer immer links-nach-rechts, westliche Ziffern */
+input.pin, input[type=tel] { direction: ltr; }
+input[type=tel] { text-align: left; }
+html[dir=rtl] .haekchen { text-align: start; }
+html[dir=rtl] .klein, html[dir=rtl] .hinweis, html[dir=rtl] .datenschutz { text-align: start; }
+html[dir=rtl] .mitte { text-align: center; }
+html[dir=rtl] body { font-family: -apple-system, "Geeza Pro", "Segoe UI", Tahoma, Roboto, Arial, sans-serif; }
+/* Nachbesserung: Nummernfelder immer LTR (auch der Platzhalter), lange Namen umbrechen statt ueberlaufen */
+input[type=tel]::placeholder, input.pin::placeholder { direction: ltr; }
+#pin-hallo, #ok-titel, #ok-text, #pin-als, #fehler-text, .flagge #sprache-name { overflow-wrap: anywhere; }

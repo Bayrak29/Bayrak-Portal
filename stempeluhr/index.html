@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,27 +9,43 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#1f3a5f">
 <title>Stempeluhr MTU</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
+<!-- Texte: Inhalt hier = Deutsch (Rueckfall ohne JavaScript). data-t = Schluessel in texte.js. -->
 <header>
   <div class="marke">Bayrak Industrieservice</div>
-  <h1>Stempeluhr MTU</h1>
+  <h1 data-t="titel">Stempeluhr MTU</h1>
+  <button id="sprache-knopf" class="flagge" type="button" aria-label="Sprache wählen" data-t-aria="sprache_waehlen"><span id="sprache-flagge" aria-hidden="true">🇩🇪</span><span id="sprache-name">Deutsch</span></button>
 </header>
 
 <main>
-  <p id="privat-hinweis" class="hinweis rot versteckt">Diese Seite kann im Handy nichts speichern (privater Modus?). Bitte im normalen Browser-Fenster öffnen – sonst musst du dich jedes Mal neu anmelden und ohne Internet geht kein Stempel.</p>
+  <p id="privat-hinweis" class="hinweis rot versteckt" data-t="privat_hinweis">Diese Seite kann im Handy nichts speichern (privater Modus?). Bitte im normalen Browser-Fenster öffnen – sonst musst du dich jedes Mal neu anmelden und ohne Internet geht kein Stempel.</p>
 
   <!-- Laden -->
   <section id="s-laden" class="karte">
-    <p class="mitte gross">Einen Moment …</p>
+    <p class="mitte gross" data-t="laden">Einen Moment …</p>
   </section>
 
   <!-- Ohne Chip-Code geoeffnet -->
   <section id="s-start" class="karte versteckt">
     <div class="symbol">📱</div>
-    <h2 class="mitte">Bitte halte dein Handy an den Stempel-Chip.</h2>
-    <p class="klein mitte">iPhone: Bildschirm an und entsperrt, oben die Mitteilung „Website öffnen“ antippen.<br>Android: NFC einschalten.</p>
+    <h2 class="mitte" data-t="start_titel">Bitte halte dein Handy an den Stempel-Chip.</h2>
+    <p class="klein mitte"><span data-t="start_iphone">iPhone: Bildschirm an und entsperrt, oben die Mitteilung „Website öffnen“ antippen.</span><br><span data-t="start_android">Android: NFC einschalten.</span></p>
+  </section>
+
+  <!-- Sprache waehlen (Flagge oben rechts) -->
+  <section id="s-sprache" class="karte versteckt">
+    <h2 class="mitte" data-t="sprache_waehlen">Sprache wählen</h2>
+    <div class="sprachen">
+      <button id="sprache-de" class="knopf zweit sprache-wahl" type="button" lang="de" dir="ltr"><span class="fl" aria-hidden="true">🇩🇪</span> Deutsch</button>
+      <button id="sprache-tr" class="knopf zweit sprache-wahl" type="button" lang="tr" dir="ltr"><span class="fl" aria-hidden="true">🇹🇷</span> Türkçe</button>
+      <button id="sprache-ro" class="knopf zweit sprache-wahl" type="button" lang="ro" dir="ltr"><span class="fl" aria-hidden="true">🇷🇴</span> Română</button>
+      <button id="sprache-ru" class="knopf zweit sprache-wahl" type="button" lang="ru" dir="ltr"><span class="fl" aria-hidden="true">🇷🇺</span> Русский</button>
+      <button id="sprache-fa" class="knopf zweit sprache-wahl" type="button" lang="fa" dir="rtl"><span class="fl" aria-hidden="true">🇮🇷</span> فارسی</button>
+      <button id="sprache-prs" class="knopf zweit sprache-wahl" type="button" lang="fa-AF" dir="rtl"><span class="fl" aria-hidden="true">🇦🇫</span> دری</button>
+    </div>
+    <button id="sprache-zurueck" class="link" type="button" data-t="zurueck">Zurück</button>
   </section>
 
   <!-- Erfolg -->
@@ -37,125 +53,117 @@
     <div id="ok-symbol" class="haken">✓</div>
     <h2 id="ok-titel" class="mitte riesig"></h2>
     <p id="ok-text" class="mitte"></p>
-    <p id="ok-wartet" class="hinweis versteckt">Danke, du bist angemeldet – Mustafa bestätigt dich noch.</p>
-    <p class="klein mitte">Du kannst die Seite jetzt schließen.</p>
+    <p id="ok-wartet" class="hinweis versteckt" data-t="ok_wartet">Danke, du bist angemeldet – Mustafa bestätigt dich noch.</p>
+    <p class="klein mitte" data-t="ok_schliessen">Du kannst die Seite jetzt schließen.</p>
   </section>
 
   <!-- Bekanntes Handy: Hallo + PIN -->
   <section id="s-pin" class="karte versteckt">
     <h2 id="pin-hallo" class="mitte"></h2>
     <p id="pin-als" class="mitte"></p>
-    <label for="pin" class="feldname mitte">Deine PIN</label>
-    <input id="pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+    <label for="pin" class="feldname mitte" data-t="pin_feld">Deine PIN</label>
+    <input id="pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" dir="ltr">
     <p id="pin-fehler" class="fehlertext versteckt" role="alert"></p>
     <p id="pin-schlange" class="klein mitte versteckt"></p>
     <button id="pin-los" class="knopf gross-knopf" type="button">Kommen</button>
   </section>
 
-  <!-- Unbekanntes Handy: Wer bist du? -->
+  <!-- Unbekanntes Handy: genau zwei grosse Knoepfe (keine Namensliste) -->
   <section id="s-wer" class="karte versteckt">
-    <h2 class="mitte">Wer bist du?</h2>
-    <input id="wer-suche" class="suche versteckt" type="search" placeholder="Namen suchen …" autocomplete="off" autocorrect="off" spellcheck="false">
-    <div id="wer-liste" class="namen"></div>
-    <p id="wer-leer" class="klein mitte versteckt">Noch keine Namen eingetragen.</p>
-    <button id="wer-neu" class="knopf zweit" type="button">Ich bin neu</button>
-    <p class="klein">Du warst schon angemeldet? Nach einem Handywechsel – oder auf dem iPhone nach 7 Tagen ohne Benutzung – fragt die Seite neu. Wähle einfach deinen Namen und gib deine PIN ein.</p>
+    <h2 class="mitte" data-t="wer_titel">Dein Handy ist hier noch nicht angemeldet</h2>
+    <button id="wer-telefon" class="knopf riesen-knopf" type="button" data-t="wer_telefon">Mit Handynummer anmelden</button>
+    <button id="wer-neu" class="knopf zweit riesen-knopf" type="button" data-t="wer_neu">Ich bin neu</button>
+    <p class="klein" data-t="wer_hinweis">Handy nicht erkannt? Das iPhone vergisst die Anmeldung nach 7 Tagen ohne Benutzung, auch ein neues Handy wird nicht erkannt. Dann einfach „Mit Handynummer anmelden“.</p>
   </section>
 
-  <!-- Name gewaehlt: PIN (neues Handy) oder PIN festlegen -->
-  <section id="s-anmelden" class="karte versteckt">
-    <h2 id="an-name" class="mitte"></h2>
-    <div id="an-neu-teil" class="versteckt">
-      <p>Lege eine 4-stellige PIN fest. Nur du kennst sie.</p>
-      <div id="an-startcode-teil" class="versteckt">
-        <label for="an-startcode" class="feldname">Startcode aus dem Büro (6 Ziffern)</label>
-        <input id="an-startcode" class="pin lang" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false">
-      </div>
-    </div>
-    <p id="an-alt-teil" class="versteckt">Gib deine PIN ein.</p>
-    <label for="an-pin" class="feldname">PIN</label>
-    <input id="an-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false">
-    <div id="an-pin2-teil" class="versteckt">
-      <label for="an-pin2" class="feldname">PIN wiederholen</label>
-      <input id="an-pin2" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false">
-    </div>
-    <p id="an-fehler" class="fehlertext versteckt" role="alert"></p>
-    <button id="an-los" class="knopf gross-knopf" type="button">Anmelden und stempeln</button>
-    <button id="an-zurueck" class="link" type="button">Anderen Namen wählen</button>
+  <!-- Mit Handynummer anmelden: Nummer + PIN -->
+  <section id="s-telefon" class="karte versteckt">
+    <h2 data-t="wer_telefon">Mit Handynummer anmelden</h2>
+    <label for="tel-nummer" class="feldname" data-t="tel_nummer">Deine Handynummer</label>
+    <input id="tel-nummer" type="tel" maxlength="30" autocomplete="tel" dir="ltr" placeholder="z. B. 0171 1234567" data-t-ph="tel_bsp">
+    <label for="tel-pin" class="feldname" data-t="pin_feld">Deine PIN</label>
+    <input id="tel-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" dir="ltr">
+    <p id="tel-fehler" class="fehlertext versteckt" role="alert"></p>
+    <button id="tel-los" class="knopf gross-knopf" type="button" data-t="anmelden_los">Anmelden und stempeln</button>
+    <button id="tel-zurueck" class="link" type="button" data-t="zurueck">Zurück</button>
   </section>
 
-  <!-- Ich bin neu -->
+  <!-- Ich bin neu (auch: schon in der Liste, aber noch nie mit Nummer angemeldet -> bisherige PIN) -->
   <section id="s-neu" class="karte versteckt">
-    <h2>Ich bin neu</h2>
-    <label for="neu-vorname" class="feldname">Vorname</label>
+    <h2 data-t="wer_neu">Ich bin neu</h2>
+    <label for="neu-vorname" class="feldname" data-t="neu_vorname">Vorname</label>
     <input id="neu-vorname" type="text" maxlength="40" autocomplete="given-name" autocapitalize="words">
-    <label for="neu-nachname" class="feldname">Nachname</label>
+    <label for="neu-nachname" class="feldname" data-t="neu_nachname">Nachname</label>
     <input id="neu-nachname" type="text" maxlength="40" autocomplete="family-name" autocapitalize="words">
-    <label for="neu-telefon" class="feldname">Handynummer</label>
-    <input id="neu-telefon" type="tel" maxlength="30" autocomplete="tel" placeholder="z. B. 0171 1234567">
-    <div class="feldname">Ich arbeite</div>
+    <label for="neu-telefon" class="feldname" data-t="neu_telefon">Handynummer</label>
+    <input id="neu-telefon" type="tel" maxlength="30" autocomplete="tel" dir="ltr" placeholder="z. B. 0171 1234567" data-t-ph="tel_bsp">
+    <div class="feldname" data-t="neu_arbeite">Ich arbeite</div>
     <div class="zwei">
-      <button id="neu-vz" class="knopf zweit wahl" type="button" aria-pressed="false">Vollzeit</button>
-      <button id="neu-mj" class="knopf zweit wahl" type="button" aria-pressed="false">Minijob</button>
+      <button id="neu-vz" class="knopf zweit wahl" type="button" aria-pressed="false" data-t="vollzeit">Vollzeit</button>
+      <button id="neu-mj" class="knopf zweit wahl" type="button" aria-pressed="false" data-t="minijob">Minijob</button>
     </div>
     <label class="haekchen">
       <input id="neu-whatsapp" type="checkbox" aria-required="true">
-      <span>Ich bin einverstanden, WhatsApp-Infos zur Arbeit von Bayrak Industrieservice an diese Nummer zu bekommen. Freiwillig. Ohne Häkchen trägt dich das Büro ein.</span>
+      <span data-t="neu_whatsapp">Ich bin einverstanden, WhatsApp-Infos zur Arbeit von Bayrak Industrieservice an diese Nummer zu bekommen. Freiwillig. Ohne Häkchen trägt dich das Büro ein.</span>
     </label>
-    <label for="neu-pin" class="feldname">PIN festlegen (4 Ziffern)</label>
-    <input id="neu-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false">
-    <label for="neu-pin2" class="feldname">PIN wiederholen</label>
-    <input id="neu-pin2" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false">
+    <label for="neu-pin" class="feldname" data-t="neu_pin">PIN festlegen (4 Ziffern)</label>
+    <input id="neu-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">
+    <label for="neu-pin2" class="feldname" data-t="neu_pin2">PIN wiederholen</label>
+    <input id="neu-pin2" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">
+    <p class="klein mitte" data-t="neu_pin_hinweis">Warst du schon mal angemeldet? Dann deine bisherige PIN.</p>
     <p id="neu-fehler" class="fehlertext versteckt" role="alert"></p>
-    <button id="neu-los" class="knopf gross-knopf" type="button">Anmelden und stempeln</button>
-    <button id="neu-zurueck" class="link" type="button">Zurück zur Namensliste</button>
+    <button id="neu-los" class="knopf gross-knopf" type="button" data-t="anmelden_los">Anmelden und stempeln</button>
+    <button id="neu-zurueck" class="link" type="button" data-t="zurueck">Zurück</button>
   </section>
 
   <!-- Offline gespeichert -->
   <section id="s-offline" class="karte orange versteckt">
     <div class="symbol">📶</div>
     <h2 id="offline-titel" class="mitte"></h2>
-    <p>Dein Stempel ist im Handy gespeichert und wird automatisch gesendet, sobald du wieder Internet hast. Öffne dazu später einfach diese Seite oder halte das Handy wieder an den Chip.</p>
-    <p id="offline-ohne-anmeldung" class="hinweis versteckt">Dein Handy ist noch nicht angemeldet. Die erste Anmeldung braucht Internet – danach wird der gespeicherte Stempel mitgesendet.</p>
+    <p data-t="offline_text">Dein Stempel ist im Handy gespeichert und wird automatisch gesendet, sobald du wieder Internet hast. Öffne dazu später einfach diese Seite oder halte das Handy wieder an den Chip.</p>
+    <p id="offline-ohne-anmeldung" class="hinweis versteckt" data-t="offline_ohne_anmeldung">Dein Handy ist noch nicht angemeldet. Die erste Anmeldung braucht Internet – danach wird der gespeicherte Stempel mitgesendet.</p>
     <p id="offline-warten" class="hinweis versteckt"></p>
-    <p class="klein">iPhone: Das Senden passiert nur, wenn du die Seite öffnest.</p>
-    <button id="offline-nochmal" class="knopf zweit" type="button">Nochmal versuchen</button>
+    <p class="klein" data-t="offline_iphone">iPhone: Das Senden passiert nur, wenn du die Seite öffnest.</p>
+    <button id="offline-nochmal" class="knopf zweit" type="button" data-t="nochmal">Nochmal versuchen</button>
   </section>
 
   <!-- Fehler / Hinweis -->
   <section id="s-fehler" class="karte versteckt">
     <h2 id="fehler-titel">Das hat nicht geklappt</h2>
     <p id="fehler-text" class="gross"></p>
-    <button id="fehler-nochmal" class="knopf versteckt" type="button">Nochmal versuchen</button>
+    <button id="fehler-nochmal" class="knopf versteckt" type="button" data-t="nochmal">Nochmal versuchen</button>
   </section>
 
   <!-- Gespeicherte (offline) Stempel nachsenden -->
   <section id="s-schlange" class="karte versteckt">
     <h2 id="schlange-titel"></h2>
-    <p class="klein">Zum Senden einmal deine PIN eingeben.</p>
-    <label for="schlange-pin" class="feldname">PIN</label>
-    <input id="schlange-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false">
+    <p class="klein" data-t="schlange_hinweis">Zum Senden einmal deine PIN eingeben.</p>
+    <label for="schlange-pin" class="feldname" data-t="pin_kurz">PIN</label>
+    <input id="schlange-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">
     <p id="schlange-fehler" class="fehlertext versteckt" role="alert"></p>
-    <button id="schlange-los" class="knopf" type="button">Jetzt senden</button>
+    <button id="schlange-los" class="knopf" type="button" data-t="schlange_los">Jetzt senden</button>
   </section>
   <p id="schlange-info" class="hinweis versteckt" role="status"></p>
   <p id="schlange-warten" class="klein mitte versteckt" role="status"></p>
 
   <details class="datenschutz">
-    <summary>Datenschutz – was wird gespeichert?</summary>
-    <p><strong>Zeiterfassung bei MTU.</strong> Wenn du dein Handy an den Stempel-Chip hältst, speichern wir: deinen Namen, Kommen- und Gehen-Zeit, an welchem Chip du gestempelt hast und eine zufällige Kennung deines Handys (damit wir wissen, dass du es bist).</p>
-    <p><strong>Wir speichern keinen Standort, keine Fotos, keine Kontakte, nichts aus deinem Handy</strong> (außer der gekürzten Gerätekennung, siehe „Missbrauchsschutz“). Die Seite ist eine normale Internetseite, du installierst nichts. Im Handy selbst liegen nur die Handy-Kennung und – ohne Internet – deine noch nicht gesendeten Stempel.</p>
-    <p><strong>Zweck:</strong> gesetzliche Arbeitszeitaufzeichnung und Lohnabrechnung. Aufbewahrung: mindestens 2 Jahre (gesetzliche Pflicht), danach Löschung. Zugriff: nur die Geschäftsleitung (Lohn).</p>
-    <p><strong>Missbrauchsschutz:</strong> Zu deinem angemeldeten Handy speichern wir die Gerätekennung, die dein Browser mitschickt (Browser und Handymodell, gekürzt), damit das Büro Handys auseinanderhalten kann. Deine IP-Adresse speichern wir in unserer Datenbank nicht – nur eine Prüfsumme daraus mit einem täglich wechselnden Geheimwert (Tagessalz), um Missbrauch und massenhafte Fehlversuche abzuwehren. Daraus lässt sich die IP-Adresse nicht zurückrechnen.</p>
-    <p><strong>Handynummer</strong> (nur bei „Ich bin neu“): nur für Infos zur Arbeit per WhatsApp, mit deinem Einverständnis. Sie wird nicht an andere weitergegeben und nicht auf dieser Seite angezeigt.</p>
-    <p><strong>WhatsApp-Einverständnis:</strong> Das Häkchen ist freiwillig und gilt nur für Infos zur Arbeit (z. B. Einsatzzeiten, Änderungen). Wir speichern, wann du zugestimmt hast, als Nachweis. Ohne Häkchen geht die Anmeldung über „Ich bin neu“ nicht – dann melde dich bitte im Büro, dort wirst du auch ohne WhatsApp eingetragen. Du kannst das Einverständnis jederzeit im Büro widerrufen, dann bekommst du keine WhatsApp-Infos mehr. Wenn du bei uns ausscheidest, wird deine Nummer gelöscht.</p>
-    <p>Deine Stunden siehst du nicht in der Seite – auf Nachfrage bekommst du jederzeit eine Aufstellung im Büro.</p>
-    <p><strong>Deine PIN:</strong> 4 Ziffern, nur du kennst sie. Gib sie nicht weiter. Stempeln für andere ist nicht erlaubt.</p>
-    <p><strong>Kein Internet beim Stempeln?</strong> Dein Stempel wird im Handy gespeichert. Öffne die Seite später einmal mit Internet, dann wird er gesendet (iPhone: nur, wenn du die Seite öffnest).</p>
-    <p>Neues Handy oder PIN vergessen? Bitte im Büro melden.</p>
+    <summary data-t="ds_titel">Datenschutz – was wird gespeichert?</summary>
+    <p id="ds-massgeblich" class="versteckt"><strong data-t="ds_massgeblich">Maßgeblich ist die deutsche Fassung.</strong></p>
+    <p><strong data-t="ds_zeit_t">Zeiterfassung bei MTU.</strong> <span data-t="ds_zeit">Wenn du dein Handy an den Stempel-Chip hältst, speichern wir: deinen Namen, Kommen- und Gehen-Zeit, an welchem Chip du gestempelt hast und eine zufällige Kennung deines Handys (damit wir wissen, dass du es bist).</span></p>
+    <p><strong data-t="ds_nichts_t">Wir speichern keinen Standort, keine Fotos, keine Kontakte, nichts aus deinem Handy</strong> <span data-t="ds_nichts">(außer der gekürzten Gerätekennung, siehe „Missbrauchsschutz“). Die Seite ist eine normale Internetseite, du installierst nichts. Im Handy selbst liegen nur die Handy-Kennung, deine Sprachwahl und – ohne Internet – deine noch nicht gesendeten Stempel.</span></p>
+    <p><strong data-t="ds_zweck_t">Zweck:</strong> <span data-t="ds_zweck">gesetzliche Arbeitszeitaufzeichnung und Lohnabrechnung. Aufbewahrung: mindestens 2 Jahre (gesetzliche Pflicht), danach Löschung. Zugriff: nur die Geschäftsleitung (Lohn).</span></p>
+    <p><strong data-t="ds_miss_t">Missbrauchsschutz:</strong> <span data-t="ds_miss">Zu deinem angemeldeten Handy speichern wir die Gerätekennung, die dein Browser mitschickt (Browser und Handymodell, gekürzt), damit das Büro Handys auseinanderhalten kann. Deine IP-Adresse speichern wir in unserer Datenbank nicht – nur eine Prüfsumme daraus mit einem täglich wechselnden Geheimwert (Tagessalz), um Missbrauch und massenhafte Fehlversuche abzuwehren. Daraus lässt sich die IP-Adresse nicht zurückrechnen.</span></p>
+    <p><strong data-t="ds_tel_t">Handynummer:</strong> <span data-t="ds_tel">Wir nutzen deine Handynummer für Infos zur Arbeit per WhatsApp (nur mit deinem Einverständnis) und damit du dich mit Nummer + PIN wieder anmelden kannst. Für die Anmeldung speichern wir die Nummer im Stempel-Server nur als nicht zurückrechenbare Prüfsumme; die Nummer selbst liegt nur in der Mitarbeiterliste im Büro. Sie wird nie auf dieser Seite angezeigt und nicht weitergegeben.</span></p>
+    <p><strong data-t="ds_wa_t">WhatsApp-Einverständnis:</strong> <span data-t="ds_wa">Das Häkchen ist freiwillig und gilt nur für Infos zur Arbeit (z. B. Einsatzzeiten, Änderungen). Wir speichern, wann du zugestimmt hast, als Nachweis. Ohne Häkchen geht die Anmeldung über „Ich bin neu“ nicht – dann melde dich bitte im Büro, dort wirst du auch ohne WhatsApp eingetragen. Du kannst das Einverständnis jederzeit im Büro widerrufen, dann bekommst du keine WhatsApp-Infos mehr. Wenn du bei uns ausscheidest, wird deine Nummer gelöscht.</span></p>
+    <p><strong data-t="ds_sprache_t">Sprache:</strong> <span data-t="ds_sprache">Die Sprache der Seite merkt sich nur dein Handy; die Sprache für WhatsApp-Infos steht in der Mitarbeiterliste.</span></p>
+    <p data-t="ds_stunden">Deine Stunden siehst du nicht in der Seite – auf Nachfrage bekommst du jederzeit eine Aufstellung im Büro.</p>
+    <p><strong data-t="ds_pin_t">Deine PIN:</strong> <span data-t="ds_pin">4 Ziffern, nur du kennst sie. Gib sie nicht weiter. Stempeln für andere ist nicht erlaubt.</span></p>
+    <p><strong data-t="ds_offline_t">Kein Internet beim Stempeln?</strong> <span data-t="ds_offline">Dein Stempel wird im Handy gespeichert. Öffne die Seite später einmal mit Internet, dann wird er gesendet (iPhone: nur, wenn du die Seite öffnest).</span></p>
+    <p data-t="ds_handy">Neues Handy? „Mit Handynummer anmelden“. PIN vergessen? Bitte im Büro melden.</p>
   </details>
 </main>
-<script src="logik.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="texte.js?v=4"></script>
+<script src="logik.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

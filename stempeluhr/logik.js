@@ -2,7 +2,11 @@
 // Stempeluhr MTU – reine Logik ohne Bildschirm (testbar mit Deno: webseite\tests\logik_test.js).
 // Regeln 1:1 wie in supabase\functions\_shared\werkzeuge.ts, damit die Seite Eingabefehler schon VOR dem
 // Senden erkennt (jedes Ticket erlaubt nur 3 Anfragen). Entscheidend bleibt immer der Server.
+// Texte (24.11.2026): alle sichtbaren Texte kommen aus texte.js (window.StzTexte) ueber t(sprache, schluessel, werte);
+// fehlt ein Text in der Sprache -> Deutsch, fehlt er ganz -> der Schluessel selbst.
 (function (g) {
+  var SPRACHEN = ["de", "tr", "ro", "ru", "fa", "prs"];
+  var FSI = "⁨", PDI = "⁩"; // Unicode-Isolierung (wie <bdi>) fuer Uhrzeiten/Zahlen/Namen in RTL-Saetzen
   var SCHLANGE_MAX = 50; // Bauplan 6.2
   var NACHREICHEN_JE_ANFRAGE = 20; // API 1.5
   var ZU_ALT_MS = 72 * 3600 * 1000; // Server weist aelter als 72 Std. ab (M1)
@@ -180,9 +184,10 @@
     "4321", "5432", "6543", "7654", "8765", "9876", "3210",
     "1212", "1122", "1010", "2580", "0852", "1004", "2000", "2020", "1999"];
 
-  function pinFormatOk(pin) { return typeof pin === "string" && /^[0-9]{4}$/.test(pin); }
+  function pinFormatOk(pin) { return typeof pin === "string" && /^[0-9]{4}$/.test(ziffernWestlich(pin)); }
   function pinErlaubt(pin) {
     if (!pinFormatOk(pin)) return false;
+    pin = ziffernWestlich(pin);
     if (/^(\d)\1{3}$/.test(pin)) return false;
     return TRIVIALE_PINS.indexOf(pin) < 0;
   }
@@ -201,9 +206,15 @@
     return n;
   }
 
+  /** Persische (۰-۹) und arabisch-indische (٠-٩) Ziffern -> 0-9 (wie ziffernWestlich in werkzeuge.ts). */
+  function ziffernWestlich(roh) {
+    if (typeof roh !== "string") return roh;
+    return roh.replace(/[۰-۹٠-٩]/g, function (z) { return String((z.charCodeAt(0) & 0xf) % 10); });
+  }
+
   function telefonNormalisieren(roh) {
     if (typeof roh !== "string" || roh.length > 40) return null;
-    var t = roh.trim().replace(/^\+(\d{1,3})\s*\(0\)/, "+$1").replace(/[\s/\-(). ]/g, "");
+    var t = ziffernWestlich(roh).trim().replace(/^\+(\d{1,3})\s*\(0\)/, "+$1").replace(/[\s/\-(). ]/g, "");
     if (t.indexOf("00") === 0) t = "+" + t.slice(2);
     else if (t.indexOf("0") === 0) t = "+49" + t.slice(1);
     t = t.replace(/^\+(49|43|41)0/, "+$1");
@@ -211,93 +222,155 @@
     return /^\+[1-9][0-9]{7,14}$/.test(t) ? t : null;
   }
 
+  // ---------- Sprachen (24.11.2026) ----------
+  function spracheOk(s) { return typeof s === "string" && SPRACHEN.indexOf(s) >= 0; }
+
+  /** Flagge, Name in eigener Schrift, Schreibrichtung, HTML-lang. prs (Dari) -> lang "fa-AF". */
+  function sprachInfo(s) {
+    var i = g.StzSprachen && g.StzSprachen[s];
+    if (i) return i;
+    var rtl = s === "fa" || s === "prs";
+    return { flagge: "", name: String(s), dir: rtl ? "rtl" : "ltr", lang: s === "prs" ? "fa-AF" : String(s) };
+  }
+
+  /** Text oder null (Sprache, sonst Deutsch). */
+  function textRoh(s, k) {
+    var T = g.StzTexte || {};
+    var a = T[s] && T[s][k];
+    if (typeof a === "string" && a) return a;
+    var b = T.de && T.de[k];
+    return typeof b === "string" && b ? b : null;
+  }
+
+  /** Text mit Platzhaltern {n}, {zeit}, {name} … In RTL-Sprachen werden die Werte isoliert (FSI … PDI). */
+  function t(s, k, werte) {
+    var x = textRoh(s, k);
+    if (x === null) return k;
+    var rtl = sprachInfo(s).dir === "rtl";
+    return x.replace(/\{(\w+)\}/g, function (m, n) {
+      if (!werte || !Object.prototype.hasOwnProperty.call(werte, n)) return m;
+      var v = String(werte[n]);
+      return rtl ? FSI + v + PDI : v;
+    });
+  }
+
+  /** Handy-Sprache (z. B. "fa-AF", "tr-TR") -> unser Code oder null. Dari: fa-AF/prs*; Persisch: fa*. */
+  function spracheAusTag(tag) {
+    if (typeof tag !== "string") return null;
+    var x = tag.toLowerCase().replace(/_/g, "-");
+    var h = x.split("-")[0];
+    if (h === "prs" || x === "fa-af" || x.indexOf("fa-af-") === 0) return "prs";
+    if (h === "fa") return "fa";
+    if (h === "ro" || h === "mo") return "ro";
+    if (h === "de" || h === "tr" || h === "ru") return h;
+    return null;
+  }
+
+  /** E13: 1. Flagge von Hand  2. Sprache der erkannten Person  3. Handy-Sprache  4. Deutsch. */
+  function spracheErmitteln(wahl, person, navigatorSprachen) {
+    if (spracheOk(wahl)) return wahl;
+    if (spracheOk(person)) return person;
+    var l = Array.isArray(navigatorSprachen) ? navigatorSprachen : [navigatorSprachen];
+    for (var i = 0; i < l.length; i++) {
+      var s = spracheAusTag(l[i]);
+      if (s) return s;
+    }
+    return "de";
+  }
+
+  function sprache(s) { return spracheOk(s) ? s : "de"; }
+
   // ---------- Antworten ----------
-  function artText(art) { return art === "gehen" ? "Gehen" : "Kommen"; }
+  function artText(art, s) { return t(sprache(s), art === "gehen" ? "gehen" : "kommen"); }
 
   /** Ueberschrift fuer schritt "fertig". */
-  function fertigTitel(j) {
-    var a = artText(j && j.art), z = (j && j.zeit) || "";
-    return j && j.schon ? "Schon erfasst: " + a + " " + z : a + " " + z + " erfasst";
+  function fertigTitel(j, s) {
+    var w = { art: artText(j && j.art, s), zeit: (j && j.zeit) || "" };
+    return t(sprache(s), j && j.schon ? "schon_erfasst" : "erfasst", w);
+  }
+
+  var CODE_SCHLUESSEL = { veraltet: "f_verbraucht", ticket: "f_abgelaufen", gross: "f_zu_gross" };
+
+  function restText(s, praefix, rest) {
+    if (rest === 0) return t(s, praefix + "_0");
+    if (rest === 1) return t(s, praefix + "_1");
+    return t(s, praefix + "_n", { n: rest });
   }
 
   /**
-   * HTTP-Fehler -> was die Seite tut.
+   * Text zu einem ausgewerteten Fehler (E12): uebersetzt NUR nach code. Der Server-Text wird nur bei Deutsch
+   * gezeigt; unbekannter Code -> Sammeltext. pin_falsch / anmeldung_falsch baut die Seite selbst aus rest.
+   * f.schluessel = eigener Text der Seite, f.zusatz = Satz, der angehaengt wird.
+   */
+  function fehlerText(f, s) {
+    s = sprache(s);
+    var x;
+    if (f.schluessel) x = t(s, f.schluessel, f.werte);
+    else if (f.art === "netz") x = t(s, "netz_text");
+    else if (f.code === "pin_falsch") x = f.rest === null || f.rest === undefined ? t(s, "pin_falsch") : restText(s, "pin_falsch", f.rest);
+    else if (f.code === "anmeldung_falsch") x = restText(s, "anm_falsch", f.rest || 0) + " " + t(s, "anm_hinweis");
+    else if (f.code === "abgelaufen" || f.code === "ticket") x = t(s, "f_abgelaufen");
+    else if (s === "de" && f.server) x = f.server;
+    else {
+      var k = CODE_SCHLUESSEL[f.code] || "f_" + f.code;
+      x = textRoh(s, k) !== null ? t(s, k) : t(s, "f_unbekannt");
+    }
+    if (f.zusatz) x += " " + t(s, f.zusatz);
+    return x;
+  }
+
+  /**
+   * HTTP-Fehler -> was die Seite tut. Liefert {art, code, rest, server, text}; text ist in `sprache` (Standard de)
+   * und laesst sich mit fehlerText(f, andereSprache) neu bauen (Flagge gewechselt).
    * art: "eingabe" (gleicher Bildschirm, korrigieren), "neu_chip" (Vorgang vorbei, nochmal an den Chip),
    *      "geraet" (Token loeschen + neu an den Chip), "netz" (Verbindung/Server), "ende" (Text zeigen, fertig).
    */
-  function fehlerAuswerten(status, j) {
-    var code = (j && j.code) || "";
-    var text = (j && typeof j.fehler === "string" && j.fehler) || "";
-    if (status === 0 || status >= 500 || code === "server") {
-      return { art: "netz", code: code || "server", text: "Keine Verbindung zum Server." };
-    }
-    if (status === 413) return { art: "netz", code: "gross", text: "Anfrage zu groß." };
+  function fehlerAuswerten(status, j, spr) {
+    var code = (j && typeof j.code === "string" && j.code) || "";
+    var server = (j && typeof j.fehler === "string" && j.fehler) || "";
+    var rest = j && typeof j.rest === "number" ? j.rest : null;
+    var f;
     var eingabe = ["format", "name", "art", "telefon_ungueltig", "einverstaendnis_fehlt", "pin_ungleich", "pin_einfach",
-      "startcode_fehlt"];
-    if (status === 400 && code === "ungueltig") {
-      return { art: "ende", code: code, text: text || "Dieser Chip wird nicht erkannt. Bitte im Büro melden." };
-    }
-    if (status === 400 && code === "einverstaendnis_fehlt") {
-      return { art: "eingabe", code: code, text: text || "Bitte bestätigen, dass wir dich per WhatsApp erreichen dürfen." };
-    }
-    if (status === 400 && eingabe.indexOf(code) >= 0) return { art: "eingabe", code: code, text: text || "Bitte Eingabe prüfen." };
-    if (code === "pin_falsch") {
-      var rest = j && typeof j.rest === "number" ? j.rest : null;
-      return { art: rest === 0 ? "neu_chip" : "eingabe", code: code, rest: rest, text: text || "PIN falsch." };
-    }
-    if (code === "startcode_falsch") {
-      return { art: "eingabe", code: code, text: text || "Startcode falsch oder abgelaufen. Bitte im Büro einen neuen holen." };
-    }
-    if (code === "geraet") {
-      return { art: "geraet", code: code, text: text || "Dieses Handy ist nicht mehr angemeldet. Bitte das Handy noch einmal an den Chip halten." };
-    }
-    if (code === "gesperrt") {
-      return { art: "ende", code: code, text: text || "Zu viele falsche Versuche. Bitte in 15 Minuten erneut – oder im Büro melden." };
-    }
-    if (code === "nicht_freigeschaltet") {
-      return { art: "ende", code: code, text: text || "Du bist nicht freigeschaltet. Bitte im Büro melden." };
-    }
-    if (code === "pin_vorhanden") {
-      return { art: "eingabe", code: code, text: text || "Für diesen Namen ist schon eine PIN festgelegt – bitte im Büro melden." };
-    }
-    if (status === 410 || code === "abgelaufen" || code === "ticket") {
-      return { art: "neu_chip", code: code || "abgelaufen", text: "Zeit abgelaufen. Bitte das Handy noch einmal an den Chip halten." };
-    }
-    if (code === "verbraucht" || code === "veraltet") {
-      return { art: "neu_chip", code: code, text: text || "Dieser Code ist schon verbraucht. Bitte das Handy noch einmal an den Chip halten." };
-    }
-    if (code === "versuche") {
-      return { art: "neu_chip", code: code, text: text || "Zu viele Versuche. Bitte das Handy noch einmal an den Chip halten." };
-    }
-    if (code === "name_existiert") {
-      return { art: "ende", code: code, text: text || "Dieser Name ist schon angemeldet. Bitte im Büro melden." };
-    }
-    if (status === 429) return { art: "ende", code: code || "rate", text: text || "Zu viele Versuche. Bitte später erneut." };
-    return { art: "ende", code: code || "unbekannt", text: text || "Das hat nicht geklappt. Bitte im Büro melden." };
+      "startcode_fehlt", "startcode_falsch", "pin_vorhanden"];
+    if (status === 0 || status >= 500 || code === "server") f = { art: "netz", code: code || "server" };
+    else if (status === 413) f = { art: "netz", code: "zu_gross" };
+    else if (status === 400 && code === "ungueltig") f = { art: "ende", code: code };
+    else if (code === "pin_falsch") f = { art: rest === 0 ? "neu_chip" : "eingabe", code: code, rest: rest };
+    else if (code === "anmeldung_falsch") f = { art: rest === 0 || rest === null ? "neu_chip" : "eingabe", code: code, rest: rest };
+    else if ((status === 400 || status === 401 || status === 409) && eingabe.indexOf(code) >= 0) f = { art: "eingabe", code: code };
+    else if (code === "geraet") f = { art: "geraet", code: code };
+    else if (code === "gesperrt" || code === "nicht_freigeschaltet") f = { art: "ende", code: code };
+    else if (status === 410 || code === "abgelaufen" || code === "ticket") f = { art: "neu_chip", code: code || "abgelaufen" };
+    else if (code === "verbraucht" || code === "veraltet" || code === "versuche") f = { art: "neu_chip", code: code };
+    else if (status === 429) f = { art: "ende", code: code || "rate" };
+    else f = { art: "ende", code: code || "unbekannt" };
+    f.server = server;
+    if (f.rest === undefined) f.rest = rest;
+    f.text = fehlerText(f, spr);
+    return f;
   }
 
   /** Text nach dem Nachreichen. „im Büro geprüft“ nur fuer Eintraege mit pruefen: true. */
-  function nachreichenText(z) {
-    var t = [];
+  function nachreichenText(z, s) {
+    s = sprache(s);
+    var a = [];
     var pr = z.pruefen || 0;
-    if (z.gesendet === 1) {
-      t.push(pr ? "1 gespeicherter Stempel wurde gesendet – er wird im Büro geprüft." : "1 gespeicherter Stempel wurde gesendet.");
-    } else if (z.gesendet > 1) {
-      t.push(z.gesendet + " gespeicherte Stempel wurden gesendet" + (
-        pr >= z.gesendet ? " – sie werden im Büro geprüft." :
-        pr === 1 ? ", davon wird 1 im Büro geprüft." :
-        pr > 1 ? ", davon werden " + pr + " im Büro geprüft." : "."));
+    var n = z.gesendet || 0;
+    if (n === 1) a.push(t(s, pr ? "g_1_p" : "g_1"));
+    else if (n > 1) {
+      a.push(pr >= n ? t(s, "g_n_alle", { n: n }) : pr === 1 ? t(s, "g_n_p1", { n: n }) :
+        pr > 1 ? t(s, "g_n_pn", { n: n, p: pr }) : t(s, "g_n", { n: n }));
     }
     var sp = z.spaeter || 0;
-    if (sp === 1) t.push("1 gespeicherter Stempel wird in ein paar Minuten noch einmal gesendet.");
-    else if (sp > 1) t.push(sp + " gespeicherte Stempel werden in ein paar Minuten noch einmal gesendet.");
-    var nicht = z.verbraucht + z.abgewiesen;
-    if (nicht === 1) t.push("1 gespeicherter Stempel konnte nicht mehr angenommen werden – bitte im Büro melden, falls er fehlt.");
-    else if (nicht > 1) t.push(nicht + " gespeicherte Stempel konnten nicht mehr angenommen werden – bitte im Büro melden, falls einer fehlt.");
-    return t.join(" ");
+    if (sp === 1) a.push(t(s, "sp_1"));
+    else if (sp > 1) a.push(t(s, "sp_n", { n: sp }));
+    var nicht = (z.verbraucht || 0) + (z.abgewiesen || 0);
+    if (nicht === 1) a.push(t(s, "nicht_1"));
+    else if (nicht > 1) a.push(t(s, "nicht_n", { n: nicht }));
+    return a.join(" ");
   }
 
-  function anzahlText(n) { return n === 1 ? "1 gespeicherter Stempel" : n + " gespeicherte Stempel"; }
+  function anzahlText(n, s) { return n === 1 ? t(sprache(s), "anzahl_1") : t(sprache(s), "anzahl_n", { n: n }); }
 
   g.StzLogik = {
     SCHLANGE_MAX: SCHLANGE_MAX,
@@ -319,10 +392,19 @@
     tokenOk: tokenOk,
     nameBereinigen: nameBereinigen,
     telefonNormalisieren: telefonNormalisieren,
+    ziffernWestlich: ziffernWestlich,
     artText: artText,
     fertigTitel: fertigTitel,
     fehlerAuswerten: fehlerAuswerten,
+    fehlerText: fehlerText,
     nachreichenText: nachreichenText,
-    anzahlText: anzahlText
+    anzahlText: anzahlText,
+    SPRACHEN: SPRACHEN,
+    spracheOk: spracheOk,
+    sprachInfo: sprachInfo,
+    textRoh: textRoh,
+    t: t,
+    spracheAusTag: spracheAusTag,
+    spracheErmitteln: spracheErmitteln
   };
 })(typeof window !== "undefined" ? window : globalThis);
