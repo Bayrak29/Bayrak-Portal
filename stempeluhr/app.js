@@ -6,6 +6,10 @@
 // Startcode mehr). 25.11.2026: nie mehr automatisch stempeln – Zustand („Du bist gerade eingestempelt (seit 07:47)“)
 // + Knopf Einstempeln/Ausstempeln, auch gleich nach der Anmeldung (dann ohne PIN-Feld). Sprache per Flagge oben rechts (de, tr, ro, ru, fa, prs; fa/prs rechts-nach-links), alle Texte
 // aus texte.js; Fehler werden nur nach `code` uebersetzt.
+// 26.11.2026 (PLAN-SICHERHEIT.md Kap. 7): Pflichthinweis mit Haken bei der Anmeldung, Live-Foto mit der Frontkamera
+// (kein Datei-Feld, keine Galerie), wenn der Server es verlangt (foto/foto_bei_pin), Face ID / Fingerabdruck (Passkey,
+// rpId bayrak29.github.io) einrichten und zum Stempeln benutzen; Rueckfall immer mit PIN. Kamera verweigert -> trotzdem
+// stempeln (Server markiert). Ob und welche Geste: entscheidet NUR der Server.
 (function () {
   // B5: nie eingebettet (iframe) laufen – Schutz gegen Clickjacking (GitHub Pages kann kein frame-ancestors senden).
   // Nichts anzeigen, nichts senden, keinen Chip-Code lesen.
@@ -28,7 +32,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var BILDSCHIRME = ["s-laden", "s-start", "s-ok", "s-pin", "s-wer", "s-telefon", "s-neu", "s-offline", "s-fehler",
-    "s-sprache"];
+    "s-sprache", "s-kamera", "s-passkey"];
   var MIT_SCHLANGE = { "s-start": 1, "s-ok": 1, "s-fehler": 1 };
   var aktuell = "s-laden";
 
@@ -79,6 +83,11 @@
   }
 
   var pinSpeicher = null; // { pin, bis } – nur Arbeitsspeicher
+  // 26.11.2026c: Geraet mit Face ID / Fingerabdruck reicht nicht per PIN nach, sondern mit einer Bestaetigung. Der
+  // Server meldet das (passkey_noetig) und schickt eine Challenge mit; die Bestaetigung startet im Klick auf die Karte.
+  var pkNachNoetig = false; // dieses Handy braucht Face ID zum Nachreichen (nur Arbeitsspeicher)
+  var pkNach = null; // { opt: {challenge, erlaubt}, zeit } – Challenge vom Server, einmal verwendbar
+  var PK_NACH_MS = 240000; // Server: 300 s gueltig
   function pinMerken(pin) { pinSpeicher = { pin: pin, bis: Date.now() + PIN_MERKEN_MS }; }
   function pinGemerkt() {
     if (pinSpeicher && Date.now() < pinSpeicher.bis) return pinSpeicher.pin;
@@ -133,6 +142,8 @@
     $("sprache-flagge").textContent = info.flagge;
     $("sprache-name").textContent = info.name;
     $("ds-massgeblich").classList.toggle("versteckt", sprache === "de");
+    $("neu-hinweis-mg").classList.toggle("versteckt", sprache === "de");
+    $("tel-hinweis-mg").classList.toggle("versteckt", sprache === "de");
     try { document.title = T("titel"); } catch (e) { /* egal */ }
     Object.keys(dyn).forEach(function (id) { $(id).textContent = dyn[id](); });
     schlangeAnzeigen();
@@ -217,13 +228,22 @@
   }
 
   // ---------- Aktueller Vorgang (ein Chip-Code) ----------
-  var v = null; // { p, m, vorgang, handyzeit, ticket, bis, timer, unsicher, versuche }
+  // tipp = letzte Antwort mit Bildschirm (tippen "pin"/"anmelden" bzw. Anmeldung "bereit"): foto, foto_bei_pin, passkey …
+  // foto = Ergebnis fuer DIESES Ticket: "ok" | "verweigert" | "fehler" | "fehlt" (null = noch keins gemacht)
+  var v = null; // { p, m, vorgang, handyzeit, ticket, bis, timer, unsicher, versuche, tipp, ort, foto, fotoVerlangt, … }
   var nochmal = null;
 
   function vorgangEnde() {
     if (v && v.timer) clearTimeout(v.timer);
-    if (v) { v.ticket = null; v.bis = 0; v.timer = null; v.pinAnmeldung = null; }
+    if (v) {
+      v.ticket = null; v.bis = 0; v.timer = null; v.pinAnmeldung = null;
+      v.foto = null; v.fotoVerlangt = false; v.info = null; v.pinStatt = false;
+    }
   }
+
+  // ---------- Face ID / Fingerabdruck (Passkey) ----------
+  var kannPk = false; // Handy hat Plattform-Passkey mit Nutzerpruefung (einmal beim Start ermittelt)
+  var pkPruefung = L.kannPasskey(window, navigator).then(function (x) { kannPk = x === true; return kannPk; });
 
   function ablaufSetzen(sek) {
     if (v.timer) clearTimeout(v.timer);
@@ -237,7 +257,7 @@
     if (!v || !v.ticket || beschaeftigt) return false;
     if (Date.now() <= v.bis) return false;
     if (aktuell !== "s-pin" && aktuell !== "s-wer" && aktuell !== "s-telefon" && aktuell !== "s-neu" &&
-        aktuell !== "s-fehler") return false;
+        aktuell !== "s-fehler" && aktuell !== "s-passkey") return false;
     zeigeFehler({ art: "neu_chip", code: "abgelaufen", rest: null, server: "" });
     return true;
   }
@@ -254,6 +274,10 @@
   }
 
   function zeigeOk(j) {
+    // Foto war verlangt, kam aber nicht an (verweigert/Kamera kaputt/Netz) -> orange Zeile; der Server hat trotzdem gestempelt
+    var ohneFoto = !!v && !!v.fotoVerlangt && (j.foto_ok === false || (j.foto_ok !== true && v.foto !== "ok"));
+    // nach einem PIN-Stempel einmal je Seitenaufruf anbieten: „Face ID einrichten?“ (Kap. 7.3)
+    var anbieten = !!v && v.weg === "pin" && !!v.tipp && v.tipp.passkey_anbieten === true && kannPk && !pkAngeboten;
     vorgangEnde();
     vorgangAusSchlange();
     if (j.geraet) geraetSetzen(j.geraet);
@@ -269,7 +293,12 @@
       return schon ? T("schon_kurz") + (hallo ? " " + hallo : "") : hallo;
     });
     $("ok-wartet").classList.toggle("versteckt", !j.wartet);
+    $("ok-ohne-foto").classList.toggle("versteckt", !ohneFoto);
+    $("ok-freigabe").classList.toggle("versteckt", j.wartet_freigabe !== true);
+    $("ok-passkey").classList.add("versteckt");
+    feldFehler("ok-info", null);
     zeige("s-ok");
+    if (anbieten) passkeyAnbieten();
   }
 
   // ---------- 1. tippen ----------
@@ -282,7 +311,8 @@
     sperren(true);
     mitWiederholung(daten, 2).then(function (e) {
       sperren(false);
-      if (e.status === 200) { tippenAntwort(e.j); return; }
+      // erst wenn feststeht, ob das Handy Face ID / Fingerabdruck kann (dauert nur Millisekunden)
+      if (e.status === 200) { pkPruefung.then(function () { tippenAntwort(e.j); }); return; }
       var f = fehlerAus(e);
       // Anfrage kam evtl. an (nur die Antwort fehlt) -> Code evtl. reserviert, erst nach Ablauf nachreichen
       if (f.art === "netz") { offlineSpeichern(true, !!g); return; }
@@ -307,6 +337,8 @@
   var mitPinFeld = true;
   function stempelBildschirm(j, mitPin) {
     mitPinFeld = mitPin;
+    v.tipp = j;
+    var pk = knopfPlan().weg === "passkey"; // Face ID statt PIN (Rueckfall „Mit PIN stempeln“)
     var name = j.name || j.vorname || "";
     var z = L.zustand(j);
     textSetzen("pin-hallo", function () { return T("hallo", { name: name }); });
@@ -314,13 +346,26 @@
     $("pin-zustand").className = "zustand mitte " + (z.ein ? "ein" : "aus");
     textSetzen("pin-los", function () { return T(z.knopf); });
     $("pin-los").className = "knopf gross-knopf" + (z.ein ? " aus" : "");
-    $("pin-block").classList.toggle("versteckt", !mitPin);
+    $("pin-block").classList.toggle("versteckt", !mitPin || pk);
+    $("pin-statt").classList.toggle("versteckt", !pk);
+    $("pin-wartet").classList.toggle("versteckt", !(j.wartet_freigabe === true || j.freigabe === "wartet"));
+    var info = v.info; // einmalige Meldung (z. B. „Ohne Foto weiter …“, „Face ID ist eingerichtet …“)
+    v.info = null;
+    feldFehler("pin-info", info ? function () { return T(info); } : null);
     $("pin").value = "";
     feldFehler("pin-fehler", null);
-    var n = mitPin && geraet() ? schlangeBereit().length : 0;
+    var n = mitPin && !pk && geraet() ? schlangeBereit().length : 0;
     feldFehler("pin-schlange", n ? function () { return T("pin_schlange", { anzahl: L.anzahlText(n, sprache) }); } : null);
     zeige("s-pin");
-    if (mitPin) $("pin").focus();
+    if (mitPin && !pk) $("pin").focus();
+  }
+
+  /** Was der Knopf auf dem Stempel-Bildschirm tut: weg passkey/pin/anmeldung/passkey_anmeldung + Geste (oder null). */
+  function knopfPlan() {
+    return L.naechsterSchritt(v.tipp, {
+      knopf: true, kannPasskey: kannPk, pinStatt: !!v.pinStatt, passkeyAnmeldung: !!v.passkeyAnmeldung,
+      mitPinFeld: mitPinFeld, fotoErledigt: !!v.foto
+    });
   }
 
   function tippenAntwort(j) {
@@ -329,6 +374,9 @@
       personSprache(j);
       v.ticket = j.ticket;
       v.pinAnmeldung = null;
+      v.passkeyAnmeldung = false;
+      v.foto = null;
+      v.ort = typeof j.ort === "string" ? j.ort : "";
       ablaufSetzen(j.gueltig_sek);
       bildschirmGesehen();
       stempelBildschirm(j, true);
@@ -336,6 +384,8 @@
     }
     if (j.schritt === "anmelden" && L.tokenOk(j.ticket)) {
       // Seit 24.11.2026: keine Namensliste (Feld "namen" wird ignoriert), genau zwei Knoepfe
+      v.tipp = j; // passkey_anmelden (Challenge fuer „Mit Face ID / Fingerabdruck anmelden“)
+      v.ort = typeof j.ort === "string" ? j.ort : "";
       v.ticket = j.ticket;
       ablaufSetzen(j.gueltig_sek);
       bildschirmGesehen();
@@ -367,7 +417,7 @@
         v.ticket = e.j.ticket;
         ablaufSetzen(e.j.gueltig_sek);
         bildschirmGesehen();
-        stempeln(pin);
+        stempeln({ pin: pin });
         return;
       }
       if (e.status === 200) { tippenAntwort(e.j); return; }
@@ -380,6 +430,11 @@
   function pinLos() {
     if (beschaeftigt || ablaufPruefen()) return;
     if (!v || !v.ticket) { zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" }); return; }
+    var plan = knopfPlan();
+    // Face ID / Fingerabdruck: navigator.credentials.get MUSS direkt im Klick laufen (Safari verlangt die Geste)
+    if (plan.weg === "passkey") { passkeyStempeln(plan.geste); return; }
+    // nach „Mit Face ID anmelden“ (Speicher geloescht): keine PIN bekannt, Foto ist Pflicht (Server)
+    if (plan.weg === "passkey_anmeldung") { fotoDann(plan.geste, function () { stempeln({}); }); return; }
     var pin;
     if (!mitPinFeld) {
       pin = v && v.pinAnmeldung;
@@ -397,7 +452,8 @@
     sperren(true);
     vorher.then(function (r) {
       sperren(false);
-      if (r && r.fehler && r.fehler.art !== "netz") {
+      // passkey_noetig: gespeicherte Stempel warten auf Face ID (Karte danach), der aktuelle Stempel geht trotzdem
+      if (r && r.fehler && r.fehler.art !== "netz" && r.fehler.code !== "passkey_noetig") {
         if (r.fehler.code === "pin_falsch") {
           pinFeldZeigen();
           $("pin").value = "";
@@ -407,7 +463,27 @@
         zeigeFehler(r.fehler);
         return;
       }
-      stempeln(pin);
+      // Foto vor dem Stempeln (nur wenn der Server es verlangt: ohne Passkey immer, sonst Stichprobe/PIN-Rueckfall)
+      fotoDann(plan.geste, function () { stempeln({ pin: pin }); });
+    });
+  }
+
+  /** Knopf im Passkey-Modus: Face ID / Fingerabdruck -> (Foto) -> stempeln mit der Bestaetigung statt PIN. */
+  function passkeyStempeln(geste) {
+    var opt = L.anmeldeOptionenWandeln(v.tipp && v.tipp.passkey);
+    var p;
+    try { p = navigator.credentials.get({ publicKey: opt, mediation: "optional" }); } catch (e) { p = Promise.reject(e); }
+    feldFehler("pin-fehler", null);
+    sperren(true);
+    Promise.resolve(p).then(function (cred) {
+      sperren(false);
+      var json = L.credentialZuJson(cred);
+      if (!json) { feldFehlerT("pin-fehler", "passkey_abbruch"); return; }
+      fotoDann(geste, function () { stempeln({ passkey: json }); });
+    }, function () {
+      // abgebrochen / nicht erkannt: gleicher Bildschirm, Knopf = nochmal, darunter „Mit PIN stempeln“
+      sperren(false);
+      feldFehlerT("pin-fehler", "passkey_abbruch");
     });
   }
 
@@ -419,24 +495,30 @@
     $("pin-block").classList.remove("versteckt");
   }
 
-  function stempeln(pin) {
+  /** auth = {pin} | {passkey: Bestaetigung als JSON} | {} (nach „Mit Face ID anmelden“). */
+  function stempeln(auth) {
     if (ablaufPruefen()) return;
     var g = geraet();
     if (!g) { zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" }); return; }
+    var daten = { aktion: "stempeln", ticket: v.ticket, geraet: g };
+    if (auth.pin) daten.pin = auth.pin;
+    if (auth.passkey) daten.passkey = auth.passkey;
+    // Kamera verweigert -> Server stempelt trotzdem und markiert „Foto verweigert“ (sonst „Foto fehlt“)
+    if (v.foto === "verweigert") daten.foto_status = "verweigert";
+    v.weg = auth.passkey ? "passkey" : auth.pin ? "pin" : "ohne";
     sperren(true);
-    mitWiederholung({ aktion: "stempeln", ticket: v.ticket, geraet: g, pin: pin }, 2).then(function (e) {
+    mitWiederholung(daten, 2).then(function (e) {
       sperren(false);
-      if (e.status === 200) { pinMerken(pin); zeigeOk(e.j); return; }
+      if (e.status === 200) { if (auth.pin) pinMerken(auth.pin); zeigeOk(e.j); return; }
       var f = fehlerAus(e);
       if (f.art === "netz") {
         v.unsicher = true;
-        zeigeFehler(f, function () { zeige("s-pin"); stempeln(pin); });
+        zeigeFehler(f, function () { zeige("s-pin"); stempeln(auth); });
         return;
       }
-      if (f.code === "verbraucht" && (v.unsicher || e.wiederholt)) { ergebnisNachholen(pin); return; }
+      if (f.code === "verbraucht" && (v.unsicher || e.wiederholt)) { ergebnisNachholen(auth.pin || null); return; }
       if (f.art === "eingabe") {
-        pinFeldZeigen();
-        $("pin").value = "";
+        if (!auth.passkey) { pinFeldZeigen(); $("pin").value = ""; }
         feldFehlerF("pin-fehler", f);
         zeige("s-pin");
         return;
@@ -453,9 +535,12 @@
     var pin = L.ziffernWestlich($("tel-pin").value.trim());
     if (!L.telefonNormalisieren(nummer)) { feldFehlerT("tel-fehler", "f_telefon_ungueltig"); return; }
     if (!L.pinFormatOk(pin)) { feldFehlerT("tel-fehler", "pin_eingeben"); return; }
+    if (!$("tel-hinweis").checked) { feldFehlerT("tel-fehler", "hinweis_fehlt"); return; }
     feldFehler("tel-fehler", null);
     // ohne_stempel (25.11.2026): Anmelden stempelt nicht mehr – danach Zustand + Knopf (schritt "bereit")
-    var daten = { aktion: "anmelden_telefon", ticket: v.ticket, telefon: nummer, pin: pin, ohne_stempel: true };
+    // hinweis_ok/hinweis_version (26.11.2026): Pflichthinweis Fotos/Fremdstempeln bestaetigt (Server speichert Fassung + Zeit)
+    var daten = { aktion: "anmelden_telefon", ticket: v.ticket, telefon: nummer, pin: pin, ohne_stempel: true,
+      hinweis_ok: true, hinweis_version: L.hinweisVersion() };
     var g = geraet();
     if (g) daten.geraet = g;
     sperren(true);
@@ -490,9 +575,10 @@
       geraetSetzen(j.geraet);
       personSprache(j);
       v.pinAnmeldung = pin;
+      v.passkeyAnmeldung = false;
       ablaufSetzen(j.gueltig_sek);
       bildschirmGesehen();
-      stempelBildschirm(j, false);
+      bereitAnnehmen(j);
     } else if (j.schritt === "bereit") {
       // Pruefung A4: "bereit" ohne gueltiges Geraete-Token ist NICHT gestempelt -> nie „Eingestempelt um …“ zeigen
       zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" });
@@ -502,6 +588,255 @@
     }
     // Offline-Stempel von vor der Anmeldung jetzt mitsenden (vor dem Knopf; pinLos wartet ggf. darauf)
     if (geraet() && schlangeBereit().length) nachreichenAlles(pin);
+  }
+
+  /** Anmeldung angenommen ("bereit"): Einrichtung (Foto -> ggf. Face ID) und danach der Stempel-Bildschirm ohne PIN-Feld. */
+  function bereitAnnehmen(j) {
+    if (typeof j.ort === "string") v.ort = j.ort;
+    v.tipp = j;
+    v.foto = null;
+    v.pkGefragt = false;
+    mitPinFeld = false;
+    einrichtungWeiter();
+  }
+
+  function einrichtungWeiter() {
+    var s = L.naechsterSchritt(v.tipp, { fotoErledigt: !!v.foto, kannPasskey: kannPk, passkeyGefragt: !!v.pkGefragt });
+    if (s.schritt === "foto") { fotoDann(s.geste, einrichtungWeiter); return; }
+    if (s.schritt === "passkey") { passkeyEinrichtungZeigen(); return; }
+    stempelBildschirm(v.tipp, false);
+  }
+
+  // ---------- Foto (Live-Kamera, Kap. 7.3) ----------
+  /**
+   * Foto zum aktuellen Ticket, wenn geste gesetzt und noch keins gemacht wurde; danach weiter(). Wirft nie.
+   * Ergebnis in v.foto: "ok" | "verweigert" | "fehler" | "fehlt" (Hochladen ging nicht). Ohne Foto wird trotzdem
+   * gestempelt – der Server markiert den Stempel fuer das Buero.
+   */
+  function fotoDann(geste, weiter) {
+    if (!geste || v.foto) { weiter(); return; }
+    v.fotoVerlangt = true;
+    var ticket = v.ticket, g = geraet();
+    sperren(true);
+    fotoMachen(geste, v.ort).then(function (r) {
+      zeige("s-laden");
+      var daten = { aktion: "foto", ticket: ticket, geraet: g };
+      if (r.bild) { daten.bild = r.bild; daten.geste = geste; } else daten.fehlt = r.fehlt;
+      return senden(daten).then(function (e) {
+        sperren(false);
+        if (r.bild) {
+          var code = e.j && e.j.code;
+          // kein_foto_noetig (Fotos abgeschaltet) / foto_schon (schon eins zu diesem Ticket) = kein Mangel
+          v.foto = e.status === 200 || code === "kein_foto_noetig" || code === "foto_schon" ? "ok" : "fehlt";
+        } else {
+          v.foto = r.fehlt === "verweigert" ? "verweigert" : "fehler";
+        }
+        if (v.foto !== "ok") v.info = v.foto === "verweigert" ? "kam_verweigert" : "kam_fehler";
+        weiter();
+      });
+    });
+  }
+
+  /**
+   * Frontkamera live: Vorschau, Geste, Countdown 3-2-1, Bild auf Canvas (480 px, NICHT gespiegelt), Band mit
+   * Datum/Uhrzeit/Stempelpunkt/Geste, JPEG <= 110 KB. Kein Datei-Feld, keine Galerie. Promise {bild} | {fehlt}.
+   */
+  function fotoMachen(geste, ort) {
+    return new Promise(function (fertig) {
+      var md = navigator.mediaDevices;
+      if (!md || typeof md.getUserMedia !== "function") { fertig({ fehlt: "fehler" }); return; }
+      var video = $("kam-video");
+      var strom = null, vorbei = false, uhr = null;
+      function stoppen() {
+        if (strom) {
+          try { strom.getTracks().forEach(function (s) { s.stop(); }); } catch (e) { /* egal */ }
+        }
+        strom = null;
+        try { video.srcObject = null; } catch (e) { /* egal */ }
+      }
+      function ende(r) {
+        if (vorbei) return;
+        vorbei = true;
+        clearTimeout(uhr);
+        stoppen();
+        $("kam-zahl").textContent = "";
+        fertig(r);
+      }
+      var gesteText = "geste_" + geste; // geste_daumen | geste_zwei | geste_hand | geste_finger
+      textSetzen("kam-geste", function () { return T("kam_gleich", { geste: T(gesteText) }); });
+      $("kam-zahl").textContent = "";
+      zeige("s-kamera");
+      // Erlaubnis-Frage des Handys: bis 30 s warten, danach ohne Foto weiter
+      uhr = setTimeout(function () { ende({ fehlt: "fehler" }); }, 30000);
+      var p;
+      try {
+        p = md.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      } catch (e) { p = Promise.reject(e); }
+      Promise.resolve(p).then(function (s) {
+        if (vorbei) {
+          try { s.getTracks().forEach(function (x) { x.stop(); }); } catch (e) { /* egal */ }
+          return;
+        }
+        strom = s;
+        try { video.srcObject = s; } catch (e) { ende({ fehlt: "fehler" }); return; }
+        try {
+          var pl = video.play && video.play();
+          if (pl && typeof pl.catch === "function") pl.catch(function () { /* autoplay: Bild kommt trotzdem */ });
+        } catch (e) { /* egal */ }
+        clearTimeout(uhr);
+        uhr = setTimeout(function () { ende({ fehlt: "fehler" }); }, 10000); // 10 s ohne Bild -> fehler
+        warteAufBild();
+      }, function (e) {
+        var n = e && e.name;
+        ende({ fehlt: n === "NotAllowedError" || n === "SecurityError" ? "verweigert" : "fehler" });
+      });
+      function warteAufBild() {
+        if (vorbei) return;
+        if (video.readyState >= 2 && video.videoWidth > 0) { clearTimeout(uhr); zaehlen(3); return; }
+        setTimeout(warteAufBild, 100);
+      }
+      function zaehlen(n) {
+        if (vorbei) return;
+        if (n === 0) { aufnehmen(); return; }
+        $("kam-zahl").textContent = String(n);
+        try { if (typeof navigator.vibrate === "function") navigator.vibrate(60); } catch (e) { /* egal */ }
+        setTimeout(function () { zaehlen(n - 1); }, 1000);
+      }
+      function aufnehmen() {
+        try {
+          var vw = video.videoWidth, vh = video.videoHeight || Math.round(video.videoWidth * 0.75);
+          var w = Math.min(L.FOTO_BREITE, vw), h = Math.max(1, Math.round(w * vh / vw));
+          var c = document.createElement("canvas");
+          c.width = w;
+          c.height = h;
+          var ctx = c.getContext && c.getContext("2d");
+          if (!ctx) { ende({ fehlt: "fehler" }); return; }
+          ctx.drawImage(video, 0, 0, w, h);
+          stoppen(); // Kamera sofort aus
+          var band = Math.max(22, Math.round(h * 0.08));
+          ctx.fillStyle = "rgba(0,0,0,0.6)";
+          ctx.fillRect(0, h - band, w, band);
+          ctx.fillStyle = "#fff";
+          ctx.font = Math.round(band * 0.6) + "px sans-serif";
+          ctx.textBaseline = "middle";
+          ctx.fillText(L.bildText(new Date(), ort, geste), 8, h - band / 2, w - 16);
+          var q = L.FOTO_QUALITAETEN[0];
+          for (var i = 0; i < 6; i++) {
+            var url = c.toDataURL("image/jpeg", q);
+            if (typeof url !== "string" || url.indexOf("data:image/jpeg;base64,") !== 0) break;
+            var b64 = url.slice(23);
+            var r = L.fotoQualitaet(Math.floor(b64.length * 3 / 4), q);
+            if (r.ok) { ende({ bild: b64 }); return; }
+            if (r.aufgeben) break;
+            q = r.q;
+          }
+          ende({ fehlt: "fehler" });
+        } catch (e) { ende({ fehlt: "fehler" }); }
+      }
+    });
+  }
+
+  // ---------- Face ID / Fingerabdruck einrichten ----------
+  /** Registrier-Optionen holen (Aktion passkey_optionen). fertig(publicKey-Objekt | null). */
+  function passkeyOptionenHolen(fertig) {
+    var g = geraet();
+    if (!g) { fertig(null); return; }
+    senden({ aktion: "passkey_optionen", geraet: g }).then(function (e) {
+      fertig(e.status === 200 ? L.registrierOptionenWandeln(e.j) : null);
+    });
+  }
+
+  /**
+   * navigator.credentials.create – MUSS direkt im Klick aufgerufen werden (Optionen vorher geholt).
+   * fertig("fertig" | "schon" | "abbruch" | "nicht"). "schon" = auf dem Handy liegt der Zugang einer anderen Person.
+   */
+  function passkeyErstellen(opt, fertig) {
+    var p;
+    try { p = navigator.credentials.create({ publicKey: opt }); } catch (e) { p = Promise.reject(e); }
+    sperren(true);
+    Promise.resolve(p).then(function (cred) {
+      var json = L.credentialZuJson(cred);
+      if (!json) return "nicht";
+      return senden({ aktion: "passkey_speichern", geraet: geraet(), antwort: json }).then(function (e) {
+        return e.status === 200 ? "fertig" : "nicht";
+      });
+    }, function (err) {
+      var n = err && err.name;
+      if (n === "InvalidStateError") {
+        return senden({ aktion: "passkey_speichern", geraet: geraet(), fehler: "schon_vorhanden" })
+          .then(function () { return "schon"; });
+      }
+      return n === "NotAllowedError" || n === "AbortError" ? "abbruch" : "nicht";
+    }).then(function (r) {
+      sperren(false);
+      fertig(r);
+    });
+  }
+
+  function passkeyMeldung(r) {
+    return r === "fertig" ? "passkey_fertig" : r === "schon" ? "passkey_schon" : r === "nicht" ? "passkey_nicht" : null;
+  }
+
+  var pkOpt = null; // vorab geholte Optionen fuer den Einrichtungs-Bildschirm
+  function passkeyEinrichtungZeigen() {
+    v.pkGefragt = true;
+    zeige("s-laden");
+    sperren(true);
+    passkeyOptionenHolen(function (opt) {
+      sperren(false);
+      pkOpt = opt;
+      if (!opt) { einrichtungWeiter(); return; }
+      zeige("s-passkey");
+    });
+  }
+
+  // Nach einem PIN-Stempel: einmal „Face ID einrichten?“ anbieten (Knopf auf dem Ergebnis-Bildschirm)
+  var pkAngeboten = false;
+  var okPkOpt = null;
+  function passkeyAnbieten() {
+    pkAngeboten = true;
+    passkeyOptionenHolen(function (opt) {
+      if (!opt || aktuell !== "s-ok") return;
+      okPkOpt = opt;
+      $("ok-passkey").classList.remove("versteckt");
+    });
+  }
+
+  // ---------- „Ich war schon angemeldet“ mit Face ID / Fingerabdruck (Speicher geloescht, gleiches Handy) ----------
+  function telPasskeyLos() {
+    if (beschaeftigt || ablaufPruefen() || !v || !v.ticket) return;
+    var opt = L.anmeldeOptionenWandeln(v.tipp && v.tipp.passkey_anmelden);
+    if (!opt) return;
+    delete opt.allowCredentials; // das Handy bietet den eigenen Zugang selbst an
+    var p;
+    try { p = navigator.credentials.get({ publicKey: opt, mediation: "optional" }); } catch (e) { p = Promise.reject(e); }
+    feldFehler("tel-fehler", null);
+    sperren(true);
+    Promise.resolve(p).then(function (cred) {
+      var json = L.credentialZuJson(cred);
+      if (!json) { sperren(false); feldFehlerT("tel-fehler", "passkey_abbruch"); return; }
+      return senden({ aktion: "anmelden_passkey", ticket: v.ticket, antwort: json }).then(function (e) {
+        sperren(false);
+        if (e.status === 200 && e.j.schritt === "bereit" && L.tokenOk(e.j.geraet)) {
+          geraetSetzen(e.j.geraet);
+          personSprache(e.j);
+          v.pinAnmeldung = null;
+          v.passkeyAnmeldung = true;
+          ablaufSetzen(e.j.gueltig_sek);
+          bildschirmGesehen();
+          bereitAnnehmen(e.j); // Foto ist hier Pflicht (Server: foto)
+          return;
+        }
+        if (e.status === 200) { zeigeFehler({ art: "neu_chip", schluessel: "chip_nochmal" }); return; }
+        var f = fehlerAus(e);
+        if (f.art === "netz") { zeigeFehler(f, function () { zeige("s-telefon"); }); return; }
+        if (f.art === "eingabe") { feldFehlerF("tel-fehler", f); return; }
+        zeigeFehler(f);
+      });
+    }, function () {
+      sperren(false);
+      feldFehlerT("tel-fehler", "passkey_abbruch");
+    });
   }
 
   // ---------- 4. Ich bin neu (auch: schon in der Liste, noch nie mit Nummer -> bisherige PIN) ----------
@@ -523,6 +858,7 @@
       !L.telefonNormalisieren(tel) ? "f_telefon_ungueltig" :
       !neuArt ? "f_art" :
       !$("neu-whatsapp").checked ? "e_whatsapp" :
+      !$("neu-hinweis").checked ? "hinweis_fehlt" :
       !L.pinFormatOk(pin) ? "e_pin_festlegen" :
       pin !== pin2 ? "f_pin_ungleich" :
       !L.pinErlaubt(pin) ? "f_pin_einfach" : "";
@@ -532,7 +868,9 @@
       aktion: "registrieren", ticket: v.ticket, vorname: vorname, nachname: nachname, art: neuArt,
       pin: pin, pin2: pin2, telefon: tel,
       whatsapp_ok: $("neu-whatsapp").checked === true, // Pflicht-Haekchen (oben geprueft), Server will genau true
-      ohne_stempel: true // 25.11.2026: erst per Knopf stempeln
+      ohne_stempel: true, // 25.11.2026: erst per Knopf stempeln
+      hinweis_ok: $("neu-hinweis").checked === true, // Pflicht-Haken (oben geprueft)
+      hinweis_version: L.hinweisVersion()
     };
     // Sprache nur mitschicken, wenn der Mitarbeiter sie SELBST per Flagge gewaehlt hat (nicht nur Handy-Sprache)
     // -> Stammliste (nur wenn dort noch keine steht)
@@ -591,8 +929,12 @@
   // ---------- 6. Nachreichen ----------
   var sendetSchlange = null; // laufendes Promise
 
-  /** Sendet die ganze Warteschlange (je 20). Ergebnis: {summe, fehler?}. Wirft nie. */
-  function nachreichenAlles(pin) {
+  /**
+   * Sendet die ganze Warteschlange (je 20). Ergebnis: {summe, fehler?}. Wirft nie.
+   * bestaetigung = Face-ID-Antwort (JSON) statt PIN: gilt fuer genau EINE Anfrage (Challenge einmal verwendbar).
+   * pin und bestaetigung leer: holt beim Server nur die Challenge (Antwort passkey_noetig).
+   */
+  function nachreichenAlles(pin, bestaetigung) {
     if (sendetSchlange) return sendetSchlange;
     var g = geraet();
     if (!g) return Promise.resolve({ summe: null });
@@ -602,9 +944,11 @@
     function runde() {
       // nur Eintraege, deren moegliche Reservierung abgelaufen ist; Notbremse gegen Endlosschleife
       var liste = schlangeBereit();
-      if (!liste.length || ++runden > 10) return Promise.resolve({ summe: summe });
+      if (!liste.length || ++runden > (bestaetigung ? 1 : 10)) return Promise.resolve({ summe: summe });
       var stueck = L.schlangeStueck(liste, groesse);
-      return mitWiederholung({ aktion: "nachreichen", geraet: g, pin: pin, eintraege: stueck }, 2).then(function (e) {
+      var daten = { aktion: "nachreichen", geraet: g, eintraege: stueck };
+      if (bestaetigung) { daten.passkey = bestaetigung; pkNach = null; } else if (pin) daten.pin = pin;
+      return mitWiederholung(daten, 2).then(function (e) {
         if (e.status === 200) {
           var r = L.schlangeNachErgebnis(schlange(), stueck, e.j.ergebnisse, Date.now());
           schlangeSpeichern(r.rest);
@@ -615,6 +959,10 @@
         var f = fehlerAus(e);
         if (f.art === "geraet") geraetLoeschen();
         if (f.code === "pin_falsch" || f.code === "gesperrt") pinSpeicher = null;
+        if (f.code === "passkey_noetig") {
+          pkNachNoetig = true;
+          pkNach = e.j && e.j.passkey && typeof e.j.passkey.challenge === "string" ? { opt: e.j.passkey, zeit: Date.now() } : null;
+        }
         return { summe: summe, fehler: f };
       });
     }
@@ -633,7 +981,7 @@
     var rest = schlange().length;
     textSetzen("schlange-info", function () {
       var t = r.summe ? L.nachreichenText(r.summe, sprache) : "";
-      if (r.fehler && rest) {
+      if (r.fehler && rest && r.fehler.code !== "passkey_noetig") {
         var warum = r.fehler.code === "pin_falsch" ? T("melden_pin") :
           r.fehler.art === "netz" ? T("melden_netz") : L.fehlerText(r.fehler, sprache);
         t = (t ? t + " " : "") + warum + " " + T("noch_nicht_gesendet", { anzahl: L.anzahlText(rest, sprache) });
@@ -654,6 +1002,13 @@
     var zeigen = n > 0 && !!geraet() && !!MIT_SCHLANGE[aktuell] && navigator.onLine !== false && !sendetSchlange;
     $("schlange-titel").textContent = n ? T("schlange_titel", { anzahl: L.anzahlText(n, sprache) }) : "";
     $("s-schlange").classList.toggle("versteckt", !zeigen);
+    // 26.11.2026c: Handy mit Face ID -> Knopf „Mit Face ID / Fingerabdruck senden“ statt PIN-Feld
+    ["schlange-hinweis", "schlange-pin-name", "schlange-pin", "schlange-los"].forEach(function (id) {
+      $(id).classList.toggle("versteckt", pkNachNoetig);
+    });
+    ["schlange-hinweis-pk", "schlange-passkey"].forEach(function (id) {
+      $(id).classList.toggle("versteckt", !pkNachNoetig);
+    });
     // Eintraege nach Funkloch beim "tippen": erst nach Ablauf der Reservierung sendbar
     var w = teil.warten.length;
     var wZeigen = w > 0 && !!geraet() && !!MIT_SCHLANGE[aktuell];
@@ -686,13 +1041,55 @@
       $("schlange-pin").value = "";
       if (!r.fehler) pinMerken(pin);
       else if (r.fehler.code === "pin_falsch") feldFehlerT("schlange-fehler", "pin_falsch_nochmal");
+      else if (r.fehler.code === "passkey_noetig") feldFehlerT("schlange-fehler", "f_passkey_noetig");
       schlangeAnzeigen();
+    });
+  }
+
+  /**
+   * 26.11.2026c: gespeicherte Stempel mit Face ID / Fingerabdruck senden. navigator.credentials.get MUSS direkt im
+   * Klick laufen -> nur mit einer schon geholten, frischen Challenge. Sonst erst holen und „noch einmal tippen“.
+   */
+  function schlangePasskeyLos() {
+    if (beschaeftigt) return;
+    feldFehler("schlange-fehler", null);
+    var opt = pkNach && Date.now() - pkNach.zeit < PK_NACH_MS ? L.anmeldeOptionenWandeln(pkNach.opt) : null;
+    if (!opt) {
+      pkNach = null;
+      sperren(true);
+      nachreichenAlles(null, null).then(function (r) {
+        sperren(false);
+        if (pkNach) feldFehlerT("schlange-fehler", "schlange_pk_nochmal");
+        else if (r.fehler && r.fehler.art !== "netz") feldFehlerF("schlange-fehler", r.fehler);
+        schlangeAnzeigen();
+      });
+      return;
+    }
+    var p;
+    try { p = navigator.credentials.get({ publicKey: opt, mediation: "optional" }); } catch (e) { p = Promise.reject(e); }
+    sperren(true);
+    Promise.resolve(p).then(function (cred) {
+      var json = L.credentialZuJson(cred);
+      if (!json) { sperren(false); feldFehlerT("schlange-fehler", "passkey_abbruch"); return; }
+      return nachreichenAlles(null, json).then(function (r) {
+        sperren(false);
+        if (r.fehler && (r.fehler.code === "passkey_falsch" || r.fehler.code === "passkey_noetig")) {
+          feldFehlerT("schlange-fehler", "passkey_abbruch");
+        }
+        schlangeAnzeigen();
+      });
+    }, function () {
+      // abgebrochen: Challenge ist beim Server noch unbenutzt -> derselbe Knopf geht noch einmal
+      sperren(false);
+      feldFehlerT("schlange-fehler", "passkey_abbruch");
     });
   }
 
   /** Automatisch: beim Oeffnen, bei „online“, alle 30 s – aber nur, wenn die PIN gerade bekannt ist. */
   function automatischNachreichen() {
     if (beschaeftigt || navigator.onLine === false || !geraet() || !schlangeBereit().length) { schlangeAnzeigen(); return; }
+    // Face ID noetig: nie automatisch (braucht den Klick), die Karte zeigt den Knopf
+    if (pkNachNoetig) { schlangeAnzeigen(); return; }
     var pin = pinGemerkt();
     if (pin) nachreichenAlles(pin);
     else schlangeAnzeigen();
@@ -766,7 +1163,40 @@
     if (ablaufPruefen()) return;
     feldFehler("tel-fehler", null);
     $("tel-pin").value = "";
+    // „Mit Face ID / Fingerabdruck anmelden“ nur, wenn das Handy es kann und der Server eine Challenge geschickt hat
+    $("tel-passkey").classList.toggle("versteckt",
+      !(kannPk && v && v.tipp && L.anmeldeOptionenWandeln(v.tipp.passkey_anmelden)));
     zeige("s-telefon");
+  });
+  $("tel-passkey").addEventListener("click", telPasskeyLos);
+  $("pin-statt").addEventListener("click", function () {
+    if (beschaeftigt || ablaufPruefen() || !v || !v.tipp) return;
+    v.pinStatt = true; // Rueckfall: PIN-Feld; Foto verlangt der Server dann immer (foto_bei_pin)
+    stempelBildschirm(v.tipp, true);
+  });
+  $("passkey-los").addEventListener("click", function () {
+    if (beschaeftigt || ablaufPruefen() || !pkOpt) return;
+    var opt = pkOpt;
+    pkOpt = null;
+    passkeyErstellen(opt, function (r) {
+      v.info = passkeyMeldung(r);
+      einrichtungWeiter();
+    });
+  });
+  $("passkey-nein").addEventListener("click", function () {
+    if (beschaeftigt || ablaufPruefen()) return;
+    pkOpt = null;
+    einrichtungWeiter();
+  });
+  $("ok-passkey").addEventListener("click", function () {
+    if (beschaeftigt || !okPkOpt) return;
+    var opt = okPkOpt;
+    okPkOpt = null;
+    $("ok-passkey").classList.add("versteckt");
+    passkeyErstellen(opt, function (r) {
+      var k = passkeyMeldung(r);
+      feldFehler("ok-info", k ? function () { return T(k); } : null);
+    });
   });
   $("tel-los").addEventListener("click", telefonLos);
   $("tel-zurueck").addEventListener("click", function () { if (!ablaufPruefen()) zeige("s-wer"); });
@@ -780,6 +1210,7 @@
   $("neu-mj").addEventListener("click", function () { artWaehlen("mj"); });
   $("neu-los").addEventListener("click", neuLos);
   $("schlange-los").addEventListener("click", schlangeLos);
+  $("schlange-passkey").addEventListener("click", schlangePasskeyLos);
   // Nach Funkloch: denselben Vorgang (gleiche vorgang) noch einmal "tippen" -> neues Ticket statt Warten
   $("offline-nochmal").addEventListener("click", function () {
     if (beschaeftigt || !v) return;

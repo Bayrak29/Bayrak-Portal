@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; worker-src 'self'; connect-src https://vzrvncxmleshwgtbvrtc.supabase.co/functions/v1/stempel; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; worker-src 'self'; media-src 'self' blob: mediastream:; connect-src https://vzrvncxmleshwgtbvrtc.supabase.co/functions/v1/stempel; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#1f3a5f">
 <title>Stempeluhr MTU</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <!-- Texte: Inhalt hier = Deutsch (Rueckfall ohne JavaScript). data-t = Schluessel in texte.js. -->
@@ -54,14 +54,21 @@
     <h2 id="ok-titel" class="mitte riesig"></h2>
     <p id="ok-text" class="mitte"></p>
     <p id="ok-wartet" class="hinweis versteckt" data-t="ok_wartet">Danke, du bist angemeldet – Mustafa bestätigt dich noch.</p>
+    <p id="ok-ohne-foto" class="hinweis orange-zeile versteckt" data-t="ok_ohne_foto">Ohne Foto gestempelt – das Büro prüft das.</p>
+    <p id="ok-freigabe" class="hinweis versteckt" data-t="ok_freigabe">Dein Handy wartet noch auf die Freigabe vom Büro.</p>
+    <button id="ok-passkey" class="knopf zweit versteckt" type="button" data-t="passkey_anbieten">Face ID einrichten? Dann brauchst du keine PIN mehr.</button>
+    <p id="ok-info" class="hinweis versteckt" role="status"></p>
     <p class="klein mitte" data-t="ok_schliessen">Du kannst die Seite jetzt schließen.</p>
   </section>
 
   <!-- Hallo + Zustand + (PIN) + Knopf Einstempeln/Ausstempeln. Gestempelt wird erst mit dem Knopf (25.11.2026).
-       Bekanntes Handy: mit PIN-Feld. Gleich nach „Mit Handynummer anmelden“ / „Ich bin neu“: ohne PIN-Feld. -->
+       Bekanntes Handy: mit PIN-Feld. Gleich nach „Ich war schon angemeldet“ / „Ich bin neu“: ohne PIN-Feld.
+       26.11.2026: mit Face ID / Fingerabdruck (Passkey) ohne PIN-Feld; Foto, wenn der Server es verlangt. -->
   <section id="s-pin" class="karte versteckt">
     <h2 id="pin-hallo" class="mitte"></h2>
     <p id="pin-zustand" class="zustand mitte"></p>
+    <p id="pin-wartet" class="hinweis versteckt" data-t="wartet_freigabe">Dein Handy wird gerade vom Büro freigegeben. Du kannst trotzdem stempeln.</p>
+    <p id="pin-info" class="hinweis versteckt" role="status"></p>
     <div id="pin-block">
       <label for="pin" class="feldname mitte" data-t="pin_feld">Deine PIN</label>
       <input id="pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" dir="ltr">
@@ -69,23 +76,56 @@
     <p id="pin-fehler" class="fehlertext versteckt" role="alert"></p>
     <p id="pin-schlange" class="klein mitte versteckt"></p>
     <button id="pin-los" class="knopf gross-knopf" type="button">Einstempeln</button>
+    <!-- Passkey-Modus (Face ID / Fingerabdruck): Rueckfall mit PIN, dann immer mit Foto (Server: foto_bei_pin) -->
+    <button id="pin-statt" class="link versteckt" type="button" data-t="pin_statt">Mit PIN stempeln</button>
+  </section>
+
+  <!-- Live-Foto mit der Frontkamera (kein Hochladen aus der Galerie, kein Datei-Feld). Ausloesen automatisch. -->
+  <section id="s-kamera" class="karte versteckt">
+    <h2 class="mitte" data-t="kam_titel">Gleich wird ein Foto gemacht</h2>
+    <p id="kam-geste" class="mitte gross"></p>
+    <div class="kam-rahmen">
+      <video id="kam-video" playsinline muted autoplay></video>
+      <div id="kam-zahl" class="kam-zahl" aria-live="assertive"></div>
+    </div>
+    <p class="klein mitte" data-t="kam_tipp">Fragt das Handy nach der Kamera, bitte „Erlauben“ antippen.</p>
+  </section>
+
+  <!-- Face ID / Fingerabdruck einrichten (nur wenn das Handy es kann) -->
+  <section id="s-passkey" class="karte versteckt">
+    <div class="symbol">🔐</div>
+    <h2 class="mitte" data-t="passkey_titel">Face ID / Fingerabdruck einrichten</h2>
+    <p data-t="passkey_text">Dann brauchst du beim Stempeln keine PIN mehr. Dein Gesicht bzw. Fingerabdruck bleibt im Handy – wir bekommen davon nichts.</p>
+    <button id="passkey-los" class="knopf gross-knopf" type="button" data-t="passkey_knopf">Face ID / Fingerabdruck einrichten</button>
+    <button id="passkey-nein" class="link" type="button" data-t="passkey_geht_nicht">Geht nicht</button>
   </section>
 
   <!-- Unbekanntes Handy: genau zwei grosse Knoepfe (keine Namensliste) -->
   <section id="s-wer" class="karte versteckt">
     <h2 class="mitte" data-t="wer_titel">Dein Handy ist hier noch nicht angemeldet</h2>
-    <button id="wer-telefon" class="knopf riesen-knopf" type="button" data-t="wer_telefon">Mit Handynummer anmelden</button>
+    <button id="wer-telefon" class="knopf riesen-knopf" type="button" data-t="wer_telefon">Ich war schon angemeldet</button>
     <button id="wer-neu" class="knopf zweit riesen-knopf" type="button" data-t="wer_neu">Ich bin neu</button>
-    <p class="klein" data-t="wer_hinweis">Handy nicht erkannt? Das iPhone vergisst die Anmeldung nach 7 Tagen ohne Benutzung, auch ein neues Handy wird nicht erkannt. Dann einfach „Mit Handynummer anmelden“.</p>
+    <p class="klein" data-t="wer_hinweis">Handy nicht erkannt? Das iPhone vergisst die Anmeldung nach 7 Tagen ohne Benutzung, auch ein neues Handy wird nicht erkannt. Dann einfach „Ich war schon angemeldet“.</p>
   </section>
 
   <!-- Mit Handynummer anmelden: Nummer + PIN -->
   <section id="s-telefon" class="karte versteckt">
-    <h2 data-t="wer_telefon">Mit Handynummer anmelden</h2>
+    <h2 data-t="wer_telefon">Ich war schon angemeldet</h2>
+    <button id="tel-passkey" class="knopf versteckt" type="button" data-t="passkey_anmelden">Mit Face ID / Fingerabdruck anmelden</button>
     <label for="tel-nummer" class="feldname" data-t="tel_nummer">Deine Handynummer</label>
     <input id="tel-nummer" type="tel" maxlength="30" autocomplete="tel" dir="ltr" placeholder="z. B. 0171 1234567" data-t-ph="tel_bsp">
     <label for="tel-pin" class="feldname" data-t="pin_feld">Deine PIN</label>
     <input id="tel-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" dir="ltr">
+    <div class="pflicht-hinweis">
+      <p><strong data-t="hinweis_titel">Wichtig – bitte lesen.</strong></p>
+      <p data-t="hinweis_foto">1. Beim Einrichten und ab und zu beim Stempeln macht diese Seite automatisch ein Foto von dir mit der Frontkamera. Zweck: prüfen, dass wirklich du stempelst. Die Fotos sehen nur Mustafa, Alp und Mikdat. Sie werden nach 30 Tagen automatisch gelöscht – außer bei Verdacht auf Missbrauch. Es gibt keine Gesichtserkennung.</p>
+      <p data-t="hinweis_betrug">2. Stempeln für andere ist Arbeitszeitbetrug und führt zur fristlosen Kündigung – für beide.</p>
+      <p id="tel-hinweis-mg" class="klein versteckt" data-t="ds_massgeblich">Maßgeblich ist die deutsche Fassung.</p>
+      <label class="haekchen">
+        <input id="tel-hinweis" type="checkbox" aria-required="true">
+        <span data-t="hinweis_haken">Ich habe das gelesen und verstanden.</span>
+      </label>
+    </div>
     <p id="tel-fehler" class="fehlertext versteckt" role="alert"></p>
     <button id="tel-los" class="knopf gross-knopf" type="button" data-t="anmelden_los">Anmelden</button>
     <button id="tel-zurueck" class="link" type="button" data-t="zurueck">Zurück</button>
@@ -114,6 +154,16 @@
     <label for="neu-pin2" class="feldname" data-t="neu_pin2">PIN wiederholen</label>
     <input id="neu-pin2" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">
     <p class="klein mitte" data-t="neu_pin_hinweis">Warst du schon mal angemeldet? Dann deine bisherige PIN.</p>
+    <div class="pflicht-hinweis">
+      <p><strong data-t="hinweis_titel">Wichtig – bitte lesen.</strong></p>
+      <p data-t="hinweis_foto">1. Beim Einrichten und ab und zu beim Stempeln macht diese Seite automatisch ein Foto von dir mit der Frontkamera. Zweck: prüfen, dass wirklich du stempelst. Die Fotos sehen nur Mustafa, Alp und Mikdat. Sie werden nach 30 Tagen automatisch gelöscht – außer bei Verdacht auf Missbrauch. Es gibt keine Gesichtserkennung.</p>
+      <p data-t="hinweis_betrug">2. Stempeln für andere ist Arbeitszeitbetrug und führt zur fristlosen Kündigung – für beide.</p>
+      <p id="neu-hinweis-mg" class="klein versteckt" data-t="ds_massgeblich">Maßgeblich ist die deutsche Fassung.</p>
+      <label class="haekchen">
+        <input id="neu-hinweis" type="checkbox" aria-required="true">
+        <span data-t="hinweis_haken">Ich habe das gelesen und verstanden.</span>
+      </label>
+    </div>
     <p id="neu-fehler" class="fehlertext versteckt" role="alert"></p>
     <button id="neu-los" class="knopf gross-knopf" type="button" data-t="anmelden_los">Anmelden</button>
     <button id="neu-zurueck" class="link" type="button" data-t="zurueck">Zurück</button>
@@ -140,11 +190,13 @@
   <!-- Gespeicherte (offline) Stempel nachsenden -->
   <section id="s-schlange" class="karte versteckt">
     <h2 id="schlange-titel"></h2>
-    <p class="klein" data-t="schlange_hinweis">Zum Senden einmal deine PIN eingeben.</p>
-    <label for="schlange-pin" class="feldname" data-t="pin_kurz">PIN</label>
+    <p id="schlange-hinweis" class="klein" data-t="schlange_hinweis">Zum Senden einmal deine PIN eingeben.</p>
+    <p id="schlange-hinweis-pk" class="klein versteckt" data-t="schlange_hinweis_pk">Zum Senden einmal mit Face ID / Fingerabdruck bestätigen.</p>
+    <label id="schlange-pin-name" for="schlange-pin" class="feldname" data-t="pin_kurz">PIN</label>
     <input id="schlange-pin" class="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">
     <p id="schlange-fehler" class="fehlertext versteckt" role="alert"></p>
     <button id="schlange-los" class="knopf" type="button" data-t="schlange_los">Jetzt senden</button>
+    <button id="schlange-passkey" class="knopf versteckt" type="button" data-t="schlange_passkey">Mit Face ID / Fingerabdruck senden</button>
   </section>
   <p id="schlange-info" class="hinweis versteckt" role="status"></p>
   <p id="schlange-warten" class="klein mitte versteckt" role="status"></p>
@@ -153,20 +205,22 @@
     <summary data-t="ds_titel">Datenschutz – was wird gespeichert?</summary>
     <p id="ds-massgeblich" class="versteckt"><strong data-t="ds_massgeblich">Maßgeblich ist die deutsche Fassung.</strong></p>
     <p><strong data-t="ds_zeit_t">Zeiterfassung bei MTU.</strong> <span data-t="ds_zeit">Wenn du dein Handy an den Stempel-Chip hältst, speichern wir: deinen Namen, Kommen- und Gehen-Zeit, an welchem Chip du gestempelt hast und eine zufällige Kennung deines Handys (damit wir wissen, dass du es bist).</span></p>
-    <p><strong data-t="ds_nichts_t">Wir speichern keinen Standort, keine Fotos, keine Kontakte, nichts aus deinem Handy</strong> <span data-t="ds_nichts">(außer der gekürzten Gerätekennung, siehe „Missbrauchsschutz“). Die Seite ist eine normale Internetseite, du installierst nichts. Im Handy selbst liegen nur die Handy-Kennung, deine Sprachwahl und – ohne Internet – deine noch nicht gesendeten Stempel.</span></p>
+    <p><strong data-t="ds_nichts_t">Wir speichern keinen Standort, keine Kontakte, nichts aus deinem Handy</strong> <span data-t="ds_nichts">(außer der gekürzten Gerätekennung, siehe „Missbrauchsschutz“, und den Fotos, siehe „Fotos“). Die Seite ist eine normale Internetseite, du installierst nichts. Im Handy selbst liegen nur die Handy-Kennung, deine Sprachwahl und – ohne Internet – deine noch nicht gesendeten Stempel.</span></p>
     <p><strong data-t="ds_zweck_t">Zweck:</strong> <span data-t="ds_zweck">gesetzliche Arbeitszeitaufzeichnung und Lohnabrechnung. Aufbewahrung: mindestens 2 Jahre (gesetzliche Pflicht), danach Löschung. Zugriff: nur die Geschäftsleitung (Lohn).</span></p>
     <p><strong data-t="ds_miss_t">Missbrauchsschutz:</strong> <span data-t="ds_miss">Zu deinem angemeldeten Handy speichern wir die Gerätekennung, die dein Browser mitschickt (Browser und Handymodell, gekürzt), damit das Büro Handys auseinanderhalten kann. Deine IP-Adresse speichern wir in unserer Datenbank nicht – nur eine Prüfsumme daraus mit einem täglich wechselnden Geheimwert (Tagessalz), um Missbrauch und massenhafte Fehlversuche abzuwehren. Daraus lässt sich die IP-Adresse nicht zurückrechnen.</span></p>
+    <p><strong data-t="ds_foto_t">Fotos:</strong> <span data-t="ds_foto">Beim Einrichten eines Handys und ab und zu beim Stempeln macht die Seite ein Foto mit der Frontkamera (live, kein Hochladen aus der Galerie). Ins Bild kommen Datum, Uhrzeit und Stempelpunkt. Zweck: prüfen, dass wirklich du stempelst. Die Fotos liegen in einem geschützten Speicher; nur Mustafa, Alp und Mikdat können sie ansehen, jeder Abruf wird protokolliert. Sie werden nach 30 Tagen automatisch gelöscht – außer bei Verdacht auf Missbrauch. Es gibt keine Gesichtserkennung. Erlaubst du die Kamera nicht, wird trotzdem gestempelt und das Büro prüft den Stempel.</span></p>
+    <p><strong data-t="ds_passkey_t">Face ID / Fingerabdruck:</strong> <span data-t="ds_passkey">Wenn du es einrichtest, prüft dein Handy dein Gesicht bzw. deinen Fingerabdruck selbst. Der Server bekommt nie Gesichts- oder Fingerdaten, sondern nur einen öffentlichen Schlüssel. Der Zugang gehört zu deinem Handy.</span></p>
     <p><strong data-t="ds_tel_t">Handynummer:</strong> <span data-t="ds_tel">Wir nutzen deine Handynummer für Infos zur Arbeit per WhatsApp (nur mit deinem Einverständnis) und damit du dich mit Nummer + PIN wieder anmelden kannst. Für die Anmeldung speichern wir die Nummer im Stempel-Server nur als nicht zurückrechenbare Prüfsumme; die Nummer selbst liegt nur in der Mitarbeiterliste im Büro. Sie wird nie auf dieser Seite angezeigt und nicht weitergegeben.</span></p>
     <p><strong data-t="ds_wa_t">WhatsApp-Einverständnis:</strong> <span data-t="ds_wa">Das Häkchen ist freiwillig und gilt nur für Infos zur Arbeit (z. B. Einsatzzeiten, Änderungen). Wir speichern, wann du zugestimmt hast, als Nachweis. Ohne Häkchen geht die Anmeldung über „Ich bin neu“ nicht – dann melde dich bitte im Büro, dort wirst du auch ohne WhatsApp eingetragen. Du kannst das Einverständnis jederzeit im Büro widerrufen, dann bekommst du keine WhatsApp-Infos mehr. Wenn du bei uns ausscheidest, wird deine Nummer gelöscht.</span></p>
     <p><strong data-t="ds_sprache_t">Sprache:</strong> <span data-t="ds_sprache">Die Sprache der Seite merkt sich nur dein Handy; die Sprache für WhatsApp-Infos steht in der Mitarbeiterliste.</span></p>
     <p data-t="ds_stunden">Deine Stunden siehst du nicht in der Seite – auf Nachfrage bekommst du jederzeit eine Aufstellung im Büro.</p>
     <p><strong data-t="ds_pin_t">Deine PIN:</strong> <span data-t="ds_pin">4 Ziffern, nur du kennst sie. Gib sie nicht weiter. Stempeln für andere ist nicht erlaubt.</span></p>
     <p><strong data-t="ds_offline_t">Kein Internet beim Stempeln?</strong> <span data-t="ds_offline">Dein Stempel wird im Handy gespeichert. Öffne die Seite später einmal mit Internet, dann wird er gesendet (iPhone: nur, wenn du die Seite öffnest).</span></p>
-    <p data-t="ds_handy">Neues Handy? „Mit Handynummer anmelden“. PIN vergessen? Bitte im Büro melden.</p>
+    <p data-t="ds_handy">Neues Handy? „Ich war schon angemeldet“. PIN vergessen? Bitte im Büro melden.</p>
   </details>
 </main>
-<script src="texte.js?v=5"></script>
-<script src="logik.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="texte.js?v=6"></script>
+<script src="logik.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

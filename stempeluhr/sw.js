@@ -3,7 +3,7 @@
 // Haelt nur die eigenen Dateien im Cache, damit die Seite auch ohne Netz aufgeht.
 // Faesst KEINE Anfragen an Supabase an (fremde Adresse -> Browser macht es selbst), speichert nie Antworten mit Daten.
 // Neue Version: VERSION hochzaehlen (und ?v= in index.html), alte eigene Caches werden beim Aktivieren geloescht.
-var VERSION = "stz-stempeluhr-v5";
+var VERSION = "stz-stempeluhr-v6"; // 26.11.2026: Sicherheit (Foto, Face ID, Pflichthinweis)
 var PRAEFIX = "stz-stempeluhr-";
 var DATEIEN = ["./index.html", "./style.css", "./texte.js", "./logik.js", "./app.js"];
 var NETZ_WARTEN_MS = 4000;

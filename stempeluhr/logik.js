@@ -346,8 +346,11 @@
     var rest = j && typeof j.rest === "number" ? j.rest : null;
     var f;
     var eingabe = ["format", "name", "art", "telefon_ungueltig", "einverstaendnis_fehlt", "pin_ungleich", "pin_einfach",
-      "startcode_fehlt", "startcode_falsch", "pin_vorhanden"];
+      "startcode_fehlt", "startcode_falsch", "pin_vorhanden", "hinweis_fehlt", "passkey_falsch", "passkey_noetig"];
     if (status === 0 || status >= 500 || code === "server") f = { art: "netz", code: code || "server" };
+    // 26.11.2026: gesperrtes Handy / Handy einer anderen Person -> Text, Token NICHT loeschen (sonst waere es „unbekannt“)
+    else if (code === "geraet_abgelehnt" || code === "handy_vergeben") f = { art: "ende", code: code };
+    else if (code === "passkey_falsch" && rest === 0) f = { art: "neu_chip", code: code, rest: rest };
     else if (status === 413) f = { art: "netz", code: "zu_gross" };
     else if (status === 400 && code === "ungueltig") f = { art: "ende", code: code };
     else if (code === "pin_falsch") f = { art: rest === 0 ? "neu_chip" : "eingabe", code: code, rest: rest };
@@ -387,7 +390,206 @@
 
   function anzahlText(n, s) { return n === 1 ? t(sprache(s), "anzahl_1") : t(sprache(s), "anzahl_n", { n: n }); }
 
+  // ---------- Sicherheit (26.11.2026): Passkey, Fotos, Pflichthinweis – PLAN-SICHERHEIT.md Kap. 7.2 ----------
+  var RP_ID = "bayrak29.github.io";
+  var B64URL = /^[A-Za-z0-9_-]*$/;
+  var GESTEN = { daumen: "👍", zwei: "✌️", hand: "✋", finger: "☝️" };
+  var FOTO_MAX_BYTES = 110 * 1024; // Server nimmt bis 150 KB, Body foto bis 160 KB (base64 = 4/3)
+  var FOTO_QUALITAETEN = [0.7, 0.6, 0.45, 0.35];
+  var FOTO_BREITE = 480;
+
+  /** Fassung des Pflichthinweises (texte.js); der Server kennt die gueltigen Fassungen. */
+  function hinweisVersion() {
+    var v = g.StzHinweisVersion;
+    return typeof v === "string" && /^[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]?$/.test(v) ? v : null;
+  }
+
+  /** base64url-Text -> Uint8Array, kaputt -> null. */
+  function b64urlZuBytes(s) {
+    if (typeof s !== "string" || !B64URL.test(s) || s.length % 4 === 1 || s.length > 20000) return null;
+    var b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    var bin;
+    try { bin = atob(b64); } catch (e) { return null; }
+    var a = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+    return a;
+  }
+
+  /** ArrayBuffer/Uint8Array (auch DataView) -> base64url ohne "=". null/undefined -> null. */
+  function bytesZuB64url(b) {
+    if (b === null || b === undefined) return null;
+    var a;
+    if (b instanceof Uint8Array) a = b;
+    else if (b instanceof ArrayBuffer) a = new Uint8Array(b);
+    else if (b && b.buffer instanceof ArrayBuffer) a = new Uint8Array(b.buffer, b.byteOffset || 0, b.byteLength);
+    else return null;
+    var s = "";
+    for (var i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function kennungenWandeln(liste) {
+    if (!Array.isArray(liste)) return [];
+    var r = [];
+    liste.slice(0, 300).forEach(function (x) {
+      var id = typeof x === "string" ? x : x && x.id;
+      var b = b64urlZuBytes(id);
+      if (!b || b.length < 8) return;
+      var e = { type: "public-key", id: b };
+      if (x && Array.isArray(x.transports)) e.transports = x.transports.filter(function (t) { return typeof t === "string"; });
+      r.push(e);
+    });
+    return r;
+  }
+
+  /**
+   * Registrier-Optionen vom Server (JSON, Strings base64url) -> publicKey-Objekt fuer navigator.credentials.create.
+   * Nimmt das Objekt direkt oder in {optionen} / {publicKey}. Kaputt -> null.
+   */
+  function registrierOptionenWandeln(json) {
+    var o = json && (json.optionen || json.publicKey || json);
+    if (!o || typeof o !== "object") return null;
+    var ch = b64urlZuBytes(o.challenge);
+    var uid = o.user && b64urlZuBytes(o.user.id);
+    if (!ch || ch.length < 16 || !uid || !uid.length || !o.rp || typeof o.rp.name !== "string") return null;
+    var auswahl = o.authenticatorSelection || {};
+    return {
+      challenge: ch,
+      rp: { id: o.rp.id || RP_ID, name: o.rp.name },
+      user: { id: uid, name: String(o.user.name || ""), displayName: String(o.user.displayName || o.user.name || "") },
+      pubKeyCredParams: Array.isArray(o.pubKeyCredParams) && o.pubKeyCredParams.length ? o.pubKeyCredParams
+        : [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+      timeout: Number(o.timeout) || 120000,
+      attestation: "none",
+      excludeCredentials: kennungenWandeln(o.excludeCredentials),
+      authenticatorSelection: {
+        authenticatorAttachment: auswahl.authenticatorAttachment || "platform",
+        residentKey: auswahl.residentKey || "required",
+        requireResidentKey: true,
+        userVerification: "required"
+      }
+    };
+  }
+
+  /**
+   * Anmelde-/Stempel-Optionen -> publicKey-Objekt fuer navigator.credentials.get.
+   * Server-Form aus tippen: {challenge, erlaubt:[credential_id…]} (Stempeln) bzw. {challenge} (Anmelden ohne Liste);
+   * ebenso die Standard-Form {challenge, allowCredentials:[{id}], rpId, timeout}. Kaputt -> null.
+   */
+  function anmeldeOptionenWandeln(json) {
+    var o = json && (json.optionen || json.publicKey || json);
+    if (!o || typeof o !== "object") return null;
+    var ch = b64urlZuBytes(o.challenge);
+    if (!ch || ch.length < 16) return null;
+    var r = { challenge: ch, rpId: o.rpId || RP_ID, timeout: Number(o.timeout) || 120000, userVerification: "required" };
+    var erlaubt = kennungenWandeln(o.erlaubt || o.allowCredentials);
+    if (erlaubt.length) r.allowCredentials = erlaubt;
+    return r;
+  }
+
+  /** Antwort von create()/get() -> JSON fuer den Server (Format wie @simplewebauthn). Kaputt -> null. */
+  function credentialZuJson(cred) {
+    if (!cred || typeof cred !== "object" || !cred.response) return null;
+    var r = cred.response;
+    var id = bytesZuB64url(cred.rawId);
+    if (!id) return null;
+    var antwort = { clientDataJSON: bytesZuB64url(r.clientDataJSON) };
+    if (r.attestationObject) {
+      antwort.attestationObject = bytesZuB64url(r.attestationObject);
+      try { if (typeof r.getTransports === "function") antwort.transports = r.getTransports(); } catch (e) { /* egal */ }
+    } else {
+      antwort.authenticatorData = bytesZuB64url(r.authenticatorData);
+      antwort.signature = bytesZuB64url(r.signature);
+      var uh = bytesZuB64url(r.userHandle);
+      if (uh) antwort.userHandle = uh;
+      if (!antwort.authenticatorData || !antwort.signature) return null;
+    }
+    if (!antwort.clientDataJSON) return null;
+    var ext = {};
+    try { if (typeof cred.getClientExtensionResults === "function") ext = cred.getClientExtensionResults() || {}; } catch (e) { /* egal */ }
+    var j = { id: id, rawId: id, type: "public-key", response: antwort, clientExtensionResults: ext };
+    if (typeof cred.authenticatorAttachment === "string") j.authenticatorAttachment = cred.authenticatorAttachment;
+    return j;
+  }
+
+  /** Kann das Handy Face ID / Fingerabdruck (Plattform-Passkey mit Pruefung)? Promise<boolean>, wirft nie. */
+  function kannPasskey(w, nav) {
+    try {
+      var pkc = w && w.PublicKeyCredential;
+      if (!pkc || typeof pkc.isUserVerifyingPlatformAuthenticatorAvailable !== "function" || !nav || !nav.credentials ||
+          typeof nav.credentials.create !== "function" || typeof nav.credentials.get !== "function") {
+        return Promise.resolve(false);
+      }
+      return Promise.resolve(pkc.isUserVerifyingPlatformAuthenticatorAvailable())
+        .then(function (x) { return x === true; }, function () { return false; });
+    } catch (e) { return Promise.resolve(false); }
+  }
+
+  function gesteOk(x) { return typeof x === "string" && Object.prototype.hasOwnProperty.call(GESTEN, x); }
+  /** {geste} vom Server -> Gesten-Schluessel (unbekannt -> "daumen"), kein Foto verlangt -> null. */
+  function fotoGeste(f) {
+    if (!f || typeof f !== "object") return null;
+    return gesteOk(f.geste) ? f.geste : "daumen";
+  }
+
+  /**
+   * Entscheidungstabelle (Kap. 7.2). j = Antwort von tippen ("pin") bzw. Anmeldung ("bereit").
+   * z = {fotoErledigt, kannPasskey, passkeyGefragt, pinStatt, passkeyAnmeldung, mitPinFeld}.
+   * Phase "bereit" (gleich nach der Anmeldung): {schritt: "foto", geste} -> {schritt: "passkey"} -> {schritt: "knopf"}.
+   * Phase Knopf (z.knopf = true): {weg: "passkey"|"pin"|"anmeldung"|"passkey_anmeldung", geste|null}.
+   */
+  function naechsterSchritt(j, z) {
+    j = j || {};
+    z = z || {};
+    if (z.knopf) {
+      var pk = !z.pinStatt && z.kannPasskey && !!anmeldeOptionenWandeln(j.passkey);
+      var weg = pk ? "passkey" : z.passkeyAnmeldung ? "passkey_anmeldung" : z.mitPinFeld === false ? "anmeldung" : "pin";
+      var geste = null;
+      if (!z.fotoErledigt) geste = fotoGeste(j.foto) || (weg === "pin" || weg === "anmeldung" ? fotoGeste(j.foto_bei_pin) : null);
+      return { weg: weg, geste: geste };
+    }
+    if (j.schritt === "bereit") {
+      if (!z.fotoErledigt && fotoGeste(j.foto)) return { schritt: "foto", geste: fotoGeste(j.foto) };
+      if (j.passkey_moeglich === true && z.kannPasskey && !z.passkeyGefragt) return { schritt: "passkey" };
+    }
+    return { schritt: "knopf" };
+  }
+
+  /** Naechste JPEG-Qualitaet: passt -> {ok}, zu gross -> {q: kleiner}, auch bei 0.35 zu gross -> {aufgeben}. */
+  function fotoQualitaet(bytes, q) {
+    if (typeof bytes === "number" && bytes > 0 && bytes <= FOTO_MAX_BYTES) return { ok: true };
+    for (var i = 0; i < FOTO_QUALITAETEN.length; i++) if (FOTO_QUALITAETEN[i] < q - 1e-9) return { q: FOTO_QUALITAETEN[i] };
+    return { aufgeben: true };
+  }
+
+  function zwei(n) { return (n < 10 ? "0" : "") + n; }
+  /** Band unten im Foto: „24.11.2026 07:47 · MTU Werk 1 · 👍“ (Handyzeit; massgeblich ist die Serverzeit). */
+  function bildText(datum, ort, geste) {
+    var d = datum instanceof Date && !isNaN(datum.getTime()) ? datum : new Date();
+    var teile = [zwei(d.getDate()) + "." + zwei(d.getMonth() + 1) + "." + d.getFullYear() + " " +
+      zwei(d.getHours()) + ":" + zwei(d.getMinutes())];
+    var o = typeof ort === "string" ? ort.replace(/[\p{Cc}\p{Cf}]/gu, "").trim().slice(0, 40) : "";
+    if (o) teile.push(o);
+    if (gesteOk(geste)) teile.push(GESTEN[geste]);
+    return teile.join(" · ");
+  }
+
   g.StzLogik = {
+    RP_ID: RP_ID,
+    FOTO_BREITE: FOTO_BREITE,
+    FOTO_QUALITAETEN: FOTO_QUALITAETEN,
+    hinweisVersion: hinweisVersion,
+    b64urlZuBytes: b64urlZuBytes,
+    bytesZuB64url: bytesZuB64url,
+    registrierOptionenWandeln: registrierOptionenWandeln,
+    anmeldeOptionenWandeln: anmeldeOptionenWandeln,
+    credentialZuJson: credentialZuJson,
+    kannPasskey: kannPasskey,
+    fotoGeste: fotoGeste,
+    naechsterSchritt: naechsterSchritt,
+    fotoQualitaet: fotoQualitaet,
+    bildText: bildText,
     SCHLANGE_MAX: SCHLANGE_MAX,
     NACHREICHEN_JE_ANFRAGE: NACHREICHEN_JE_ANFRAGE,
     codeAusHash: codeAusHash,

@@ -177,3 +177,42 @@ input[type=tel]::placeholder, input.pin::placeholder { direction: ltr; }
 .zustand.ein { background: #e3f4ea; color: var(--gruen); border: 2px solid var(--gruen); }
 .zustand.aus { background: var(--grund); color: var(--text); border: 2px solid var(--rand); }
 .knopf.gross-knopf.aus { background: var(--orange); }
+
+/* ---------- 26.11.2026: Sicherheit – Pflichthinweis, Live-Foto, Face ID ---------- */
+.pflicht-hinweis {
+  background: var(--gelb);
+  border: 2px solid #e0b000;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 18px 0 4px;
+  font-size: 16px;
+}
+.pflicht-hinweis p { margin: 0 0 8px; }
+.pflicht-hinweis .haekchen { margin: 10px 0 0; font-weight: 600; }
+.hinweis.orange-zeile { background: var(--orange-hell); color: var(--orange); border: 2px solid var(--orange); font-weight: 600; }
+.kam-rahmen {
+  position: relative;
+  width: 260px;
+  height: 320px;
+  margin: 10px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  border: 4px solid var(--blau);
+}
+/* Vorschau gespiegelt (wie ein Spiegel) – gespeichert wird das Bild NICHT gespiegelt */
+.kam-rahmen video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.kam-zahl {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 120px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,.8);
+  pointer-events: none;
+}
+#kam-geste { font-weight: 700; }
+html[dir=rtl] .pflicht-hinweis { text-align: start; }
