@@ -129,11 +129,13 @@
     statusLaden().catch(function (e) { fehler(e.message); });
   }
 
-  // Eingabe lesen: Punkte/Leerzeichen/Apostrophe entfernen; Ergebnis Zahl oder Fehlertext
+  // Eingabe lesen: Leerzeichen/Apostrophe entfernen; Punkt NUR als Tausendertrenner (Gruppen aus genau
+  // 3 Ziffern: 25.000 ok, 25000.5 / 1.5 → Fehler); Ergebnis Zahl oder Fehlertext
   function eingabeLesen() {
-    var roh = ($("km").value || "").replace(/[\s.'’]/g, "");
+    var roh = ($("km").value || "").replace(/[\s'’]/g, "");
     if (!roh) return { fehler: "Bitte den aktuellen KM-Stand eingeben." };
-    if (/[,]/.test(roh)) return { fehler: "Bitte nur ganze Kilometer eingeben (ohne Komma)." };
+    if (/^\d{1,3}(\.\d{3})+$/.test(roh)) roh = roh.replace(/\./g, "");
+    if (/[.,]/.test(roh)) return { fehler: "Bitte nur ganze Kilometer eingeben (ohne Komma)." };
     if (!/^\d+$/.test(roh)) return { fehler: "Bitte nur Ziffern eingeben." };
     var n = parseInt(roh, 10);
     if (!isFinite(n) || n > KM_MAX) return { fehler: "Bitte eine Zahl zwischen 0 und 2.000.000 eingeben." };
