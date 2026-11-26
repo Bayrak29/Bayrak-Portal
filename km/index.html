@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://vzrvncxmleshwgtbvrtc.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f3a5f">
+<title>KM-Stand melden</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<header>
+  <div class="marke">Bayrak Industrieservice</div>
+  <h1>KM-Stand melden</h1>
+</header>
+
+<main>
+  <section id="laden" class="karte">
+    <p class="mitte">Einen Moment …</p>
+  </section>
+
+  <section id="fehler" class="karte versteckt">
+    <h2>Das hat nicht geklappt</h2>
+    <p id="fehler-text"></p>
+    <button id="fehler-neu" type="button" class="knopf zweit">Nochmal</button>
+  </section>
+
+  <section id="anzeige" class="karte versteckt">
+    <div class="fahrzeug">
+      <div id="fz-kz" class="kennzeichen gross"></div>
+      <div id="fz-name" class="fz-name"></div>
+    </div>
+
+    <div class="kaestchen">
+      <div class="kasten">
+        <div class="kasten-titel">Nächster TÜV</div>
+        <div id="wert-tuev" class="kasten-wert"></div>
+      </div>
+      <div class="kasten">
+        <div class="kasten-titel">Nächste Wartung</div>
+        <div id="wert-wartung" class="kasten-wert"></div>
+      </div>
+      <div class="kasten">
+        <div class="kasten-titel">Letzter Stand</div>
+        <div id="wert-stand" class="kasten-wert"></div>
+      </div>
+    </div>
+
+    <p id="erfolg" class="erfolg versteckt" role="status"></p>
+
+    <label for="km" class="feldname">Aktueller KM-Stand</label>
+    <div class="km-zeile">
+      <input id="km" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" enterkeyhint="done" placeholder="z. B. 25340">
+      <span class="einheit">km</span>
+    </div>
+    <p class="klein">Bitte den Kilometerstand vom Tacho ablesen (nur ganze Kilometer).</p>
+
+    <div id="meldung" class="meldung versteckt" role="alert">
+      <p id="meldung-text"></p>
+      <button id="knopf-nochmal" type="button" class="knopf zweit versteckt">Nochmal</button>
+    </div>
+
+    <div id="rueckfrage" class="rueckfrage versteckt" role="alert">
+      <p id="rueckfrage-text"></p>
+      <button id="knopf-ja" type="button" class="knopf">Ja, speichern</button>
+      <button id="knopf-nein" type="button" class="knopf zweit">Nein, korrigieren</button>
+    </div>
+
+    <button id="knopf-speichern" type="button" class="knopf">Speichern</button>
+  </section>
+</main>
+<script src="app.js?v=1"></script>
+</body>
+</html>
