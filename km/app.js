@@ -141,7 +141,7 @@
   }
 
   function sprungText(differenz, letzterAm) {
-    var seit = letzterAm ? " vom " + kurzDatum(letzterAm) : "";
+    var seit = letzterAm ? " vom " + kurzDatum(letzterAm).replace(/\.$/, "") : "";
     return "Das sind " + tausender(differenz) + " km mehr als die letzte Meldung" + seit + ". Stimmt das?";
   }
   function ersteText(km) {
